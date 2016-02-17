@@ -82,7 +82,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <protege.version>5.0.0-beta-22-SNAPSHOT</protege.version>
         <owlapi.version>4.1.3</owlapi.version>
-        <lucene.version>5.3.1</lucene.version>
+        <lucene.version>5.4.1</lucene.version>
         <logback.version>1.1.3</logback.version>
     </properties>
 
@@ -153,41 +153,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.0</version>
+                <version>3.3</version>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
                 </configuration>
             </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>2.2.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
 
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -200,15 +171,33 @@
                         <Bundle-ClassPath>.</Bundle-ClassPath>
                         <Bundle-SymbolicName>${project.artifactId};singleton:=true</Bundle-SymbolicName>
                         <Bundle-Vendor>The Protege Development Team</Bundle-Vendor>
+                        <Embed-Dependency>
+                            lucene-core,
+                            lucene-analyzers-common,
+                            lucene-queryparser,
+                            lucene-analyzers-phonetic
+                        </Embed-Dependency>
+                        <Export-Package>
+                            org.apache.commons.*
+                        </Export-Package>
                         <Import-Package>
-                            org.protege.editor.core.*;version="5.0.0",
                             org.protege.editor.owl.*;version="5.0.0",
                             org.semanticweb.owlapi.*;version="[4.1.3,5.0.0)",
+                            org.apache.*;resolution:=optional,
+                            javax.*;resolution:=optional,
                             *
                         </Import-Package>
                         <Include-Resource>{maven-resources}</Include-Resource>
-                        <Private-Package>${project.artifactId}</Private-Package>
                     </instructions>
+                    <executions>
+                        <execution>
+                            <id>bundle-manifest</id>
+                            <phase>install</phase>
+                            <goals>
+                                <goal>manifest</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </configuration>
             </plugin>
 
@@ -219,8 +208,23 @@
                     <pde>true</pde>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.5</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.scm</groupId>
+                        <artifactId>maven-scm-provider-gitexe</artifactId>
+                        <version>1.9</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
         </plugins>
     </build>
+
+    <!-- Generate source and Javadoc JAR files, and sign artifacts. Required 
+        by Sonatype OSSRH for deployment. -->
     <profiles>
         <profile>
             <id>release</id>
@@ -231,8 +235,40 @@
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>2.2.1</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>2.10.3</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <failOnError>false</failOnError>
+                                    <quiet>true</quiet>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.5</version>
+                        <version>1.6</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
