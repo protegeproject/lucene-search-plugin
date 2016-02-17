@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <plugin>
-    <extension id="LuceneSearchManager" point="org.protege.editor.owl.searchmanager">
-        <name value="Lucene search" />
-        <class value="org.protege.editor.search.lucene.LuceneSearchManager" />
+    <extension id="NciLuceneSearchManager" point="org.protege.editor.owl.searchmanager">
+        <name value="NCI Lucene search" />
+        <class value="org.protege.editor.search.nci.NciSearchManager" />
     </extension>
 </plugin>
