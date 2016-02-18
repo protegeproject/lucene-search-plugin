@@ -25,21 +25,29 @@ public class QueryRunner {
     }
 
     public void execute(Long searchId, SearchQueries searchQueries, AbstractDocumentHandler handler, SearchProgressListener listener)
-            throws IOException, SearchInterruptionException {
+            throws SearchInterruptionException {
         int counter = 1;
         for (SearchQuery searchQuery : searchQueries) {
-            if (!isLatestSearch(searchId)) {
-                throw new SearchInterruptionException();
+            pollingSearchStatus(searchId);
+            try {
+                execute(searchQuery, handler);
             }
-            execute(searchId, searchQuery, handler, listener);
+            catch (IOException e) {
+                logger.error("Error while executing the search query: {}", e.getMessage());
+            }
             listener.fireSearchingProgressed((counter++*100)/searchQueries.size());
         }
     }
 
-    public void execute(Long searchId, SearchQuery searchQuery, AbstractDocumentHandler handler, SearchProgressListener listener)
-            throws IOException, SearchInterruptionException {
+    public void execute(SearchQuery searchQuery, AbstractDocumentHandler handler) throws IOException {
         logger.debug("... executing query " + searchQuery);
         searchQuery.evaluate(handler);
+    }
+
+    private void pollingSearchStatus(Long searchId) throws SearchInterruptionException {
+        if (!isLatestSearch(searchId)) {
+            throw new SearchInterruptionException();
+        }
     }
 
     private boolean isLatestSearch(long searchId) {
