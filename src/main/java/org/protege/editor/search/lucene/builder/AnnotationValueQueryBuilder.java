@@ -1,7 +1,12 @@
-package org.protege.editor.search.lucene;
+package org.protege.editor.search.lucene.builder;
 
 import org.protege.editor.owl.model.search.SearchCategory;
 import org.protege.editor.owl.model.search.SearchKeyword;
+import org.protege.editor.search.lucene.IndexField;
+import org.protege.editor.search.lucene.LuceneSearcher;
+import org.protege.editor.search.lucene.LuceneUtils;
+import org.protege.editor.search.lucene.SearchQuery;
+import org.protege.editor.search.lucene.SearchQueryBuilder;
 
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -15,15 +20,15 @@ import org.slf4j.LoggerFactory;
  * Bio-Medical Informatics Research Group<br>
  * Date: 10/11/2015
  */
-public class QueryForEntityIriBuilder extends SearchQueryBuilder {
+public class AnnotationValueQueryBuilder extends SearchQueryBuilder {
 
-    protected static final Logger logger = LoggerFactory.getLogger(QueryForEntityIriBuilder.class);
+    protected static final Logger logger = LoggerFactory.getLogger(AnnotationValueQueryBuilder.class);
 
     private LuceneSearcher searcher;
 
     private BooleanQuery query;
 
-    public QueryForEntityIriBuilder(LuceneSearcher searcher) {
+    public AnnotationValueQueryBuilder(LuceneSearcher searcher) {
         this.searcher = searcher;
     }
 
@@ -31,7 +36,7 @@ public class QueryForEntityIriBuilder extends SearchQueryBuilder {
     public void add(SearchKeyword keyword) {
         if (keyword.isBlank()) return;
         try {
-            query = LuceneUtils.createQuery(IndexField.ENTITY_IRI, keyword.getString(), new StandardAnalyzer());
+            query = LuceneUtils.createQuery(IndexField.ANNOTATION_TEXT, keyword.getString(), new StandardAnalyzer());
         }
         catch (ParseException e) {
             // Silently show is as debug message
@@ -41,7 +46,7 @@ public class QueryForEntityIriBuilder extends SearchQueryBuilder {
 
     @Override
     public SearchQuery build() {
-        return new SearchQuery(query, SearchCategory.IRI, searcher);
+        return new SearchQuery(query, SearchCategory.ANNOTATION_VALUE, searcher);
     }
 
     @Override

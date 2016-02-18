@@ -3,6 +3,10 @@ package org.protege.editor.search.lucene;
 import org.protege.editor.owl.model.search.CompoundKeyword;
 import org.protege.editor.owl.model.search.SearchInputHandlerBase;
 import org.protege.editor.owl.model.search.SearchKeyword;
+import org.protege.editor.search.lucene.builder.AnnotationValueQueryBuilder;
+import org.protege.editor.search.lucene.builder.DisplayNameQueryBuilder;
+import org.protege.editor.search.lucene.builder.EntityIriQueryBuilder;
+import org.protege.editor.search.lucene.builder.FilteredAnnotationQueryBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,10 +29,10 @@ public class QueryBasedInputHandler extends SearchInputHandlerBase<SearchQueries
 
     private List<SearchQueryBuilder> getBuilders() {
         List<SearchQueryBuilder> builders = new ArrayList<>();
-        builders.add(new QueryForEntityIriBuilder(searcher));
-        builders.add(new QueryForDisplayNameBuilder(searcher));
-        builders.add(new QueryForAnnotationValueBuilder(searcher));
-        builders.add(new QueryForFilteredAnnotationBuilder(searcher));
+        builders.add(new EntityIriQueryBuilder(searcher));
+        builders.add(new DisplayNameQueryBuilder(searcher));
+        builders.add(new AnnotationValueQueryBuilder(searcher));
+        builders.add(new FilteredAnnotationQueryBuilder(searcher));
         return builders;
     }
 

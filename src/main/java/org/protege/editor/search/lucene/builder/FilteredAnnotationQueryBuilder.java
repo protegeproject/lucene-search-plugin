@@ -1,7 +1,12 @@
-package org.protege.editor.search.lucene;
+package org.protege.editor.search.lucene.builder;
 
 import org.protege.editor.owl.model.search.SearchCategory;
 import org.protege.editor.owl.model.search.SearchKeyword;
+import org.protege.editor.search.lucene.IndexField;
+import org.protege.editor.search.lucene.LuceneSearcher;
+import org.protege.editor.search.lucene.LuceneUtils;
+import org.protege.editor.search.lucene.SearchQuery;
+import org.protege.editor.search.lucene.SearchQueryBuilder;
 
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -17,15 +22,15 @@ import org.slf4j.LoggerFactory;
  * Bio-Medical Informatics Research Group<br>
  * Date: 10/11/2015
  */
-public class QueryForFilteredAnnotationBuilder extends SearchQueryBuilder {
+public class FilteredAnnotationQueryBuilder extends SearchQueryBuilder {
 
-    protected static final Logger logger = LoggerFactory.getLogger(QueryForFilteredAnnotationBuilder.class);
+    protected static final Logger logger = LoggerFactory.getLogger(FilteredAnnotationQueryBuilder.class);
 
     private LuceneSearcher searcher;
 
     private BooleanQuery.Builder builder = new BooleanQuery.Builder();
 
-    public QueryForFilteredAnnotationBuilder(LuceneSearcher searcher) {
+    public FilteredAnnotationQueryBuilder(LuceneSearcher searcher) {
         this.searcher = searcher;
     }
 
