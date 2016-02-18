@@ -73,7 +73,7 @@ public abstract class AbstractLuceneIndexer {
         doc.add(new TextField(IndexField.ENTITY_IRI, getEntityId(entity), Store.YES));
         doc.add(new TextField(IndexField.DISPLAY_NAME, getDisplayName(entity, context), Store.YES));
         doc.add(new StringField(IndexField.ANNOTATION_IRI, getAnnotationId(annotation), Store.YES));
-        doc.add(new TextField(IndexField.ANNOTATION_DISPLAY_NAME, getDisplayName(annotation.getProperty(), context), Store.YES));
+        doc.add(new TextField(IndexField.ANNOTATION_DISPLAY_NAME, getDisplayName(annotation, context), Store.YES));
         doc.add(new TextField(IndexField.ANNOTATION_TEXT, getAnnotationText(annotation, context), Store.YES));
         return doc;
     }
@@ -83,7 +83,12 @@ public abstract class AbstractLuceneIndexer {
     }
 
     protected String getDisplayName(OWLObject object, SearchContext context) {
-        return context.getRendering(object);
+        if (object instanceof OWLAnnotation) {
+            OWLAnnotation annotation = (OWLAnnotation) object;
+            object = annotation.getProperty();
+        }
+        String displayName = context.getRendering(object);
+        return getLocalNameOnly(displayName);
     }
 
     protected String getType(OWLEntity entity) {
@@ -96,6 +101,14 @@ public abstract class AbstractLuceneIndexer {
 
     protected String getAnnotationText(OWLAnnotation annotation, SearchContext context) {
         return context.getStyledStringRendering(annotation).getString();
+    }
+
+    private static String getLocalNameOnly(String displayName) {
+        int pos = displayName.indexOf(":");
+        if (pos != -1) { // if prefixed name then omit the prefix
+            displayName = displayName.substring(pos+1);
+        }
+        return displayName;
     }
 
     public interface IndexProgressListener {

@@ -3,7 +3,11 @@ package org.protege.editor.search.lucene;
 import org.protege.editor.owl.model.search.SearchCategory;
 import org.protege.editor.owl.model.search.SearchKeyword;
 
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.BooleanQuery;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Author: Josef Hardi <josef.hardi@stanford.edu><br>
@@ -13,9 +17,11 @@ import org.apache.lucene.search.BooleanQuery;
  */
 public class QueryForAnnotationValueBuilder extends SearchQueryBuilder {
 
-    private BooleanQuery.Builder builder = new BooleanQuery.Builder();
+    protected static final Logger logger = LoggerFactory.getLogger(QueryForAnnotationValueBuilder.class);
 
     private LuceneSearcher searcher;
+
+    private BooleanQuery query;
 
     public QueryForAnnotationValueBuilder(LuceneSearcher searcher) {
         this.searcher = searcher;
@@ -24,20 +30,18 @@ public class QueryForAnnotationValueBuilder extends SearchQueryBuilder {
     @Override
     public void add(SearchKeyword keyword) {
         if (keyword.isBlank()) return;
-        if (keyword.searchWholeWords()) {
-            builder.add(LuceneUtils.createPhraseQuery(
-                    IndexField.ANNOTATION_TEXT,
-                    keyword.getString()), LuceneUtils.toOccur(keyword.occurance()));
-        } else {
-            builder.add(LuceneUtils.createTermQuery(
-                    IndexField.ANNOTATION_TEXT,
-                    keyword.getString()), LuceneUtils.toOccur(keyword.occurance()));
+        try {
+            query = LuceneUtils.createQuery(IndexField.ANNOTATION_TEXT, keyword.getString(), new StandardAnalyzer());
+        }
+        catch (ParseException e) {
+            // Silently show is as debug message
+            logger.debug(e.getMessage());
         }
     }
 
     @Override
     public SearchQuery build() {
-        return new SearchQuery(builder.build(), SearchCategory.ANNOTATION_VALUE, searcher);
+        return new SearchQuery(query, SearchCategory.ANNOTATION_VALUE, searcher);
     }
 
     @Override

@@ -55,7 +55,7 @@ public class LuceneSearchManager extends LuceneSearcher {
 
     private AtomicLong lastSearchId = new AtomicLong(0);
 
-    private SearchStringParser searchStringParser = new KeywordStringParser();
+    private SearchStringParser searchStringParser = new LuceneStringParser();
 
     private LuceneIndexer indexer = new LuceneIndexer();
 
@@ -253,11 +253,6 @@ public class LuceneSearchManager extends LuceneSearcher {
             }
             catch (SearchInterruptionException e) {
                 return; // search terminated prematurely
-            }
-            catch (Throwable e) {
-                logger.error("... error while searching: " + e.getMessage());
-                e.printStackTrace();
-                return;
             }
             fireSearchFinished();
             Set<SearchResult> results = documentHandler.getSearchResults();
