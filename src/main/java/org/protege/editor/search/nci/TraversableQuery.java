@@ -6,6 +6,7 @@ import org.protege.editor.search.lucene.IndexField;
 import org.protege.editor.search.lucene.LuceneSearcher;
 import org.protege.editor.search.lucene.SearchQuery;
 import org.protege.editor.search.lucene.SearchQueryBuilder;
+import org.protege.editor.search.lucene.builder.FilteredAnnotationQueryBuilder;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.search.BooleanQuery;
@@ -40,7 +41,7 @@ public class TraversableQuery extends SearchQuery {
             Set<Document> docs = new HashSet<>();
             swap(toReturn, docs);
             for (Document doc : docs) {
-                SearchQueryBuilder builder = new NciQueryForFilteredAnnotationBuilder(searcher);
+                SearchQueryBuilder builder = new FilteredAnnotationQueryBuilder(searcher);
                 builder.add(new SearchKeywordWrapper(hangingKeyword, prepareKeyword(doc)));
                 SearchQuery searchQuery = builder.build();
                 toReturn.addAll(evaluateBackTrack(searchQuery));

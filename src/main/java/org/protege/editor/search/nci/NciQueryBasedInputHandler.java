@@ -7,6 +7,10 @@ import org.protege.editor.owl.model.search.SearchKeyword;
 import org.protege.editor.search.lucene.LuceneSearcher;
 import org.protege.editor.search.lucene.SearchQueries;
 import org.protege.editor.search.lucene.SearchQueryBuilder;
+import org.protege.editor.search.lucene.builder.AnnotationValueQueryBuilder;
+import org.protege.editor.search.lucene.builder.DisplayNameQueryBuilder;
+import org.protege.editor.search.lucene.builder.EntityIriQueryBuilder;
+import org.protege.editor.search.lucene.builder.FilteredAnnotationQueryBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,10 +29,10 @@ public class NciQueryBasedInputHandler extends SearchInputHandlerBase<UserQuerie
 
     private List<SearchQueryBuilder> getBuilders() {
         List<SearchQueryBuilder> builders = new ArrayList<>();
-        builders.add(new NciQueryForEntityIriBuilder(searcher));
-        builders.add(new NciQueryForDisplayNameBuilder(searcher));
-        builders.add(new NciQueryForAnnotationValueBuilder(searcher));
-        builders.add(new NciQueryForFilteredAnnotationBuilder(searcher));
+        builders.add(new EntityIriQueryBuilder(searcher));
+        builders.add(new DisplayNameQueryBuilder(searcher));
+        builders.add(new AnnotationValueQueryBuilder(searcher));
+        builders.add(new FilteredAnnotationQueryBuilder(searcher));
         return builders;
     }
 
