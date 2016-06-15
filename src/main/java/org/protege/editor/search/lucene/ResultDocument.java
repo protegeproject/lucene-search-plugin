@@ -68,7 +68,7 @@ public class ResultDocument implements ResultItem {
         if (catDiff != 0) {
             return catDiff;
         }
-        int typeDiff = this.getSubjectRendering().compareTo(other.getSubjectRendering());
+        int typeDiff = this.getGroupDescription().compareTo(other.getGroupDescription());
         if (typeDiff != 0) {
             return typeDiff;
         }
