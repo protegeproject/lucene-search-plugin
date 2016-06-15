@@ -5,4 +5,10 @@
         <name value="NCI Lucene search" />
         <class value="org.protege.editor.search.nci.NciSearchManager" />
     </extension>
+    
+    <extension id="ui.preferences.update"
+               point="org.protege.editor.core.application.preferencespanel">
+        <label value="Lucene Search"/>
+        <class value="org.protege.editor.search.lucene.SearchPreferencesPanel"/>
+    </extension>
 </plugin>
