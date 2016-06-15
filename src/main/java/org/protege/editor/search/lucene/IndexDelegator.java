@@ -1,7 +1,6 @@
 package org.protege.editor.search.lucene;
 
 import org.protege.editor.owl.model.search.SearchContext;
-import org.protege.editor.owl.model.search.SearchIndexPreferences;
 import org.protege.editor.search.lucene.AbstractLuceneIndexer.IndexProgressListener;
 
 import org.apache.commons.io.FileUtils;
@@ -50,18 +49,16 @@ public class IndexDelegator {
 
     private OWLOntology ontology;
 
-    private final SearchIndexPreferences preferences = SearchIndexPreferences.getInstance();
-
     public IndexDelegator(OWLOntology ontology) {
         this.ontology = ontology;
         String ontologyVersion = OntologyVersion.create(ontology);
-        Optional<String> indexLocation = preferences.getIndexLocation(ontologyVersion);
+        Optional<String> indexLocation = LuceneSearchPreferences.getIndexLocation(ontologyVersion);
         if (indexLocation.isPresent()) {
             String existingIndexLocation = indexLocation.get();
             indexDirectory = IndexDirectory.load(existingIndexLocation);
             logger.info("Loading search index from {}", indexDirectory.getLocation());
         } else {
-            String newIndexLocation = preferences.createIndexLocation(ontology);
+            String newIndexLocation = LuceneSearchPreferences.createIndexLocation(ontology);
             indexDirectory = IndexDirectory.create(newIndexLocation);
         }
         setActiveOntologyVersion(ontologyVersion);
@@ -86,14 +83,14 @@ public class IndexDelegator {
     protected void setActiveOntologyVersion(String version) {
         previousOntologyVersion = version;
         currentOntologyVersion = version;
-        preferences.registerIndexLocation(version, indexDirectory.getLocation());
+        LuceneSearchPreferences.registerIndexLocation(version, indexDirectory.getLocation());
     }
 
     protected void changeActiveOntologyVersion(String newVersion) {
         previousOntologyVersion = currentOntologyVersion;
         currentOntologyVersion = newVersion;
-        preferences.clearIndexLocation(getPreviousOntologyVersion());
-        preferences.registerIndexLocation(getOntologyVersion(), indexDirectory.getLocation());
+        LuceneSearchPreferences.clearIndexLocation(getPreviousOntologyVersion());
+        LuceneSearchPreferences.registerIndexLocation(getOntologyVersion(), indexDirectory.getLocation());
     }
 
     protected String getPreviousOntologyVersion() {
@@ -213,7 +210,7 @@ public class IndexDelegator {
      * Method to rollback changes in the index tree.
      */
     public void revertIndex() throws IOException {
-        preferences.clearIndexLocation(getOntologyVersion());
+        LuceneSearchPreferences.clearIndexLocation(getOntologyVersion());
         FileUtils.deleteDirectory(new File(indexDirectory.getLocation()));
     }
 
