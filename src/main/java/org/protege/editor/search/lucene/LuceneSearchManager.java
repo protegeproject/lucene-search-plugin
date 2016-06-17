@@ -177,7 +177,6 @@ public class LuceneSearchManager extends LuceneSearcher {
                 Directory directory = loadOrCreateIndexDirectory();
                 if (!DirectoryReader.indexExists(directory)) {
                     service.submit(this::buildingIndex);
-                    saveIndex();
                 }
             }
             SearchQueries searchQueries = prepareQuery(searchString);
@@ -221,6 +220,7 @@ public class LuceneSearchManager extends LuceneSearcher {
             indexer.doIndex(indexDelegator,
                     new SearchContext(editorKit),
                     progress -> fireIndexingProgressed(progress));
+            saveIndex();
         }
         catch (IOException e) {
             logger.error("... build index failed");
