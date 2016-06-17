@@ -91,7 +91,7 @@ public class IndexDelegator implements Disposable {
     public void dispose() throws IOException {
         if (isOpen(indexWriter)) {
             indexWriter.close();
-            logger.info("Closed search index");
+            logger.info("Closing search index");
         }
     }
 

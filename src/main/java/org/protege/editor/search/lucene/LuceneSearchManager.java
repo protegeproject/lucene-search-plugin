@@ -206,9 +206,9 @@ public class LuceneSearchManager extends LuceneSearcher {
     private Directory loadOrCreateIndexDirectory() throws IOException {
         OWLOntology activeOntology = editorKit.getOWLModelManager().getActiveOntology();
         String indexLocation = LuceneSearchPreferences.getIndexLocation(activeOntology);
-        logger.info("Using index located at {}", indexLocation);
         Directory directory = FSDirectory.open(Paths.get(indexLocation));
         setIndexDirectory(directory);
+        logger.info("Using index located at {}", indexLocation);
         return directory;
     }
 
@@ -239,8 +239,7 @@ public class LuceneSearchManager extends LuceneSearcher {
             saveIndex();
         }
         catch (IOException e) {
-            logger.error("... build index failed");
-            e.printStackTrace();
+            logger.error("... build index failed", e);
         }
         finally {
             fireIndexingFinished();
