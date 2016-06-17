@@ -17,7 +17,7 @@ import java.io.IOException;
  */
 public abstract class LuceneSearcher extends SearchManager {
 
-    public abstract IndexSearcher getIndexSearcher();
+    protected abstract IndexSearcher getIndexSearcher() throws IOException;
 
     public TopDocs search(Query query) throws IOException {
         return getIndexSearcher().search(query, Integer.MAX_VALUE);
