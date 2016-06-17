@@ -151,7 +151,7 @@ public class LuceneSearchPreferences {
         return createIndexLocation(ontology);
     }
 
-    private static void removeIndexLocation(OWLOntology ontology) {
+    public static void removeIndexLocation(OWLOntology ontology) {
         try {
             Optional<String> location = getPreferenceValue(getLocationKey(ontology));
             if (location.isPresent()) {

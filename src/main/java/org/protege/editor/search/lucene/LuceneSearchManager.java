@@ -88,8 +88,11 @@ public class LuceneSearchManager extends LuceneSearcher {
         };
         modelManagerListener = new OWLModelManagerListener() {
             public void handleChange(OWLModelManagerChangeEvent event) {
-                if (isCacheMutatingEvent(event)) {
-                    markIndexAsStale();
+                if (isCacheChangingEvent(event)) {
+                    markIndexAsStale(false);
+                }
+                else if (isCacheMutatingEvent(event)) {
+                    markIndexAsStale(true);
                 }
                 else if (isCacheSavingEvent(event)) {
                     saveIndex();
@@ -100,9 +103,12 @@ public class LuceneSearchManager extends LuceneSearcher {
         editorKit.getModelManager().addListener(modelManagerListener);
     }
 
+    private boolean isCacheChangingEvent(OWLModelManagerChangeEvent event) {
+        return event.isType(EventType.ACTIVE_ONTOLOGY_CHANGED);
+    }
+
     private boolean isCacheMutatingEvent(OWLModelManagerChangeEvent event) {
-        return event.isType(EventType.ACTIVE_ONTOLOGY_CHANGED)
-                || event.isType(EventType.ENTITY_RENDERER_CHANGED)
+        return event.isType(EventType.ENTITY_RENDERER_CHANGED)
                 || event.isType(EventType.ENTITY_RENDERING_CHANGED);
     }
 
@@ -129,8 +135,16 @@ public class LuceneSearchManager extends LuceneSearcher {
         }
     }
 
-    private void markIndexAsStale() {
-        lastSearchId.set(0); // rebuild index
+    private void markIndexAsStale(boolean forceDelete) {
+        if (forceDelete) {
+            if (indexDirectory != null) { // remove the index
+                logger.info("Rebuilding index");
+                OWLOntology activeOntology = editorKit.getOWLModelManager().getActiveOntology();
+                LuceneSearchPreferences.removeIndexLocation(activeOntology);
+                indexDelegator = null;
+            }
+        }
+        lastSearchId.set(0);
     }
 
     private void saveIndex() {
@@ -169,7 +183,7 @@ public class LuceneSearchManager extends LuceneSearcher {
     public void setCategories(Collection<SearchCategory> categories) {
         this.categories.clear();
         this.categories.addAll(categories);
-        markIndexAsStale();
+        markIndexAsStale(false);
     }
 
     @Override
