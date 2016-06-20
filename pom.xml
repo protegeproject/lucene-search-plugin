@@ -20,6 +20,7 @@
         <name>Stanford Center for Biomedical Informatics Research</name>
         <url>http://bmir.stanford.edu/</url>
     </organization>
+
     <licenses>
         <license>
             <name>BSD 2-Clause License</name>
@@ -60,13 +61,13 @@
         <url>https://github.com/protegeproject/lucene-search-plugin</url>
         <tag>HEAD</tag>
     </scm>
+
     <issueManagement>
         <system>GitHub</system>
         <url>https://github.com/protegeproject/lucene-search-plugin/issues</url>
     </issueManagement>
 
-    <!-- Protege libraries are hosted on Sonatype OSSRH (OSS Repository Hosting 
-        Service). -->
+    <!-- Protege libraries are hosted on Sonatype OSSRH (OSS Repository Hosting Service). -->
     <distributionManagement>
         <snapshotRepository>
             <id>ossrh</id>
@@ -81,7 +82,6 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <protege.version>5.0.1-SNAPSHOT</protege.version>
-        <owlapi.version>4.1.3</owlapi.version>
         <lucene.version>5.4.1</lucene.version>
         <logback.version>1.1.3</logback.version>
     </properties>
@@ -103,12 +103,6 @@
             <groupId>edu.stanford.protege</groupId>
             <artifactId>protege-editor-owl</artifactId>
             <version>${protege.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.sourceforge.owlapi</groupId>
-            <artifactId>owlapi-osgidistribution</artifactId>
-            <version>${owlapi.version}</version>
         </dependency>
 
         <dependency>
@@ -163,13 +157,13 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>3.0.0</version>
+                <version>3.0.1</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
                         <Bundle-Activator>org.protege.editor.owl.ProtegeOWL</Bundle-Activator>
                         <Bundle-ClassPath>.</Bundle-ClassPath>
-                        <Bundle-SymbolicName>${project.artifactId};singleton:=true</Bundle-SymbolicName>
+                        <Bundle-SymbolicName>org.protege.editor.search;singleton:=true</Bundle-SymbolicName>
                         <Bundle-Vendor>The Protege Development Team</Bundle-Vendor>
                         <Embed-Dependency>
                             lucene-core,
@@ -178,26 +172,28 @@
                             lucene-analyzers-phonetic
                         </Embed-Dependency>
                         <Export-Package>
-                            org.apache.commons.*
+                            org.apache.commons.codec.*,
+                            org.protege.editor.*,
+                            org.protege.owlapi.*
                         </Export-Package>
                         <Import-Package>
                             org.protege.editor.owl.*;version="5.0.0",
                             org.semanticweb.owlapi.*;version="[4.1.3,5.0.0)",
-                            org.apache.*;resolution:=optional,
-                            javax.*;resolution:=optional,
+                            org.apache.lucene.*;resolution:=optional,
+                            org.apache.commons.codec.*,
                             *
                         </Import-Package>
                         <Include-Resource>{maven-resources}</Include-Resource>
+                        <executions>
+                            <execution>
+                                <id>bundle-manifest</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>manifest</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                     </instructions>
-                    <executions>
-                        <execution>
-                            <id>bundle-manifest</id>
-                            <phase>install</phase>
-                            <goals>
-                                <goal>manifest</goal>
-                            </goals>
-                        </execution>
-                    </executions>
                 </configuration>
             </plugin>
 
@@ -216,7 +212,7 @@
                     <dependency>
                         <groupId>org.apache.maven.scm</groupId>
                         <artifactId>maven-scm-provider-gitexe</artifactId>
-                        <version>1.9</version>
+                        <version>1.9.4</version>
                     </dependency>
                 </dependencies>
             </plugin>

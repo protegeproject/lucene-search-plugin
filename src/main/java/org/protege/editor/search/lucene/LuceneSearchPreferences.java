@@ -3,11 +3,14 @@ package org.protege.editor.search.lucene;
 import org.protege.editor.core.prefs.Preferences;
 import org.protege.editor.core.prefs.PreferencesManager;
 
+import org.apache.commons.io.FileUtils;
 import org.semanticweb.owlapi.model.OWLOntology;
+import org.semanticweb.owlapi.model.OWLOntologyID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 import java.util.Optional;
 
@@ -117,67 +120,53 @@ public class LuceneSearchPreferences {
      * @return A full path location of the index directory.
      */
     public static String createIndexLocation(OWLOntology ontology) {
-        String ontologyIdHex = Integer.toHexString(ontology.getOntologyID().toString().hashCode());
-        String timestampHex = Integer.toHexString(new Date().hashCode());
-        String indexDir = String.format("%s-%s-%s", PREFIX_INDEX_DIR, ontologyIdHex, timestampHex);
-        return getBaseDirectory() + fsSeparator + indexDir;
+        String directoryName = createUniqueName(ontology.getOntologyID());
+        String directoryPath = getBaseDirectory() + fsSeparator + directoryName;
+        getPreferences().putString(getLocationKey(ontology), directoryPath);
+        return directoryPath;
     }
 
-    /**
-     * Create a map between the ontology version and its index directory location.
-     *
-     * @param ontologyVersion
-     *          A string represents the unique versioning ID of the ontology.
-     * @param indexLocation
-     *          The directory location where the index files are stored.
-     */
-    public static void registerIndexLocation(String ontologyVersion, String indexLocation) {
-        getPreferences().putString(ontologyVersion, prepare(indexLocation));
-    }
-
-    /**
-     * Remove index location by its ontology version string.
-     *
-     * @param ontologyVersion
-     *          A string represents the unique versioning ID of the ontology.
-     */
-    public static void clearIndexLocation(String ontologyVersion) {
-        if (getPreferenceValue(ontologyVersion).isPresent()) {
-            getPreferences().putString(ontologyVersion, null); // clear by make the value null
-        }
-    }
-
-    /**
-     * Get the index directory location based on the ontology version. The method
-     * will return no location if users recently changed the <code>BASE_DIR</code>
-     * location or the directory was recently removed (i.e., path is invalid)
-     *
-     * @param ontologyVersion
-     *          A string represents the unique versioning ID of the ontology.
-     * @return The directory location.
-     */
-    public static Optional<String> getIndexLocation(String ontologyVersion) {
-        Optional<String> location = getPreferenceValue(ontologyVersion);
+    public static String getIndexLocation(OWLOntology ontology) {
+        Optional<String> location = getPreferenceValue(getLocationKey(ontology));
         if (location.isPresent()) {
-            /*
-             * If the location is found in the preference (cached), we must check it
-             * against the file system.
-             */
             String cachedLocation = location.get();
             /*
-             * Make sure the index directory is at the current root directory setting.
+             * Make sure the index location still exists.
              */
-            if (!cachedLocation.startsWith(getBaseDirectory())) {
-                location = Optional.empty(); // reset if the base directory has changed
-            }
-            /*
-             * Make sure the index directory still exists.
-             */
-            if (!new File(cachedLocation).exists()) {
-                location = Optional.empty(); // reset if the index directory has been removed.
+            if (new File(cachedLocation).exists()) {
+                /*
+                 * If does exist, check if the hash signature between the index and the
+                 * current ontology is the same.
+                 */
+                Optional<String> hashInfo = getPreferenceValue(getHashKey(ontology));
+                if (hashInfo.isPresent() && hashInfo.get().equals(ontology.hashCode()+"")) {
+                    return cachedLocation;
+                }
+                else {
+                    removeIndexLocation(ontology);
+                    return createIndexLocation(ontology);
+                }
             }
         }
-        return location;
+        return createIndexLocation(ontology);
+    }
+
+    public static void removeIndexLocation(OWLOntology ontology) {
+        try {
+            Optional<String> location = getPreferenceValue(getLocationKey(ontology));
+            if (location.isPresent()) {
+                getPreferences().putString(getLocationKey(ontology), null); // remove preference by set null value
+                getPreferences().putString(getHashKey(ontology), null);
+                FileUtils.deleteDirectory(new File(location.get()));
+            }
+        }
+        catch (IOException e) {
+            logger.error("Error while removing index directory", e);
+        }
+    }
+
+    public static void setIndexSnapshot(OWLOntology ontology) {
+        getPreferences().putString(getHashKey(ontology), ontology.hashCode()+"");
     }
 
     /**
@@ -194,6 +183,14 @@ public class LuceneSearchPreferences {
      * Private utility methods
      */
 
+    private static String getLocationKey(OWLOntology ontology) {
+        return ontology.getOntologyID().getDefaultDocumentIRI().get().toString();
+    }
+
+    private static String getHashKey(OWLOntology ontology) {
+        return "SIGN:" + ontology.getOntologyID().getDefaultDocumentIRI().get().toString();
+    }
+
     private static String getDefaultBaseDirectory() {
         return getUserHomeDirectory();
     }
@@ -202,6 +199,11 @@ public class LuceneSearchPreferences {
         return Optional.ofNullable(getPreferences().getString(key, null));
     }
 
+    private static String createUniqueName(OWLOntologyID ontologyId) {
+        String ontologyIdHex = Integer.toHexString(ontologyId.toString().hashCode());
+        String timestampHex = Integer.toHexString(new Date().hashCode());
+        return String.format("%s-%s-%s", PREFIX_INDEX_DIR, ontologyIdHex, timestampHex);
+    }
     /**
      * Make sure the path directory contains no file separator at the end of the string
      *
