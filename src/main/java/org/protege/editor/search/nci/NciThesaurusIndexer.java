@@ -24,6 +24,8 @@ import org.semanticweb.owlapi.model.OWLLiteral;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLOntology;
+import org.semanticweb.owlapi.model.OWLQuantifiedObjectRestriction;
+import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 import org.semanticweb.owlapi.model.parameters.Imports;
 
 import java.util.HashSet;
@@ -121,6 +123,29 @@ public class NciThesaurusIndexer extends AbstractLuceneIndexer {
                     doc.add(new TextField(IndexField.ANNOTATION_DISPLAY_NAME, getDisplayName(axiom.getProperty()), Store.YES));
                     doc.add(new TextField(IndexField.ANNOTATION_TEXT, getAnnotationText(axiom.getAnnotation()), Store.YES));
                     documents.add(doc);
+                }
+            }
+
+            @Override
+            public void visit(OWLSubClassOfAxiom axiom) {
+                if (!(axiom.getSubClass() instanceof OWLClass)) {
+                    return;
+                }
+                OWLClass cls = axiom.getSubClass().asOWLClass();
+                if (axiom.getSuperClass() instanceof OWLQuantifiedObjectRestriction) {
+                    OWLQuantifiedObjectRestriction restriction = (OWLQuantifiedObjectRestriction) axiom.getSuperClass();
+                    if (restriction.getProperty() instanceof OWLObjectProperty && restriction.getFiller() instanceof OWLClass) {
+                        OWLObjectProperty property = restriction.getProperty().asOWLObjectProperty();
+                        OWLClass filler = restriction.getFiller().asOWLClass();
+                        Document doc = new Document();
+                        doc.add(new TextField(IndexField.ENTITY_IRI, getEntityId(cls), Store.YES));
+                        doc.add(new TextField(IndexField.DISPLAY_NAME, getDisplayName(cls), Store.YES));
+                        doc.add(new TextField(IndexField.OBJECT_PROPERTY_IRI, getEntityId(property), Store.YES));
+                        doc.add(new TextField(IndexField.OBJECT_PROPERTY_DISPLAY_NAME, getDisplayName(property), Store.YES));
+                        doc.add(new TextField(IndexField.FILLER_IRI, getEntityId(filler), Store.YES));
+                        doc.add(new TextField(IndexField.FILLER_DISPLAY_NAME, getDisplayName(filler), Store.YES));
+                        documents.add(doc);
+                    }
                 }
             }
 
