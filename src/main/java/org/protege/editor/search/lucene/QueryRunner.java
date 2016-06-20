@@ -5,7 +5,6 @@ import org.protege.editor.owl.model.search.SearchInterruptionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -32,14 +31,14 @@ public class QueryRunner {
             try {
                 execute(searchQuery, handler);
             }
-            catch (IOException e) {
+            catch (QueryEvaluationException e) {
                 logger.error("Error while executing the search query: {}", e.getMessage());
             }
             listener.fireSearchingProgressed((counter++*100)/searchQueries.size());
         }
     }
 
-    public void execute(SearchQuery searchQuery, AbstractDocumentHandler handler) throws IOException {
+    public void execute(SearchQuery searchQuery, AbstractDocumentHandler handler) throws QueryEvaluationException {
         logger.debug("... executing query " + searchQuery);
         searchQuery.evaluate(handler);
     }

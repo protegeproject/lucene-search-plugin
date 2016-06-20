@@ -2,6 +2,7 @@ package org.protege.editor.search.lucene.builder;
 
 import org.protege.editor.owl.model.search.SearchCategory;
 import org.protege.editor.owl.model.search.SearchKeyword;
+import org.protege.editor.search.lucene.BasicSearchQuery;
 import org.protege.editor.search.lucene.IndexField;
 import org.protege.editor.search.lucene.LuceneSearcher;
 import org.protege.editor.search.lucene.LuceneUtils;
@@ -62,7 +63,7 @@ public class FilteredAnnotationQueryBuilder extends SearchQueryBuilder {
 
     @Override
     public SearchQuery build() {
-        return new SearchQuery(builder.build(), SearchCategory.ANNOTATION_VALUE, searcher);
+        return new BasicSearchQuery(builder.build(), SearchCategory.ANNOTATION_VALUE, searcher);
     }
 
     @Override
