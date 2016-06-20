@@ -215,6 +215,21 @@ public class NciSearchManager extends LuceneSearcher {
         }
     }
 
+    public void performSearch(UserQueries userQueries, SearchResultHandler searchResultHandler) {
+        try {
+            if (lastSearchId.getAndIncrement() == 0) {
+                Directory directory = loadOrCreateIndexDirectory();
+                if (!DirectoryReader.indexExists(directory)) {
+                    service.submit(this::buildingIndex);
+                }
+            }
+            service.submit(new SearchCallable(lastSearchId.incrementAndGet(), userQueries, searchResultHandler));
+        }
+        catch (IOException e) {
+            logger.error("Search failed to perform", e);
+        }
+    }
+
     private Directory loadOrCreateIndexDirectory() throws IOException {
         OWLOntology activeOntology = editorKit.getOWLModelManager().getActiveOntology();
         String indexLocation = LuceneSearchPreferences.getIndexLocation(activeOntology);

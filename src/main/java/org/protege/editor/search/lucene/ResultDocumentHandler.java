@@ -51,6 +51,7 @@ public class ResultDocumentHandler extends AbstractDocumentHandler {
             case IRI: return new ResultDocument(category, "IRI", subject, subjectName, getContent(doc, IndexField.ENTITY_IRI));
             case DISPLAY_NAME: return new ResultDocument(category, "DISPLAY NAME", subject, subjectName, getContent(doc, IndexField.DISPLAY_NAME));
             case ANNOTATION_VALUE: return new ResultDocument(category, "@" + getContent(doc, IndexField.ANNOTATION_DISPLAY_NAME), subject, subjectName, getContent(doc, IndexField.ANNOTATION_TEXT));
+            case OTHER: return new ResultDocument(category, "OTHER", subject, subjectName, getContent(doc, IndexField.ENTITY_IRI));
             default: break;
         }
         return null;
