@@ -67,8 +67,6 @@ public class NciQueryBasedInputHandler extends SearchInputHandlerBase<UserQuerie
             handle((OrSearch) compoundKeyword);
         } else if (compoundKeyword instanceof AndSearch) {
             handle((AndSearch) compoundKeyword);
-        } else if (compoundKeyword instanceof NestedSearch) {
-            handle((NestedSearch) compoundKeyword);
         }
     }
 
@@ -84,15 +82,5 @@ public class NciQueryBasedInputHandler extends SearchInputHandlerBase<UserQuerie
             isLinked = true;
             handle(keyword);
         }
-    }
-
-    public void handle(NestedSearch nestedSearch) {
-        SearchQueries searchQueries = new SearchQueries();
-        SearchQueryBuilder builder = new NciQueryForNestedAnnotationBuilder(searcher);
-        for (SearchKeyword keyword : nestedSearch) {
-            builder.add(keyword);
-            searchQueries.add(builder.build());
-        }
-        userQueries.add(searchQueries, isLinked);
     }
 }
