@@ -56,7 +56,7 @@ public class FilteredAnnotationQueryBuilder extends SearchQueryBuilder {
             }
         }
         catch (ParseException e) {
-            // Silently show is as debug message
+            // Silently show the exception as a debug message
             logger.debug(e.getMessage());
         }
     }
