@@ -50,7 +50,7 @@ public final class QueryType {
         return booleanType;
     }
 
-    public Set<QueryType> getTypesForOWLObject(OWLObject owlObject) {
+    public static Set<QueryType> getTypesForOWLObject(OWLObject owlObject) {
         Set<QueryType> types = new HashSet<>();
         if (owlObject instanceof OWLDataProperty) {
             types.addAll(ValueQueryTypes);
