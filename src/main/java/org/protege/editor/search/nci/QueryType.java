@@ -9,6 +9,12 @@ import org.semanticweb.owlapi.util.CollectionFactory;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author Josef Hardi <johardi@stanford.edu><br>
+ * Stanford University<br>
+ * Bio-Medical Informatics Research Group<br>
+ * Date: 21/06/2016
+ */
 public final class QueryType {
 
     private final String name;
@@ -21,7 +27,7 @@ public final class QueryType {
         this.name = name;
         this.displayName = displayName;
         this.valueType = valueType;
-        this.nonValueType = valueType;
+        this.nonValueType = nonValueType;
         this.booleanType = booleanType;
     }
 
