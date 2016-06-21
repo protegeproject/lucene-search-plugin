@@ -6,8 +6,8 @@ import org.semanticweb.owlapi.model.OWLObject;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.util.CollectionFactory;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class QueryType {
 
@@ -50,8 +50,8 @@ public final class QueryType {
         return booleanType;
     }
 
-    public static Set<QueryType> getTypesForOWLObject(OWLObject owlObject) {
-        Set<QueryType> types = new HashSet<>();
+    public static List<QueryType> getTypesForOWLObject(OWLObject owlObject) {
+        List<QueryType> types = new ArrayList<>();
         if (owlObject instanceof OWLDataProperty) {
             types.addAll(ValueQueryTypes);
             types.addAll(NonValueQueryTypes);
@@ -78,7 +78,7 @@ public final class QueryType {
     public static final QueryType IS = getInstance("IsQuery", "is", false, false, true);
 
     //@formatter:off
-    public static final Set<QueryType> QUERY_TYPES = CollectionFactory.createSet(
+    public static final List<QueryType> QUERY_TYPES = CollectionFactory.list(
             CONTAINS,
             STARTS_WITH,
             ENDS_WITH,
@@ -89,17 +89,17 @@ public final class QueryType {
             PROPERTY_RESTRICTION_PRESENT,
             IS);
 
-    public static final Set<QueryType> ValueQueryTypes = CollectionFactory.createSet(
+    public static final List<QueryType> ValueQueryTypes = CollectionFactory.list(
             CONTAINS,
             STARTS_WITH,
             ENDS_WITH,
             EXACT_MATCH);
 
-    public static final Set<QueryType> NonValueQueryTypes = CollectionFactory.createSet(
+    public static final List<QueryType> NonValueQueryTypes = CollectionFactory.list(
             PROPERTY_VALUE_ABSENT,
             PROPERTY_VALUE_PRESENT,
             PROPERTY_RESTRICTION_ABSENT,
             PROPERTY_RESTRICTION_PRESENT);
 
-    public static final Set<QueryType> BooleanQueryTypes = CollectionFactory.createSet(IS);
+    public static final List<QueryType> BooleanQueryTypes = CollectionFactory.list(IS);
 }
