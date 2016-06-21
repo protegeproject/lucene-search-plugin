@@ -3,6 +3,7 @@ package org.protege.editor.search.lucene;
 import org.protege.editor.owl.OWLEditorKit;
 import org.protege.editor.owl.model.find.OWLEntityFinder;
 import org.protege.editor.owl.model.search.SearchCategory;
+import org.protege.editor.owl.model.search.SearchMetadata;
 import org.protege.editor.owl.model.search.SearchResult;
 import org.protege.editor.owl.model.search.SearchResultMatch;
 
@@ -39,18 +40,18 @@ public class ResultDocumentHandler extends AbstractDocumentHandler {
     public void handle(SearchCategory category, Document doc) {
         Optional<OWLEntity> subject = getOWLEntity(doc.get(IndexField.ENTITY_IRI));
         if (subject.isPresent()) {
-            ResultDocument resultDocument = createResultDocument(category, doc, subject.get());
-            SearchResult searchResult = new SearchResult(resultDocument, createEmptySearchResultMatch());
+            SearchMetadata metadata = createSearchMetadata(category, doc, subject.get());
+            SearchResult searchResult = new SearchResult(metadata, createEmptySearchResultMatch());
             builder.add(searchResult);
         }
     }
 
-    private ResultDocument createResultDocument(SearchCategory category, Document doc, OWLEntity subject) {
+    private SearchMetadata createSearchMetadata(SearchCategory category, Document doc, OWLEntity subject) {
         String subjectName = editorKit.getOWLModelManager().getRendering(subject);
         switch (category) {
-            case IRI: return new ResultDocument(category, "IRI", subject, subjectName, getContent(doc, IndexField.ENTITY_IRI));
-            case DISPLAY_NAME: return new ResultDocument(category, "DISPLAY NAME", subject, subjectName, getContent(doc, IndexField.DISPLAY_NAME));
-            case ANNOTATION_VALUE: return new ResultDocument(category, "@" + getContent(doc, IndexField.ANNOTATION_DISPLAY_NAME), subject, subjectName, getContent(doc, IndexField.ANNOTATION_TEXT));
+            case IRI: return new SearchMetadata(category, "IRI", subject, subjectName, getContent(doc, IndexField.ENTITY_IRI));
+            case DISPLAY_NAME: return new SearchMetadata(category, "DISPLAY NAME", subject, subjectName, getContent(doc, IndexField.DISPLAY_NAME));
+            case ANNOTATION_VALUE: return new SearchMetadata(category, "@" + getContent(doc, IndexField.ANNOTATION_DISPLAY_NAME), subject, subjectName, getContent(doc, IndexField.ANNOTATION_TEXT));
             default: break;
         }
         return null;
