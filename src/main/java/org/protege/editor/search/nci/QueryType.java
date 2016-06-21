@@ -72,6 +72,11 @@ public final class QueryType {
         return types; 
     }
 
+    @Override
+    public String toString() {
+        return displayName;
+    }
+
     //@formatter:off
     public static final QueryType CONTAINS = getInstance("ContainsQuery", "contains", true, false, false);
     public static final QueryType STARTS_WITH = getInstance("StartsWithQuery", "starts with", true, false, false);
