@@ -14,7 +14,7 @@ public class EntityOnlySearchResult extends SearchResult {
     private static final String DEFAULT_SEARCH_STRING = "(Found in multiple fields)";
 
     public EntityOnlySearchResult(SearchResult searchResult) {
-        super(searchResult.getResultItem(), searchResult.getMatches());
+        super(searchResult.getSearchMetadata(), searchResult.getMatches());
     }
 
     @Override
