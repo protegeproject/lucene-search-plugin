@@ -3,7 +3,7 @@ package org.protege.editor.search.lucene;
 import org.protege.editor.owl.model.search.SearchCategory;
 
 import org.apache.lucene.document.Document;
-import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TopDocs;
 
 import java.io.IOException;
@@ -12,18 +12,18 @@ import java.util.Set;
 
 public class BasicSearchQuery implements SearchQuery {
 
-    private BooleanQuery query;
+    private Query query;
     private SearchCategory category;
 
     protected LuceneSearcher searcher;
 
-    public BasicSearchQuery(BooleanQuery query, SearchCategory category, LuceneSearcher searcher) {
+    public BasicSearchQuery(Query query, SearchCategory category, LuceneSearcher searcher) {
         this.query = query;
         this.category = category;
         this.searcher = searcher;
     }
 
-    public BooleanQuery getQuery() {
+    public Query getQuery() {
         return query;
     }
 
