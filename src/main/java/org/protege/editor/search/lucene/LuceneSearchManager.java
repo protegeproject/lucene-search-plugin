@@ -5,11 +5,11 @@ import org.protege.editor.owl.model.event.EventType;
 import org.protege.editor.owl.model.event.OWLModelManagerChangeEvent;
 import org.protege.editor.owl.model.event.OWLModelManagerListener;
 import org.protege.editor.owl.model.search.SearchCategory;
-import org.protege.editor.owl.model.search.SearchContext;
 import org.protege.editor.owl.model.search.SearchInterruptionException;
 import org.protege.editor.owl.model.search.SearchResult;
 import org.protege.editor.owl.model.search.SearchResultHandler;
 import org.protege.editor.owl.model.search.SearchStringParser;
+import org.protege.editor.owl.model.search.impl.SearchMetadataImportContext;
 
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.search.IndexSearcher;
@@ -234,7 +234,7 @@ public class LuceneSearchManager extends LuceneSearcher {
         fireIndexingStarted();
         try {
             indexer.doIndex(indexDelegator,
-                    new SearchContext(editorKit),
+                    new SearchMetadataImportContext(editorKit),
                     progress -> fireIndexingProgressed(progress));
             saveIndex();
         }

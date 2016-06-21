@@ -1,6 +1,6 @@
 package org.protege.editor.search.lucene;
 
-import org.protege.editor.owl.model.search.SearchContext;
+import org.protege.editor.owl.model.search.impl.SearchMetadataImportContext;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -42,7 +42,7 @@ public abstract class AbstractLuceneIndexer extends OWLObjectVisitorAdapter {
 
     public abstract IndexItemsCollector getIndexItemsCollector();
 
-    public void doIndex(IndexDelegator delegator, SearchContext context, IndexProgressListener listener) throws IOException {
+    public void doIndex(IndexDelegator delegator, SearchMetadataImportContext context, IndexProgressListener listener) throws IOException {
         IndexItemsCollector collector = getIndexItemsCollector();
         for (OWLOntology ontology : context.getOntologies()) {
             logger.info("... collecting items to index from {}", ontology.getOntologyID().getDefaultDocumentIRI().get());
