@@ -81,6 +81,7 @@ public class LuceneSearchManager extends LuceneSearcher {
         categories.add(SearchCategory.DISPLAY_NAME);
         categories.add(SearchCategory.IRI);
         categories.add(SearchCategory.ANNOTATION_VALUE);
+        categories.add(SearchCategory.LOGICAL_AXIOM);
         ontologyChangeListener = new OWLOntologyChangeListener() {
             public void ontologiesChanged(List<? extends OWLOntologyChange> changes) {
                 updateIndex(changes);
