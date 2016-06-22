@@ -184,7 +184,6 @@ public class LuceneSearchManager extends LuceneSearcher {
     public void setCategories(Collection<SearchCategory> categories) {
         this.categories.clear();
         this.categories.addAll(categories);
-        markIndexAsStale(false);
     }
 
     @Override
