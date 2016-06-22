@@ -7,6 +7,7 @@ import org.protege.editor.search.lucene.builder.AnnotationValueQueryBuilder;
 import org.protege.editor.search.lucene.builder.DisplayNameQueryBuilder;
 import org.protege.editor.search.lucene.builder.EntityIriQueryBuilder;
 import org.protege.editor.search.lucene.builder.FilteredAnnotationQueryBuilder;
+import org.protege.editor.search.lucene.builder.LogicalAxiomQueryBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +34,7 @@ public class QueryBasedInputHandler extends SearchInputHandlerBase<SearchQueries
         builders.add(new DisplayNameQueryBuilder(searcher));
         builders.add(new AnnotationValueQueryBuilder(searcher));
         builders.add(new FilteredAnnotationQueryBuilder(searcher));
+        builders.add(new LogicalAxiomQueryBuilder(searcher));
         return builders;
     }
 

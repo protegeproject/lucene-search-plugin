@@ -52,6 +52,7 @@ public class ResultDocumentHandler extends AbstractDocumentHandler {
             case IRI: return new SearchMetadata(category, "IRI", subject, subjectName, getContent(doc, IndexField.ENTITY_IRI));
             case DISPLAY_NAME: return new SearchMetadata(category, "DISPLAY NAME", subject, subjectName, getContent(doc, IndexField.DISPLAY_NAME));
             case ANNOTATION_VALUE: return new SearchMetadata(category, getContent(doc, IndexField.ANNOTATION_DISPLAY_NAME), subject, subjectName, getContent(doc, IndexField.ANNOTATION_TEXT));
+            case LOGICAL_AXIOM: return new SearchMetadata(category, getContent(doc, IndexField.AXIOM_TYPE), subject, subjectName, getContent(doc, IndexField.AXIOM_DISPLAY_NAME));
             case OTHER: return new SearchMetadata(category, "OTHER", subject, subjectName, "(Found in multiple fields)");
             default: break;
         }
