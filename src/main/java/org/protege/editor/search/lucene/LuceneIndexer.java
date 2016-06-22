@@ -56,7 +56,6 @@ import org.semanticweb.owlapi.model.OWLSubObjectPropertyOfAxiom;
 import org.semanticweb.owlapi.model.OWLSubPropertyChainOfAxiom;
 import org.semanticweb.owlapi.model.OWLSymmetricObjectPropertyAxiom;
 import org.semanticweb.owlapi.model.OWLTransitiveObjectPropertyAxiom;
-import org.semanticweb.owlapi.model.parameters.Imports;
 import org.semanticweb.owlapi.util.AxiomSubjectProvider;
 
 import java.util.HashSet;
@@ -100,8 +99,11 @@ public class LuceneIndexer extends AbstractLuceneIndexer {
             public void visit(OWLOntology ontology) {
                 for (OWLEntity entity : ontology.getSignature()) {
                     entity.accept(this);
+                    for (OWLAnnotationAssertionAxiom axiom : ontology.getAnnotationAssertionAxioms(entity.getIRI())) {
+                        axiom.accept(this);
+                    }
                 }
-                for (OWLAxiom axiom : ontology.getTBoxAxioms(Imports.EXCLUDED)) {
+                for (OWLAxiom axiom : ontology.getLogicalAxioms()) {
                     axiom.accept(this);
                 }
             }
