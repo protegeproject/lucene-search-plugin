@@ -51,7 +51,8 @@ public class ResultDocumentHandler extends AbstractDocumentHandler {
         switch (category) {
             case IRI: return new SearchMetadata(category, "IRI", subject, subjectName, getContent(doc, IndexField.ENTITY_IRI));
             case DISPLAY_NAME: return new SearchMetadata(category, "DISPLAY NAME", subject, subjectName, getContent(doc, IndexField.DISPLAY_NAME));
-            case ANNOTATION_VALUE: return new SearchMetadata(category, "@" + getContent(doc, IndexField.ANNOTATION_DISPLAY_NAME), subject, subjectName, getContent(doc, IndexField.ANNOTATION_TEXT));
+            case ANNOTATION_VALUE: return new SearchMetadata(category, getContent(doc, IndexField.ANNOTATION_DISPLAY_NAME), subject, subjectName, getContent(doc, IndexField.ANNOTATION_TEXT));
+            case OTHER: return new SearchMetadata(category, "OTHER", subject, subjectName, "(Found in multiple fields)");
             default: break;
         }
         return null;
