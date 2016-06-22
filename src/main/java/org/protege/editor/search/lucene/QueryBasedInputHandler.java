@@ -1,6 +1,7 @@
 package org.protege.editor.search.lucene;
 
 import org.protege.editor.owl.model.search.CompoundKeyword;
+import org.protege.editor.owl.model.search.SearchCategory;
 import org.protege.editor.owl.model.search.SearchInputHandlerBase;
 import org.protege.editor.owl.model.search.SearchKeyword;
 import org.protege.editor.search.lucene.builder.AnnotationValueQueryBuilder;
@@ -9,7 +10,10 @@ import org.protege.editor.search.lucene.builder.EntityIriQueryBuilder;
 import org.protege.editor.search.lucene.builder.FilteredAnnotationQueryBuilder;
 import org.protege.editor.search.lucene.builder.LogicalAxiomQueryBuilder;
 
+import org.semanticweb.owlapi.util.CollectionFactory;
+
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -22,19 +26,38 @@ public class QueryBasedInputHandler extends SearchInputHandlerBase<SearchQueries
 
     private SearchQueries searchQueries = new SearchQueries();
 
+    private Collection<SearchCategory> categories;
     private LuceneSearcher searcher;
 
     public QueryBasedInputHandler(LuceneSearcher searcher) {
         this.searcher = searcher;
+        categories = CollectionFactory.createSet(
+                SearchCategory.DISPLAY_NAME,
+                SearchCategory.IRI,
+                SearchCategory.ANNOTATION_VALUE,
+                SearchCategory.LOGICAL_AXIOM,
+                SearchCategory.OTHER);
+    }
+
+    public void setCategories(Collection<SearchCategory> categories) {
+        this.categories = categories;
     }
 
     private List<SearchQueryBuilder> getBuilders() {
         List<SearchQueryBuilder> builders = new ArrayList<>();
-        builders.add(new EntityIriQueryBuilder(searcher));
-        builders.add(new DisplayNameQueryBuilder(searcher));
-        builders.add(new AnnotationValueQueryBuilder(searcher));
-        builders.add(new FilteredAnnotationQueryBuilder(searcher));
-        builders.add(new LogicalAxiomQueryBuilder(searcher));
+        if (categories.contains(SearchCategory.IRI)) {
+            builders.add(new EntityIriQueryBuilder(searcher));
+        }
+        if (categories.contains(SearchCategory.DISPLAY_NAME)) {
+            builders.add(new DisplayNameQueryBuilder(searcher));
+        }
+        if (categories.contains(SearchCategory.ANNOTATION_VALUE)) {
+            builders.add(new AnnotationValueQueryBuilder(searcher));
+            builders.add(new FilteredAnnotationQueryBuilder(searcher));
+        }
+        if (categories.contains(SearchCategory.LOGICAL_AXIOM)) {
+            builders.add(new LogicalAxiomQueryBuilder(searcher));
+        }
         return builders;
     }
 

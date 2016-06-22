@@ -226,6 +226,7 @@ public class LuceneSearchManager extends LuceneSearcher {
 
     private SearchQueries prepareQuery(String searchString) {
         QueryBasedInputHandler handler = new QueryBasedInputHandler(this);
+        handler.setCategories(categories);
         searchStringParser.parse(searchString, handler);
         return handler.getQueryObject();
     }
