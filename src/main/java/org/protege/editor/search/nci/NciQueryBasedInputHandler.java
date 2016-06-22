@@ -5,7 +5,6 @@ import org.protege.editor.owl.model.search.SearchInput;
 import org.protege.editor.owl.model.search.SearchInputHandlerBase;
 import org.protege.editor.owl.model.search.SearchKeyword;
 import org.protege.editor.search.lucene.LuceneSearcher;
-import org.protege.editor.search.lucene.SearchQueries;
 import org.protege.editor.search.lucene.SearchQueryBuilder;
 import org.protege.editor.search.lucene.builder.AnnotationValueQueryBuilder;
 import org.protege.editor.search.lucene.builder.DisplayNameQueryBuilder;
@@ -15,13 +14,11 @@ import org.protege.editor.search.lucene.builder.FilteredAnnotationQueryBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NciQueryBasedInputHandler extends SearchInputHandlerBase<UserQueries> {
+public class NciQueryBasedInputHandler extends SearchInputHandlerBase<UserQuery> {
 
-    private UserQueries userQueries = new UserQueries();
+    private UserQuery userQuery = new UserQuery();
 
     private LuceneSearcher searcher;
-
-    private boolean isLinked = false;
 
     public NciQueryBasedInputHandler(LuceneSearcher searcher) {
         this.searcher = searcher;
@@ -37,8 +34,8 @@ public class NciQueryBasedInputHandler extends SearchInputHandlerBase<UserQuerie
     }
 
     @Override
-    public UserQueries getQueryObject() {
-        return userQueries;
+    public UserQuery getQueryObject() {
+        return userQuery;
     }
 
     private void handle(SearchInput searchInput) {
@@ -51,14 +48,12 @@ public class NciQueryBasedInputHandler extends SearchInputHandlerBase<UserQuerie
 
     @Override
     public void handle(SearchKeyword searchKeyword) {
-        SearchQueries searchQueries = new SearchQueries();
         for (SearchQueryBuilder builder : getBuilders()) {
             if (builder.isBuilderFor(searchKeyword)) {
                 builder.add(searchKeyword);
-                searchQueries.add(builder.build());
+                userQuery.add(builder.build());
             }
         }
-        userQueries.add(searchQueries, isLinked);
     }
 
     @Override
@@ -72,14 +67,12 @@ public class NciQueryBasedInputHandler extends SearchInputHandlerBase<UserQuerie
 
     public void handle(OrSearch orSearch) {
         for (SearchInput searchGroup : orSearch.getSearchGroup()) {
-            isLinked = false;
             handle(searchGroup);
         }
     }
 
     public void handle(AndSearch andSearch) {
         for (SearchKeyword keyword : andSearch) {
-            isLinked = true;
             handle(keyword);
         }
     }
