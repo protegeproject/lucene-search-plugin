@@ -32,6 +32,13 @@ public class UnionQuery implements SearchQuery {
         }
     }
 
+    @Override
+    public void evaluate(AbstractDocumentHandler handler, SearchProgressListener listener) throws QueryEvaluationException {
+        for (SearchQuery query : queries) {
+            query.evaluate(handler, listener);
+        }
+    }
+
     public static class Builder {
 
         private final Set<SearchQuery> queries = new HashSet<>();

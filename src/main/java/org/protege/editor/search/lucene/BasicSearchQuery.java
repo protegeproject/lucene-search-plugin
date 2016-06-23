@@ -54,6 +54,16 @@ public class BasicSearchQuery implements SearchQuery {
     }
 
     @Override
+    public void evaluate(AbstractDocumentHandler handler, SearchProgressListener listener) throws QueryEvaluationException {
+        Set<Document> docs = evaluate();
+        int counter = 0;
+        for (Document doc : docs) {
+            handler.handle(category, doc);
+            listener.fireSearchingProgressed((counter++*100)/docs.size());
+        }
+    }
+
+    @Override
     public int hashCode() {
         return SearchQuery.class.getSimpleName().hashCode() + query.hashCode() + category.hashCode();
     }

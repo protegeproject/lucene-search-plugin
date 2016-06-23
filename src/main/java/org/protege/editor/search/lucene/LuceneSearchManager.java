@@ -268,13 +268,13 @@ public class LuceneSearchManager extends LuceneSearcher {
             for (SearchQuery query : searchQueries) {
                 if (!isLatestSearch()) {
                     // New search started
-                    logger.info("... terminating search {} prematurely", searchId);
+                    logger.debug("... terminating search {} prematurely", searchId);
                     return;
                 }
                 try {
                     ResultDocumentHandler handler = new ResultDocumentHandler(editorKit);
                     logger.debug("... executing query " + query);
-                    query.evaluate(handler);
+                    query.evaluate(handler, progress -> fireSearchingProgressed(progress));
                     SearchUtils.intersect(finalResults, handler.getSearchResults());
                 }
                 catch (QueryEvaluationException e) {
@@ -346,7 +346,7 @@ public class LuceneSearchManager extends LuceneSearcher {
         });
     }
 
-    private void fireSearchProgressed(final long progress) {
+    private void fireSearchingProgressed(final long progress) {
         SwingUtilities.invokeLater(() -> {
             for (ProgressMonitor pm : progressMonitors) {
                 pm.setProgress(progress);
