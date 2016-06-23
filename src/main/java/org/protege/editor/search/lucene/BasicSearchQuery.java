@@ -15,7 +15,7 @@ public class BasicSearchQuery implements SearchQuery {
     private Query query;
     private SearchCategory category;
 
-    protected LuceneSearcher searcher;
+    private LuceneSearcher searcher;
 
     public BasicSearchQuery(Query query, SearchCategory category, LuceneSearcher searcher) {
         this.query = query;
