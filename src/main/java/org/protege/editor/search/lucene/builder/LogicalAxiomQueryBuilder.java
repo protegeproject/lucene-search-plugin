@@ -9,43 +9,39 @@ import org.protege.editor.search.lucene.LuceneUtils;
 import org.protege.editor.search.lucene.SearchQuery;
 import org.protege.editor.search.lucene.SearchQueryBuilder;
 
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
+
+/**
+ * @author Josef Hardi <johardi@stanford.edu><br>
+ * Stanford University<br>
+ * Bio-Medical Informatics Research Group<br>
+ * Date: 23/06/2016
+ */
 public class LogicalAxiomQueryBuilder extends SearchQueryBuilder {
 
-    protected static final Logger logger = LoggerFactory.getLogger(AnnotationValueQueryBuilder.class);
+    protected static final Logger logger = LoggerFactory.getLogger(LogicalAxiomQueryBuilder.class);
 
     private LuceneSearcher searcher;
-
-    private BooleanQuery query;
 
     public LogicalAxiomQueryBuilder(LuceneSearcher searcher) {
         this.searcher = searcher;
     }
 
     @Override
-    public void add(SearchKeyword keyword) {
-        if (keyword.isBlank()) return;
-        try {
-            query = LuceneUtils.createQuery(IndexField.AXIOM_DISPLAY_NAME, keyword.getString(), new StandardAnalyzer());
-        }
-        catch (ParseException e) {
-            // Silently show the exception as a debug message
-            logger.debug(e.getMessage());
-        }
-    }
-
-    @Override
-    public SearchQuery build() {
+    public SearchQuery buildSearchQueryFor(SearchKeyword keyword) {
+        Query query = LuceneUtils.createQuery(IndexField.AXIOM_DISPLAY_NAME, keyword.getString());
         return new BasicSearchQuery(query, SearchCategory.LOGICAL_AXIOM, searcher);
     }
 
     @Override
-    public boolean isBuilderFor(SearchKeyword keyword) {
-        return (keyword.hasField()) ? false : true;
+    public boolean isBuilderFor(SearchKeyword keyword, Collection<SearchCategory> categories) {
+        if (categories.contains(SearchCategory.LOGICAL_AXIOM)) {
+            return (keyword.hasField()) ? false : true;
+        }
+        return false;
     }
 }

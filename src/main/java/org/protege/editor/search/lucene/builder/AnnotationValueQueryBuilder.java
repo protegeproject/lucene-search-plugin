@@ -9,17 +9,17 @@ import org.protege.editor.search.lucene.LuceneUtils;
 import org.protege.editor.search.lucene.SearchQuery;
 import org.protege.editor.search.lucene.SearchQueryBuilder;
 
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
+
 /**
- * Author: Josef Hardi <josef.hardi@stanford.edu><br>
+ * @author Josef Hardi <johardi@stanford.edu><br>
  * Stanford University<br>
  * Bio-Medical Informatics Research Group<br>
- * Date: 10/11/2015
+ * Date: 23/06/2016
  */
 public class AnnotationValueQueryBuilder extends SearchQueryBuilder {
 
@@ -27,31 +27,21 @@ public class AnnotationValueQueryBuilder extends SearchQueryBuilder {
 
     private LuceneSearcher searcher;
 
-    private BooleanQuery query;
-
     public AnnotationValueQueryBuilder(LuceneSearcher searcher) {
         this.searcher = searcher;
     }
 
     @Override
-    public void add(SearchKeyword keyword) {
-        if (keyword.isBlank()) return;
-        try {
-            query = LuceneUtils.createQuery(IndexField.ANNOTATION_TEXT, keyword.getString(), new StandardAnalyzer());
-        }
-        catch (ParseException e) {
-            // Silently show is as debug message
-            logger.debug(e.getMessage());
-        }
-    }
-
-    @Override
-    public SearchQuery build() {
+    public SearchQuery buildSearchQueryFor(SearchKeyword keyword) {
+        Query query = LuceneUtils.createQuery(IndexField.ANNOTATION_TEXT, keyword.getString());
         return new BasicSearchQuery(query, SearchCategory.ANNOTATION_VALUE, searcher);
     }
 
     @Override
-    public boolean isBuilderFor(SearchKeyword keyword) {
-        return (keyword.hasField()) ? false : true;
+    public boolean isBuilderFor(SearchKeyword keyword, Collection<SearchCategory> categories) {
+        if (categories.contains(SearchCategory.ANNOTATION_VALUE)) {
+            return (keyword.hasField()) ? false : true;
+        }
+        return false;
     }
 }

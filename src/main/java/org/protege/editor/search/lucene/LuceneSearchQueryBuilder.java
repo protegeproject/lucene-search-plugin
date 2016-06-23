@@ -40,14 +40,13 @@ public class LuceneSearchQueryBuilder implements SearchInputVisitor {
     @Override
     public void visit(SearchInput searchInput) {
         for (SearchKeyword keyword : searchInput) {
-            UnionQuery.Builder builder = new UnionQuery.Builder();
+            UnionQuery.Builder unionQueryBuilder = new UnionQuery.Builder();
             for (SearchQueryBuilder queryBuilder : getBuilders()) {
-                if (queryBuilder.isBuilderFor(keyword)) {
-                    queryBuilder.add(keyword);
-                    builder.add(queryBuilder.build());
+                if (queryBuilder.isBuilderFor(keyword, categories)) {
+                    unionQueryBuilder.add(queryBuilder.buildSearchQueryFor(keyword));
                 }
             }
-            searchQueries.add(builder.build());
+            searchQueries.add(unionQueryBuilder.build());
         }
     }
 
@@ -57,20 +56,11 @@ public class LuceneSearchQueryBuilder implements SearchInputVisitor {
 
     private List<SearchQueryBuilder> getBuilders() {
         List<SearchQueryBuilder> builders = new ArrayList<>();
-        if (categories.contains(SearchCategory.IRI)) {
-            builders.add(new EntityIriQueryBuilder(searcher));
-        }
-        if (categories.contains(SearchCategory.DISPLAY_NAME)) {
-            builders.add(new DisplayNameQueryBuilder(searcher));
-        }
-        if (categories.contains(SearchCategory.ANNOTATION_VALUE)) {
-            builders.add(new AnnotationValueQueryBuilder(searcher));
-            builders.add(new FilteredAnnotationQueryBuilder(searcher));
-        }
-        if (categories.contains(SearchCategory.LOGICAL_AXIOM)) {
-            builders.add(new LogicalAxiomQueryBuilder(searcher));
-        }
+        builders.add(new EntityIriQueryBuilder(searcher));
+        builders.add(new DisplayNameQueryBuilder(searcher));
+        builders.add(new AnnotationValueQueryBuilder(searcher));
+        builders.add(new FilteredAnnotationQueryBuilder(searcher));
+        builders.add(new LogicalAxiomQueryBuilder(searcher));
         return builders;
     }
-
 }
