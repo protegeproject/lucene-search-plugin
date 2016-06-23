@@ -33,7 +33,7 @@ public class LuceneStringParser implements SearchStringParser {
                     searchField = m.group(1).trim();
                     searchString = m.group(2).trim();
                 }
-                SearchKeyword keyword = createSearchKeyword(searchField, searchGroup);
+                SearchKeyword keyword = createSearchKeyword(searchField, searchString);
                 builder.add(keyword);
             }
         }
