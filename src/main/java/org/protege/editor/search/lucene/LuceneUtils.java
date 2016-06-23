@@ -9,8 +9,10 @@ import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.PhraseQuery;
+import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.WildcardQuery;
 
 public class LuceneUtils {
 
@@ -29,6 +31,14 @@ public class LuceneUtils {
 
     public static TermQuery createTermQuery(String searchField, String searchString) {
         return new TermQuery(new Term(searchField, searchString));
+    }
+
+    public static PrefixQuery createPrefixQuery(String searchField, String keyword) {
+        return new PrefixQuery(new Term(searchField, keyword + "*"));
+    }
+
+    public static WildcardQuery createSuffixQuery(String searchField, String keyword) {
+        return new WildcardQuery(new Term(searchField, "*" + keyword));
     }
 
     public static Occur toOccur(Occurance occurance) {
