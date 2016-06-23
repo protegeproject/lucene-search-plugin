@@ -1,8 +1,8 @@
 package org.protege.editor.search.lucene;
 
-import org.protege.editor.owl.model.search.CompoundKeyword;
 import org.protege.editor.owl.model.search.SearchCategory;
-import org.protege.editor.owl.model.search.SearchInputHandlerBase;
+import org.protege.editor.owl.model.search.SearchInput;
+import org.protege.editor.owl.model.search.SearchInputVisitor;
 import org.protege.editor.owl.model.search.SearchKeyword;
 import org.protege.editor.search.lucene.builder.AnnotationValueQueryBuilder;
 import org.protege.editor.search.lucene.builder.DisplayNameQueryBuilder;
@@ -16,20 +16,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * Author: Josef Hardi <josef.hardi@stanford.edu><br>
- * Stanford University<br>
- * Bio-Medical Informatics Research Group<br>
- * Date: 04/11/2015
- */
-public class QueryBasedInputHandler extends SearchInputHandlerBase<SearchQueries> {
-
-    private SearchQueries searchQueries = new SearchQueries();
+public class LuceneSearchQueryBuilder implements SearchInputVisitor {
 
     private Collection<SearchCategory> categories;
     private LuceneSearcher searcher;
 
-    public QueryBasedInputHandler(LuceneSearcher searcher) {
+    private List<SearchQuery> searchQueries = new ArrayList<>();
+
+    public LuceneSearchQueryBuilder(LuceneSearcher searcher) {
         this.searcher = searcher;
         categories = CollectionFactory.createSet(
                 SearchCategory.DISPLAY_NAME,
@@ -41,6 +35,24 @@ public class QueryBasedInputHandler extends SearchInputHandlerBase<SearchQueries
 
     public void setCategories(Collection<SearchCategory> categories) {
         this.categories = categories;
+    }
+
+    @Override
+    public void visit(SearchInput searchInput) {
+        for (SearchKeyword keyword : searchInput) {
+            UnionQuery.Builder builder = new UnionQuery.Builder();
+            for (SearchQueryBuilder queryBuilder : getBuilders()) {
+                if (queryBuilder.isBuilderFor(keyword)) {
+                    queryBuilder.add(keyword);
+                    builder.add(queryBuilder.build());
+                }
+            }
+            searchQueries.add(builder.build());
+        }
+    }
+
+    public List<SearchQuery> build() {
+        return searchQueries;
     }
 
     private List<SearchQueryBuilder> getBuilders() {
@@ -61,25 +73,4 @@ public class QueryBasedInputHandler extends SearchInputHandlerBase<SearchQueries
         return builders;
     }
 
-    @Override
-    public SearchQueries getQueryObject() {
-        return searchQueries;
-    }
-
-    @Override
-    public void handle(SearchKeyword searchKeyword) {
-        for (SearchQueryBuilder builder : getBuilders()) {
-            if (builder.isBuilderFor(searchKeyword)) {
-                builder.add(searchKeyword);
-                searchQueries.add(builder.build());
-            }
-        }
-    }
-
-    @Override
-    public void handle(CompoundKeyword compoundKeyword) {
-        for (SearchKeyword keyword : compoundKeyword) {
-            handle(keyword);
-        }
-    }
 }

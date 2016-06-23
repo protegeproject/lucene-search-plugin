@@ -1,6 +1,7 @@
 package org.protege.editor.search.lucene;
 
-import org.protege.editor.owl.model.search.SearchInputHandler;
+import org.protege.editor.owl.model.find.OWLEntityFinderPreferences;
+import org.protege.editor.owl.model.search.SearchInput;
 import org.protege.editor.owl.model.search.SearchKeyword;
 import org.protege.editor.owl.model.search.SearchKeyword.Occurance;
 import org.protege.editor.owl.model.search.SearchStringParser;
@@ -8,31 +9,47 @@ import org.protege.editor.owl.model.search.SearchStringParser;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.jgoodies.common.base.Strings;
+
 /**
- * Author: Josef Hardi <josef.hardi@stanford.edu><br>
+ * @author Josef Hardi <johardi@stanford.edu><br>
  * Stanford University<br>
  * Bio-Medical Informatics Research Group<br>
- * Date: 17/02/2016
+ * Date: 22/06/2016
  */
 public class LuceneStringParser implements SearchStringParser {
 
     private static final Pattern filteredSearchStringPattern = Pattern.compile("([^:,]*):(\"[^\"]*\"|[^,\"]*)");
 
     @Override
-    public void parse(String searchString, SearchInputHandler handler) {
-        SearchKeyword keyword = parseSearchString(searchString.trim());
-        handler.handle(keyword);
+    public SearchInput parse(String searchString) {
+        SearchInput.Builder builder = new SearchInput.Builder();
+        searchString = searchString.trim();
+        for (String searchGroup : searchString.split("&")) {
+            if (!Strings.isBlank(searchGroup)) {
+                String searchField = "";
+                Matcher m = filteredSearchStringPattern.matcher(searchGroup);
+                if (m.find()) {
+                    searchField = m.group(1).trim();
+                    searchString = m.group(2).trim();
+                }
+                SearchKeyword keyword = createSearchKeyword(searchField, searchGroup);
+                builder.add(keyword);
+            }
+        }
+        return builder.build();
     }
 
-    private SearchKeyword parseSearchString(String searchString) {
-        String searchField = "";
-        Matcher m = filteredSearchStringPattern.matcher(searchString);
-        if (m.find()) {
-            searchField = m.group(1).trim();
-            searchString = m.group(2).trim();
-        }
-        SearchKeyword keyword = createSearchKeyword(searchField, appendSearchOperator(searchString));
-        return keyword;
+    private static SearchKeyword createSearchKeyword(String searchField, String searchString) {
+        OWLEntityFinderPreferences prefs = OWLEntityFinderPreferences.getInstance();
+        return new SearchKeyword(searchField,
+                appendSearchOperator(searchString),
+                Occurance.INCLUDE,
+                prefs.isCaseSensitive(), // is case-sensitive
+                prefs.isIgnoreWhiteSpace(), // ignore whitespace
+                prefs.isWholeWords(), // search whole words
+                prefs.isUseRegularExpressions(), // search by regex
+                false); // search by phonetic
     }
 
     private static String appendSearchOperator(String searchString) {
@@ -48,16 +65,5 @@ public class LuceneStringParser implements SearchStringParser {
             sb.append(" ");
         }
         return sb.toString();
-    }
-
-    private SearchKeyword createSearchKeyword(String field, String keyword) {
-        return new SearchKeyword(field,
-                keyword,
-                Occurance.INCLUDE,
-                false, // is case-sensitive
-                false, // ignore whitespace
-                false, // search whole words
-                false, // search by regex
-                false); // search by phonetic
     }
 }
