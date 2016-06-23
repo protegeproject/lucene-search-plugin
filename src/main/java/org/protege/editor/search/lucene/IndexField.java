@@ -16,6 +16,10 @@ public final class IndexField {
 
     public static final String ENTITY_TYPE = "entityType";
 
+    public static final String AXIOM_DISPLAY_NAME = "axiomDisplayName";
+
+    public static final String AXIOM_TYPE = "axiomType";
+
     public static final String OBJECT_PROPERTY_IRI = "objectPropertyIri";
 
     public static final String OBJECT_PROPERTY_DISPLAY_NAME = "objectPropertyDisplayName";

@@ -11,29 +11,29 @@ import org.apache.lucene.document.Document;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLEntity;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * Author: Josef Hardi <josef.hardi@stanford.edu><br>
  * Stanford University<br>
  * Bio-Medical Informatics Research Group<br>
- * Date: 20/11/2015
+ * Date: 23/06/2016
  */
 public class ResultDocumentHandler extends AbstractDocumentHandler {
 
     private OWLEditorKit editorKit;
-    private ImmutableSet.Builder<SearchResult> builder = new ImmutableSet.Builder<>();
-    
+    private Set<SearchResult> results = new HashSet<>();
+
     public ResultDocumentHandler(OWLEditorKit editorKit) {
         this.editorKit = editorKit;
     }
 
     public Set<SearchResult> getSearchResults() {
-        return builder.build();
+        return results;
     }
 
     @Override
@@ -42,7 +42,7 @@ public class ResultDocumentHandler extends AbstractDocumentHandler {
         if (subject.isPresent()) {
             SearchMetadata metadata = createSearchMetadata(category, doc, subject.get());
             SearchResult searchResult = new SearchResult(metadata, createEmptySearchResultMatch());
-            builder.add(searchResult);
+            results.add(searchResult);
         }
     }
 
@@ -51,7 +51,9 @@ public class ResultDocumentHandler extends AbstractDocumentHandler {
         switch (category) {
             case IRI: return new SearchMetadata(category, "IRI", subject, subjectName, getContent(doc, IndexField.ENTITY_IRI));
             case DISPLAY_NAME: return new SearchMetadata(category, "DISPLAY NAME", subject, subjectName, getContent(doc, IndexField.DISPLAY_NAME));
-            case ANNOTATION_VALUE: return new SearchMetadata(category, "@" + getContent(doc, IndexField.ANNOTATION_DISPLAY_NAME), subject, subjectName, getContent(doc, IndexField.ANNOTATION_TEXT));
+            case ANNOTATION_VALUE: return new SearchMetadata(category, getContent(doc, IndexField.ANNOTATION_DISPLAY_NAME), subject, subjectName, getContent(doc, IndexField.ANNOTATION_TEXT));
+            case LOGICAL_AXIOM: return new SearchMetadata(category, getContent(doc, IndexField.AXIOM_TYPE), subject, subjectName, getContent(doc, IndexField.AXIOM_DISPLAY_NAME));
+            case OTHER: return new SearchMetadata(category, "OTHER", subject, subjectName, "(Found in multiple fields)");
             default: break;
         }
         return null;

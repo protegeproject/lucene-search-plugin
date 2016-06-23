@@ -1,6 +1,9 @@
 package org.protege.editor.search.lucene;
 
+import org.protege.editor.owl.model.search.SearchCategory;
 import org.protege.editor.owl.model.search.SearchKeyword;
+
+import java.util.Collection;
 
 /**
  * Author: Josef Hardi <josef.hardi@stanford.edu><br>
@@ -10,9 +13,7 @@ import org.protege.editor.owl.model.search.SearchKeyword;
  */
 public abstract class SearchQueryBuilder {
 
-    public abstract boolean isBuilderFor(SearchKeyword keyword);
+    public abstract boolean isBuilderFor(SearchKeyword keyword, Collection<SearchCategory> categories);
 
-    public abstract void add(SearchKeyword keyword);
-
-    public abstract SearchQuery build();
+    public abstract SearchQuery buildSearchQueryFor(SearchKeyword keyword);
 }

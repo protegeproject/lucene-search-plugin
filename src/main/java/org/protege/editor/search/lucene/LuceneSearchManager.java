@@ -5,7 +5,7 @@ import org.protege.editor.owl.model.event.EventType;
 import org.protege.editor.owl.model.event.OWLModelManagerChangeEvent;
 import org.protege.editor.owl.model.event.OWLModelManagerListener;
 import org.protege.editor.owl.model.search.SearchCategory;
-import org.protege.editor.owl.model.search.SearchInterruptionException;
+import org.protege.editor.owl.model.search.SearchInput;
 import org.protege.editor.owl.model.search.SearchResult;
 import org.protege.editor.owl.model.search.SearchResultHandler;
 import org.protege.editor.owl.model.search.SearchStringParser;
@@ -80,6 +80,7 @@ public class LuceneSearchManager extends LuceneSearcher {
         categories.add(SearchCategory.DISPLAY_NAME);
         categories.add(SearchCategory.IRI);
         categories.add(SearchCategory.ANNOTATION_VALUE);
+        categories.add(SearchCategory.LOGICAL_AXIOM);
         ontologyChangeListener = new OWLOntologyChangeListener() {
             public void ontologiesChanged(List<? extends OWLOntologyChange> changes) {
                 updateIndex(changes);
@@ -182,7 +183,6 @@ public class LuceneSearchManager extends LuceneSearcher {
     public void setCategories(Collection<SearchCategory> categories) {
         this.categories.clear();
         this.categories.addAll(categories);
-        markIndexAsStale(false);
     }
 
     @Override
@@ -194,7 +194,7 @@ public class LuceneSearchManager extends LuceneSearcher {
                     service.submit(this::buildingIndex);
                 }
             }
-            SearchQueries searchQueries = prepareQuery(searchString);
+            List<SearchQuery> searchQueries = prepareQuery(searchString);
             service.submit(new SearchCallable(lastSearchId.incrementAndGet(), searchQueries, searchResultHandler));
         }
         catch (IOException e) {
@@ -223,10 +223,12 @@ public class LuceneSearchManager extends LuceneSearcher {
         indexDelegator = IndexDelegator.create(indexDirectory, indexer.getIndexWriterConfig());
     }
 
-    private SearchQueries prepareQuery(String searchString) {
-        QueryBasedInputHandler handler = new QueryBasedInputHandler(this);
-        searchStringParser.parse(searchString, handler);
-        return handler.getQueryObject();
+    private List<SearchQuery> prepareQuery(String searchString) {
+        SearchInput searchInput = searchStringParser.parse(searchString);
+        LuceneSearchQueryBuilder builder = new LuceneSearchQueryBuilder(this);
+        builder.setCategories(categories);
+        searchInput.accept(builder);
+        return builder.build();
     }
 
     private void buildingIndex() {
@@ -247,11 +249,10 @@ public class LuceneSearchManager extends LuceneSearcher {
 
     private class SearchCallable implements Runnable {
         private long searchId;
-        private SearchQueries searchQueries;
+        private List<SearchQuery> searchQueries;
         private SearchResultHandler searchResultHandler;
-        private QueryRunner queryRunner = new QueryRunner(lastSearchId);
 
-        private SearchCallable(long searchId, SearchQueries searchQueries, SearchResultHandler searchResultHandler) {
+        private SearchCallable(long searchId, List<SearchQuery> searchQueries, SearchResultHandler searchResultHandler) {
             this.searchId = searchId;
             this.searchQueries = searchQueries;
             this.searchResultHandler = searchResultHandler;
@@ -259,21 +260,30 @@ public class LuceneSearchManager extends LuceneSearcher {
 
         @Override
         public void run() {
-            logger.debug("Starting search {} (pattern: {})", searchId, searchQueries);
+            logger.debug("Starting search {}", searchId);
             Stopwatch stopwatch = Stopwatch.createStarted();
             fireSearchStarted();
-            ResultDocumentHandler documentHandler = new ResultDocumentHandler(editorKit);
-            try {
-                queryRunner.execute(searchId, searchQueries, documentHandler, progress -> fireSearchProgressed(progress));
-            }
-            catch (SearchInterruptionException e) {
-                return; // search terminated prematurely
+            Set<SearchResult> finalResults = new HashSet<>();
+            for (SearchQuery query : searchQueries) {
+                if (!isLatestSearch()) {
+                    // New search started
+                    logger.debug("... terminating search {} prematurely", searchId);
+                    return;
+                }
+                try {
+                    ResultDocumentHandler handler = new ResultDocumentHandler(editorKit);
+                    logger.debug("... executing query " + query);
+                    query.evaluate(handler, progress -> fireSearchingProgressed(progress));
+                    SearchUtils.intersect(finalResults, handler.getSearchResults());
+                }
+                catch (QueryEvaluationException e) {
+                    logger.error("Error while executing the query: {}", e);
+                }
             }
             fireSearchFinished();
-            Set<SearchResult> results = documentHandler.getSearchResults();
             stopwatch.stop();
-            logger.debug("... finished search {} in {} ms ({} results)", searchId, stopwatch.elapsed(TimeUnit.MILLISECONDS), results.size());
-            showResults(results, searchResultHandler);
+            logger.debug("... finished search {} in {} ms ({} results)", searchId, stopwatch.elapsed(TimeUnit.MILLISECONDS), finalResults.size());
+            showResults(finalResults, searchResultHandler);
         }
 
         private void showResults(final Set<SearchResult> results, final SearchResultHandler searchResultHandler) {
@@ -283,6 +293,10 @@ public class LuceneSearchManager extends LuceneSearcher {
             else {
                 SwingUtilities.invokeLater(() -> searchResultHandler.searchFinished(results));
             }
+        }
+
+        private boolean isLatestSearch() {
+            return searchId == lastSearchId.get();
         }
     }
 
@@ -331,7 +345,7 @@ public class LuceneSearchManager extends LuceneSearcher {
         });
     }
 
-    private void fireSearchProgressed(final long progress) {
+    private void fireSearchingProgressed(final long progress) {
         SwingUtilities.invokeLater(() -> {
             for (ProgressMonitor pm : progressMonitors) {
                 pm.setProgress(progress);

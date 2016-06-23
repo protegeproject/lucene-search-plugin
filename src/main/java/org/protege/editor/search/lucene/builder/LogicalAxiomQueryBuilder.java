@@ -21,25 +21,25 @@ import java.util.Collection;
  * Bio-Medical Informatics Research Group<br>
  * Date: 23/06/2016
  */
-public class DisplayNameQueryBuilder extends SearchQueryBuilder {
+public class LogicalAxiomQueryBuilder extends SearchQueryBuilder {
 
-    protected static final Logger logger = LoggerFactory.getLogger(DisplayNameQueryBuilder.class);
+    protected static final Logger logger = LoggerFactory.getLogger(LogicalAxiomQueryBuilder.class);
 
     private LuceneSearcher searcher;
 
-    public DisplayNameQueryBuilder(LuceneSearcher searcher) {
+    public LogicalAxiomQueryBuilder(LuceneSearcher searcher) {
         this.searcher = searcher;
     }
 
     @Override
     public SearchQuery buildSearchQueryFor(SearchKeyword keyword) {
-        Query query = LuceneUtils.createQuery(IndexField.DISPLAY_NAME, keyword.getString());
-        return new BasicSearchQuery(query, SearchCategory.DISPLAY_NAME, searcher);
+        Query query = LuceneUtils.createQuery(IndexField.AXIOM_DISPLAY_NAME, keyword.getString());
+        return new BasicSearchQuery(query, SearchCategory.LOGICAL_AXIOM, searcher);
     }
 
     @Override
     public boolean isBuilderFor(SearchKeyword keyword, Collection<SearchCategory> categories) {
-        if (categories.contains(SearchCategory.DISPLAY_NAME)) {
+        if (categories.contains(SearchCategory.LOGICAL_AXIOM)) {
             return (keyword.hasField()) ? false : true;
         }
         return false;

@@ -15,7 +15,7 @@ public class BasicSearchQuery implements SearchQuery {
     private Query query;
     private SearchCategory category;
 
-    protected LuceneSearcher searcher;
+    private LuceneSearcher searcher;
 
     public BasicSearchQuery(Query query, SearchCategory category, LuceneSearcher searcher) {
         this.query = query;
@@ -51,6 +51,16 @@ public class BasicSearchQuery implements SearchQuery {
     public void evaluate(AbstractDocumentHandler handler) throws QueryEvaluationException {
         Set<Document> docs = evaluate();
         docs.stream().forEach((doc) -> handler.handle(category, doc));
+    }
+
+    @Override
+    public void evaluate(AbstractDocumentHandler handler, SearchProgressListener listener) throws QueryEvaluationException {
+        Set<Document> docs = evaluate();
+        int counter = 0;
+        for (Document doc : docs) {
+            handler.handle(category, doc);
+            listener.fireSearchingProgressed((counter++*100)/docs.size());
+        }
     }
 
     @Override

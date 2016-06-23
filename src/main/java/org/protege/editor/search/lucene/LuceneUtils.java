@@ -2,33 +2,49 @@ package org.protege.editor.search.lucene;
 
 import org.protege.editor.owl.model.search.SearchKeyword.Occurance;
 
-import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause.Occur;
-import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.PhraseQuery;
+import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.WildcardQuery;
 
+/**
+ * @author Josef Hardi <johardi@stanford.edu><br>
+ * Stanford University<br>
+ * Bio-Medical Informatics Research Group<br>
+ * Date: 23/06/2016
+ */
 public class LuceneUtils {
 
-    public static BooleanQuery createQuery(String searchField, String searchString, Analyzer analyzer) throws ParseException {
-        QueryParser parser = new QueryParser(searchField, analyzer);
-        Query query = parser.parse(searchString);
-        if (!(query instanceof BooleanQuery)) {
-            return new BooleanQuery.Builder().add(query, Occur.MUST).build();
+    public static Query createQuery(String searchField, String searchString) {
+        try {
+            QueryParser parser = new QueryParser(searchField, new StandardAnalyzer());
+            return parser.parse(searchString);
         }
-        return (BooleanQuery) query;
+        catch (ParseException e) {
+            return createTermQuery(searchField, ""); // return an empty term query
+        }
     }
 
-    public static PhraseQuery createPhraseQuery(String searchField, String searchString) {
-        return new PhraseQuery(searchField, searchString.split("\\s+"));
+    public static PhraseQuery createPhraseQuery(String searchField, String keyword) {
+        return new PhraseQuery(searchField, keyword.split("\\s+"));
     }
 
-    public static TermQuery createTermQuery(String searchField, String searchString) {
-        return new TermQuery(new Term(searchField, searchString));
+    public static TermQuery createTermQuery(String searchField, String keyword) {
+        return new TermQuery(new Term(searchField, keyword));
+    }
+
+    public static PrefixQuery createPrefixQuery(String searchField, String keyword) {
+        return new PrefixQuery(new Term(searchField, keyword + "*"));
+    }
+
+    public static WildcardQuery createSuffixQuery(String searchField, String keyword) {
+        return new WildcardQuery(new Term(searchField, "*" + keyword));
     }
 
     public static Occur toOccur(Occurance occurance) {
