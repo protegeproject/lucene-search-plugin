@@ -25,12 +25,12 @@ public class LuceneUtils {
         return (BooleanQuery) query;
     }
 
-    public static PhraseQuery createPhraseQuery(String searchField, String searchString) {
-        return new PhraseQuery(searchField, searchString.split("\\s+"));
+    public static PhraseQuery createPhraseQuery(String searchField, String keyword) {
+        return new PhraseQuery(searchField, keyword.split("\\s+"));
     }
 
-    public static TermQuery createTermQuery(String searchField, String searchString) {
-        return new TermQuery(new Term(searchField, searchString));
+    public static TermQuery createTermQuery(String searchField, String keyword) {
+        return new TermQuery(new Term(searchField, keyword));
     }
 
     public static PrefixQuery createPrefixQuery(String searchField, String keyword) {
