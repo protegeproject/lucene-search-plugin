@@ -21,9 +21,14 @@ import org.apache.lucene.search.WildcardQuery;
  */
 public class LuceneUtils {
 
-    public static Query createQuery(String searchField, String searchString) throws ParseException {
-        QueryParser parser = new QueryParser(searchField, new StandardAnalyzer());
-        return parser.parse(searchString);
+    public static Query createQuery(String searchField, String searchString) {
+        try {
+            QueryParser parser = new QueryParser(searchField, new StandardAnalyzer());
+            return parser.parse(searchString);
+        }
+        catch (ParseException e) {
+            return createTermQuery(searchField, ""); // return an empty term query
+        }
     }
 
     public static PhraseQuery createPhraseQuery(String searchField, String keyword) {
