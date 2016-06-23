@@ -60,7 +60,13 @@ public class LuceneStringParser implements SearchStringParser {
             switch (prefix) {
                 case '+': // include sign
                 case '-': sb.append(s); break; // exclude sign
-                default: sb.append("+" + s);
+                default:
+                    if (s.length() < 3) {
+                        sb.append("+" + s);
+                    }
+                    else {
+                        sb.append("+" + s + "*"); // start using a wildcard when input length >= 3
+                    }
             }
             sb.append(" ");
         }
