@@ -111,71 +111,50 @@ public class UserQuery implements Iterable<SearchQuery> {
 
         private static BooleanQuery createContainsQuery(OWLProperty property, String searchString, boolean isNegated) {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
-            builder.add(LuceneUtils.createTermQuery(getPropertyIriIndexField(property), property.getIRI().toString()), Occur.MUST);
+            builder.add(LuceneUtils.createTermQuery(IndexField.ANNOTATION_IRI, property.getIRI().toString()), Occur.MUST);
             if (isNegated) {
-                builder.add(LuceneUtils.createTermQuery(getPropertyValueIndexField(property), searchString), Occur.MUST_NOT);
+                builder.add(LuceneUtils.createTermQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST_NOT);
             } else {
-                builder.add(LuceneUtils.createTermQuery(getPropertyValueIndexField(property), searchString), Occur.MUST);
+                builder.add(LuceneUtils.createTermQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST);
             }
             return builder.build();
         }
 
         private static BooleanQuery createStartsWithQuery(OWLProperty property, String searchString, boolean isNegated) {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
-            builder.add(LuceneUtils.createTermQuery(getPropertyIriIndexField(property), property.getIRI().toString()), Occur.MUST);
+            builder.add(LuceneUtils.createTermQuery(IndexField.ANNOTATION_IRI, property.getIRI().toString()), Occur.MUST);
             if (isNegated) {
-                builder.add(LuceneUtils.createPrefixQuery(getPropertyValueIndexField(property), searchString), Occur.MUST_NOT);
+                builder.add(LuceneUtils.createPrefixQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST_NOT);
             } else {
-                builder.add(LuceneUtils.createPrefixQuery(getPropertyValueIndexField(property), searchString), Occur.MUST);
+                builder.add(LuceneUtils.createPrefixQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST);
             }
             return builder.build();
         }
 
         private static BooleanQuery createEndsWithMatchQuery(OWLProperty property, String searchString, boolean isNegated) {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
-            builder.add(LuceneUtils.createTermQuery(getPropertyIriIndexField(property), property.getIRI().toString()), Occur.MUST);
+            builder.add(LuceneUtils.createTermQuery(IndexField.ANNOTATION_IRI, property.getIRI().toString()), Occur.MUST);
             if (isNegated) {
-                builder.add(LuceneUtils.createSuffixQuery(getPropertyValueIndexField(property), searchString), Occur.MUST_NOT);
+                builder.add(LuceneUtils.createSuffixQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST_NOT);
             } else {
-                builder.add(LuceneUtils.createSuffixQuery(getPropertyValueIndexField(property), searchString), Occur.MUST);
+                builder.add(LuceneUtils.createSuffixQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST);
             }
             return builder.build();
         }
 
         private static BooleanQuery createExactMatchQuery(OWLProperty property, String searchString, boolean isNegated) {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
-            builder.add(LuceneUtils.createTermQuery(getPropertyIriIndexField(property), property.getIRI().toString()), Occur.MUST);
+            builder.add(LuceneUtils.createTermQuery(IndexField.ANNOTATION_IRI, property.getIRI().toString()), Occur.MUST);
             if (isNegated) {
-                builder.add(LuceneUtils.createPhraseQuery(getPropertyValueIndexField(property), searchString), Occur.MUST_NOT);
+                builder.add(LuceneUtils.createPhraseQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST_NOT);
             } else {
-                builder.add(LuceneUtils.createPhraseQuery(getPropertyValueIndexField(property), searchString), Occur.MUST);
+                builder.add(LuceneUtils.createPhraseQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST);
             }
             return builder.build();
         }
 
         private static Query createPropertyValueQuery(OWLProperty property) {
-            return LuceneUtils.createTermQuery(getPropertyIriIndexField(property), property.getIRI().toString());
-        }
-
-        private static String getPropertyIriIndexField(OWLProperty property) {
-            if (property instanceof OWLDataProperty) {
-                return IndexField.DATA_PROPERTY_IRI;
-            }
-            else if (property instanceof OWLObjectProperty) {
-                return IndexField.OBJECT_PROPERTY_IRI;
-            }
-            else { // OWLAnnotationProperty
-                return IndexField.ANNOTATION_IRI;
-            }
-        }
-
-        private static String getPropertyValueIndexField(OWLProperty property) {
-            if (property instanceof OWLDataProperty || property instanceof OWLObjectProperty) {
-                return IndexField.FILLER_DISPLAY_NAME;
-            }
-            else { // OWLAnnotationProperty
-                return IndexField.ANNOTATION_TEXT;
-            }
+            return LuceneUtils.createTermQuery(IndexField.ANNOTATION_IRI, property.getIRI().toString());
         }
 
         private static SearchCategory getSearchCategory(OWLProperty property) {
