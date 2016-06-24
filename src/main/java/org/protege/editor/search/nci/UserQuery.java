@@ -103,6 +103,9 @@ public class UserQuery implements Iterable<SearchQuery> {
             else if (type.equals(QueryType.EXACT_MATCH)) {
                 return createExactMatchQuery(property, searchString, isNegated);
             }
+            else if (type.equals(QueryType.PROPERTY_VALUE_PRESENT) || type.equals(QueryType.PROPERTY_VALUE_ABSENT)) {
+                return createPropertyValueQuery(property);
+            }
             throw new IllegalArgumentException("Unsupported filter query: " + type);
         }
 
@@ -148,6 +151,10 @@ public class UserQuery implements Iterable<SearchQuery> {
                 builder.add(LuceneUtils.createPhraseQuery(getPropertyValueIndexField(property), searchString), Occur.MUST);
             }
             return builder.build();
+        }
+
+        private static Query createPropertyValueQuery(OWLProperty property) {
+            return LuceneUtils.createTermQuery(getPropertyIriIndexField(property), property.getIRI().toString());
         }
 
         private static String getPropertyIriIndexField(OWLProperty property) {
