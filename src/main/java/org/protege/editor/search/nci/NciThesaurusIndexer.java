@@ -16,17 +16,49 @@ import org.semanticweb.owlapi.model.OWLAnnotation;
 import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLAnnotationProperty;
 import org.semanticweb.owlapi.model.OWLAnnotationValue;
+import org.semanticweb.owlapi.model.OWLAsymmetricObjectPropertyAxiom;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLClassAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLDataProperty;
+import org.semanticweb.owlapi.model.OWLDataPropertyAssertionAxiom;
+import org.semanticweb.owlapi.model.OWLDataPropertyDomainAxiom;
+import org.semanticweb.owlapi.model.OWLDataPropertyRangeAxiom;
+import org.semanticweb.owlapi.model.OWLDifferentIndividualsAxiom;
+import org.semanticweb.owlapi.model.OWLDisjointClassesAxiom;
+import org.semanticweb.owlapi.model.OWLDisjointDataPropertiesAxiom;
+import org.semanticweb.owlapi.model.OWLDisjointObjectPropertiesAxiom;
+import org.semanticweb.owlapi.model.OWLDisjointUnionAxiom;
 import org.semanticweb.owlapi.model.OWLEntity;
+import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
+import org.semanticweb.owlapi.model.OWLEquivalentDataPropertiesAxiom;
+import org.semanticweb.owlapi.model.OWLEquivalentObjectPropertiesAxiom;
+import org.semanticweb.owlapi.model.OWLFunctionalDataPropertyAxiom;
+import org.semanticweb.owlapi.model.OWLFunctionalObjectPropertyAxiom;
+import org.semanticweb.owlapi.model.OWLHasKeyAxiom;
+import org.semanticweb.owlapi.model.OWLInverseFunctionalObjectPropertyAxiom;
+import org.semanticweb.owlapi.model.OWLInverseObjectPropertiesAxiom;
+import org.semanticweb.owlapi.model.OWLIrreflexiveObjectPropertyAxiom;
 import org.semanticweb.owlapi.model.OWLLiteral;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
+import org.semanticweb.owlapi.model.OWLNegativeDataPropertyAssertionAxiom;
+import org.semanticweb.owlapi.model.OWLNegativeObjectPropertyAssertionAxiom;
+import org.semanticweb.owlapi.model.OWLObject;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
+import org.semanticweb.owlapi.model.OWLObjectPropertyAssertionAxiom;
+import org.semanticweb.owlapi.model.OWLObjectPropertyDomainAxiom;
+import org.semanticweb.owlapi.model.OWLObjectPropertyRangeAxiom;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLQuantifiedObjectRestriction;
+import org.semanticweb.owlapi.model.OWLReflexiveObjectPropertyAxiom;
+import org.semanticweb.owlapi.model.OWLSameIndividualAxiom;
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
-import org.semanticweb.owlapi.model.parameters.Imports;
+import org.semanticweb.owlapi.model.OWLSubDataPropertyOfAxiom;
+import org.semanticweb.owlapi.model.OWLSubObjectPropertyOfAxiom;
+import org.semanticweb.owlapi.model.OWLSubPropertyChainOfAxiom;
+import org.semanticweb.owlapi.model.OWLSymmetricObjectPropertyAxiom;
+import org.semanticweb.owlapi.model.OWLTransitiveObjectPropertyAxiom;
+import org.semanticweb.owlapi.util.AxiomSubjectProvider;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -64,8 +96,11 @@ public class NciThesaurusIndexer extends AbstractLuceneIndexer {
             public void visit(OWLOntology ontology) {
                 for (OWLEntity entity : ontology.getSignature()) {
                     entity.accept(this);
+                    for (OWLAnnotationAssertionAxiom axiom : ontology.getAnnotationAssertionAxioms(entity.getIRI())) {
+                        axiom.accept(this);
+                    }
                 }
-                for (OWLAxiom axiom : ontology.getTBoxAxioms(Imports.EXCLUDED)) {
+                for (OWLAxiom axiom : ontology.getLogicalAxioms()) {
                     axiom.accept(this);
                 }
             }
@@ -128,6 +163,7 @@ public class NciThesaurusIndexer extends AbstractLuceneIndexer {
 
             @Override
             public void visit(OWLSubClassOfAxiom axiom) {
+                visitLogicalAxiom(axiom);
                 if (!(axiom.getSubClass() instanceof OWLClass)) {
                     return;
                 }
@@ -149,6 +185,53 @@ public class NciThesaurusIndexer extends AbstractLuceneIndexer {
                 }
             }
 
+            //@formatter:off
+            @Override public void visit(OWLNegativeObjectPropertyAssertionAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLAsymmetricObjectPropertyAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLReflexiveObjectPropertyAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLDisjointClassesAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLDataPropertyDomainAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLObjectPropertyDomainAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLEquivalentObjectPropertiesAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLNegativeDataPropertyAssertionAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLDifferentIndividualsAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLDisjointDataPropertiesAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLDisjointObjectPropertiesAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLObjectPropertyRangeAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLObjectPropertyAssertionAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLFunctionalObjectPropertyAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLSubObjectPropertyOfAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLDisjointUnionAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLSymmetricObjectPropertyAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLDataPropertyRangeAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLFunctionalDataPropertyAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLEquivalentDataPropertiesAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLClassAssertionAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLEquivalentClassesAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLDataPropertyAssertionAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLTransitiveObjectPropertyAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLIrreflexiveObjectPropertyAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLSubDataPropertyOfAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLInverseFunctionalObjectPropertyAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLSameIndividualAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLSubPropertyChainOfAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLInverseObjectPropertiesAxiom axiom) { visitLogicalAxiom(axiom); }
+            @Override public void visit(OWLHasKeyAxiom axiom) { visitLogicalAxiom(axiom); }
+
+            //@formatter:on
+            private void visitLogicalAxiom(OWLAxiom axiom) {
+                Document doc = new Document();
+                OWLObject subject = new AxiomSubjectProvider().getSubject(axiom);
+                if (subject instanceof OWLEntity) {
+                    OWLEntity entity = (OWLEntity) subject;
+                    doc.add(new StringField(IndexField.ENTITY_IRI, getEntityId(entity), Store.YES));
+                    doc.add(new StringField(IndexField.DISPLAY_NAME, getDisplayName(entity), Store.YES));
+                    doc.add(new TextField(IndexField.AXIOM_DISPLAY_NAME, getDisplayName(axiom), Store.YES));
+                    doc.add(new StringField(IndexField.AXIOM_TYPE, getType(axiom), Store.YES));
+                    documents.add(doc);
+                }
+            }
+
             /*
              * Utility methods
              */
@@ -161,12 +244,18 @@ public class NciThesaurusIndexer extends AbstractLuceneIndexer {
                 return entity.getIRI().toString();
             }
 
-            private String getType(OWLEntity entity) {
-                return entity.getEntityType().getName();
+            private String getType(OWLObject object) {
+                if (object instanceof OWLEntity) {
+                    return ((OWLEntity) object).getEntityType().getName();
+                }
+                else if (object instanceof OWLAxiom) {
+                    return ((OWLAxiom) object).getAxiomType().getName();
+                }
+                return "(Unknown type)";
             }
 
-            private String getDisplayName(OWLEntity entity) {
-                return objectRenderer.getRendering(entity);
+            private String getDisplayName(OWLObject object) {
+                return objectRenderer.getRendering(object);
             }
 
             private String getAnnotationText(OWLAnnotation annotation) {

@@ -5,7 +5,7 @@ import org.protege.editor.owl.model.event.EventType;
 import org.protege.editor.owl.model.event.OWLModelManagerChangeEvent;
 import org.protege.editor.owl.model.event.OWLModelManagerListener;
 import org.protege.editor.owl.model.search.SearchCategory;
-import org.protege.editor.owl.model.search.SearchInterruptionException;
+import org.protege.editor.owl.model.search.SearchInput;
 import org.protege.editor.owl.model.search.SearchResult;
 import org.protege.editor.owl.model.search.SearchResultHandler;
 import org.protege.editor.owl.model.search.SearchStringParser;
@@ -13,12 +13,16 @@ import org.protege.editor.search.lucene.AddChangeSet;
 import org.protege.editor.search.lucene.AddChangeSetHandler;
 import org.protege.editor.search.lucene.IndexDelegator;
 import org.protege.editor.search.lucene.LuceneSearchPreferences;
+import org.protege.editor.search.lucene.LuceneSearchQueryBuilder;
 import org.protege.editor.search.lucene.LuceneSearcher;
-import org.protege.editor.search.lucene.QueryRunner;
+import org.protege.editor.search.lucene.LuceneStringParser;
+import org.protege.editor.search.lucene.QueryEvaluationException;
 import org.protege.editor.search.lucene.RemoveChangeSet;
 import org.protege.editor.search.lucene.RemoveChangeSetHandler;
 import org.protege.editor.search.lucene.ResultDocumentHandler;
 import org.protege.editor.search.lucene.SearchContext;
+import org.protege.editor.search.lucene.SearchQuery;
+import org.protege.editor.search.lucene.SearchUtils;
 
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.search.IndexSearcher;
@@ -66,7 +70,7 @@ public class NciSearchManager extends LuceneSearcher {
 
     private AtomicLong lastSearchId = new AtomicLong(0);
 
-    private SearchStringParser searchStringParser = new NciSearchStringParser();
+    private SearchStringParser searchStringParser = new LuceneStringParser();
 
     private NciThesaurusIndexer indexer;
 
@@ -91,6 +95,7 @@ public class NciSearchManager extends LuceneSearcher {
         categories.add(SearchCategory.DISPLAY_NAME);
         categories.add(SearchCategory.IRI);
         categories.add(SearchCategory.ANNOTATION_VALUE);
+        categories.add(SearchCategory.LOGICAL_AXIOM);
         ontologyChangeListener = new OWLOntologyChangeListener() {
             public void ontologiesChanged(List<? extends OWLOntologyChange> changes) throws OWLException {
                 updateIndex(changes);
@@ -193,27 +198,21 @@ public class NciSearchManager extends LuceneSearcher {
     public void setCategories(Collection<SearchCategory> categories) {
         this.categories.clear();
         this.categories.addAll(categories);
-        markIndexAsStale(false);
     }
 
     @Override
     public void performSearch(String searchString, SearchResultHandler searchResultHandler) {
-        try {
-            if (lastSearchId.getAndIncrement() == 0) {
-                Directory directory = loadOrCreateIndexDirectory();
-                if (!DirectoryReader.indexExists(directory)) {
-                    service.submit(this::buildingIndex);
-                }
-            }
-            UserQuery searchQuery = prepareQuery(searchString);
-            service.submit(new SearchCallable(lastSearchId.incrementAndGet(), searchQuery, searchResultHandler));
-        }
-        catch (IOException e) {
-            logger.error("Search failed to perform", e);
-        }
+        buildIndexWhenNecessary();
+        UserQuery userQuery = prepareQuery(searchString);
+        service.submit(new SearchCallable(lastSearchId.incrementAndGet(), userQuery, searchResultHandler));
     }
 
     public void performSearch(UserQuery userQuery, SearchResultHandler searchResultHandler) {
+        buildIndexWhenNecessary();
+        service.submit(new SearchCallable(lastSearchId.incrementAndGet(), userQuery, searchResultHandler));
+    }
+
+    private void buildIndexWhenNecessary() {
         try {
             if (lastSearchId.getAndIncrement() == 0) {
                 Directory directory = loadOrCreateIndexDirectory();
@@ -221,7 +220,6 @@ public class NciSearchManager extends LuceneSearcher {
                     service.submit(this::buildingIndex);
                 }
             }
-            service.submit(new SearchCallable(lastSearchId.incrementAndGet(), userQuery, searchResultHandler));
         }
         catch (IOException e) {
             logger.error("Search failed to perform", e);
@@ -250,9 +248,11 @@ public class NciSearchManager extends LuceneSearcher {
     }
 
     private UserQuery prepareQuery(String searchString) {
-        NciQueryBasedInputHandler handler = new NciQueryBasedInputHandler(this);
-        searchStringParser.parse(searchString, handler);
-        return handler.getQueryObject();
+        SearchInput searchInput = searchStringParser.parse(searchString);
+        LuceneSearchQueryBuilder builder = new LuceneSearchQueryBuilder(this);
+        builder.setCategories(categories);
+        searchInput.accept(builder);
+        return UserQuery.createInstance(builder.build(), true);
     }
 
     private void buildingIndex() {
@@ -275,7 +275,6 @@ public class NciSearchManager extends LuceneSearcher {
         private long searchId;
         private UserQuery userQuery;
         private SearchResultHandler searchResultHandler;
-        private QueryRunner queryRunner = new QueryRunner(lastSearchId);
 
         private SearchCallable(long searchId, UserQuery userQuery, SearchResultHandler searchResultHandler) {
             this.searchId = searchId;
@@ -285,26 +284,35 @@ public class NciSearchManager extends LuceneSearcher {
 
         @Override
         public void run() {
-            logger.debug("Starting search {}\n{}", searchId, userQuery.toString());
+            logger.debug("Starting search {}", searchId);
             Stopwatch stopwatch = Stopwatch.createStarted();
             fireSearchStarted();
-            ResultDocumentHandler documentHandler = new ResultDocumentHandler(editorKit);
-            try {
-                queryRunner.execute(searchId, userQuery, documentHandler, progress -> fireSearchProgressed(progress));
-            }
-            catch (SearchInterruptionException e) {
-                return; // search terminated prematurely
-            }
-            catch (Throwable e) {
-                logger.error("... error while searching: " + e.getMessage());
-                e.printStackTrace();
-                return;
+            Set<SearchResult> finalResults = new HashSet<>();
+            for (SearchQuery query : userQuery) {
+                if (!isLatestSearch()) {
+                    // New search started
+                    logger.debug("... terminating search {} prematurely", searchId);
+                    return;
+                }
+                try {
+                    ResultDocumentHandler handler = new ResultDocumentHandler(editorKit);
+                    logger.debug("... executing query " + query);
+                    query.evaluate(handler, progress -> fireSearchingProgressed(progress));
+                    if (userQuery.isMatchAll()) {
+                        SearchUtils.intersect(finalResults, handler.getSearchResults());
+                    }
+                    else { // MatchAny
+                        SearchUtils.union(finalResults, handler.getSearchResults());
+                    }
+                }
+                catch (QueryEvaluationException e) {
+                    logger.error("Error while executing the query: {}", e);
+                }
             }
             fireSearchFinished();
             stopwatch.stop();
-            Set<SearchResult> searchResults = documentHandler.getSearchResults();
-            logger.debug("... finished search {} in {} ms ({} results)", searchId, stopwatch.elapsed(TimeUnit.MILLISECONDS), searchResults.size());
-            showResults(searchResults, searchResultHandler);
+            logger.debug("... finished search {} in {} ms ({} results)", searchId, stopwatch.elapsed(TimeUnit.MILLISECONDS), finalResults.size());
+            showResults(finalResults, searchResultHandler);
         }
 
         private void showResults(final Set<SearchResult> results, final SearchResultHandler searchResultHandler) {
@@ -314,6 +322,10 @@ public class NciSearchManager extends LuceneSearcher {
             else {
                 SwingUtilities.invokeLater(() -> searchResultHandler.searchFinished(results));
             }
+        }
+
+        private boolean isLatestSearch() {
+            return searchId == lastSearchId.get();
         }
     }
 
@@ -362,7 +374,7 @@ public class NciSearchManager extends LuceneSearcher {
         });
     }
 
-    private void fireSearchProgressed(final long progress) {
+    private void fireSearchingProgressed(final long progress) {
         SwingUtilities.invokeLater(() -> {
             for (ProgressMonitor pm : progressMonitors) {
                 pm.setProgress(progress);

@@ -4,7 +4,7 @@ import org.protege.editor.owl.model.search.SearchCategory;
 import org.protege.editor.search.lucene.BasicSearchQuery;
 import org.protege.editor.search.lucene.IndexField;
 import org.protege.editor.search.lucene.LuceneSearcher;
-import org.protege.editor.search.lucene.SearchQueries;
+import org.protege.editor.search.lucene.SearchQuery;
 
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
@@ -18,27 +18,50 @@ import org.semanticweb.owlapi.model.OWLDataProperty;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLProperty;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 /**
  * @author Josef Hardi <johardi@stanford.edu><br>
  * Stanford University<br>
  * Bio-Medical Informatics Research Group<br>
  * Date: 22/06/2016
  */
-public class UserQuery extends SearchQueries {
+public class UserQuery implements Iterable<SearchQuery> {
 
+    private List<SearchQuery> queries;
     private boolean isMatchAll = true;
+
+    private UserQuery(List<SearchQuery> queries, boolean isMatchAll) {
+        this.queries = queries;
+        this.isMatchAll = isMatchAll;
+    }
+
+    public static UserQuery createInstance(List<SearchQuery> queries, boolean isMatchAll) {
+        return new UserQuery(queries, isMatchAll);
+    }
 
     public boolean isMatchAll() {
         return isMatchAll;
     }
 
-    public void setMatchAll(boolean isMatchAll) {
-        this.isMatchAll = isMatchAll;
+    public boolean isEmpty() {
+        return queries.isEmpty();
+    }
+
+    public int size() {
+        return queries.size();
+    }
+
+    @Override
+    public Iterator<SearchQuery> iterator() {
+        return queries.iterator();
     }
 
     public static class Builder {
 
-        private UserQuery userQuery = new UserQuery();
+        private final List<SearchQuery> queries = new ArrayList<>();
 
         private final LuceneSearcher searcher;
 
@@ -47,20 +70,19 @@ public class UserQuery extends SearchQueries {
         }
 
         public Builder addBasicQuery(OWLProperty property, String searchString, QueryType type) {
-            userQuery.add(new BasicSearchQuery(
+            queries.add(new BasicSearchQuery(
                     createFilterQuery(property, searchString, type),
                     getSearchCategory(property), searcher));
             return this;
         }
 
         public Builder addNestedQuery(UserQuery fillerFilters, String propertyName) {
-            userQuery.add(new NestedQuery(fillerFilters, propertyName, searcher));
+            queries.add(new NestedQuery(fillerFilters, propertyName, searcher));
             return this;
         }
 
         public UserQuery build(boolean isMatchAll) {
-            userQuery.setMatchAll(isMatchAll);
-            return userQuery;
+            return new UserQuery(queries, isMatchAll);
         }
 
         /*

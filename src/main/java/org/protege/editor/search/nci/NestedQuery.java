@@ -1,11 +1,13 @@
 package org.protege.editor.search.nci;
 
 import org.protege.editor.owl.model.search.SearchCategory;
+import org.protege.editor.owl.model.search.SearchResult;
 import org.protege.editor.search.lucene.AbstractDocumentHandler;
 import org.protege.editor.search.lucene.IndexField;
 import org.protege.editor.search.lucene.LuceneSearcher;
 import org.protege.editor.search.lucene.LuceneUtils;
 import org.protege.editor.search.lucene.QueryEvaluationException;
+import org.protege.editor.search.lucene.ResultDocumentHandler;
 import org.protege.editor.search.lucene.SearchQuery;
 
 import org.apache.lucene.document.Document;
@@ -19,13 +21,13 @@ import java.util.Set;
 
 public class NestedQuery implements SearchQuery {
 
-    private BooleanQuery fillerQuery;
+    private UserQuery fillerQuery;
     private String propertyName;
     private SearchCategory category;
 
     private LuceneSearcher searcher;
 
-    public NestedQuery(BooleanQuery fillerQuery, String propertyName, LuceneSearcher searcher) {
+    public NestedQuery(UserQuery fillerQuery, String propertyName, LuceneSearcher searcher) {
         this.fillerQuery = fillerQuery;
         this.propertyName = propertyName;
         this.category = SearchCategory.OTHER;
@@ -34,35 +36,41 @@ public class NestedQuery implements SearchQuery {
 
     @Override
     public void evaluate(AbstractDocumentHandler handler) throws QueryEvaluationException {
+        evaluate(handler, null);
+    }
+
+    @Override
+    public void evaluate(AbstractDocumentHandler handler, SearchProgressListener listener) throws QueryEvaluationException {
         Set<String> fillers = evaluateFillerQuery();
         Set<Document> docs = new HashSet<>();
-        for (String filler : fillers) {
-            BooleanQuery query = createObjectRestrictionQuery(propertyName, filler);
+        for (String fillerName : fillers) {
+            BooleanQuery query = createObjectRestrictionQuery(propertyName, fillerName);
             docs.addAll(evaluateQuery(query));
         }
-        docs.stream().forEach((doc) -> handler.handle(category, doc));
+        int counter = 0;
+        for (Document doc : docs) {
+            handler.handle(category, doc);
+            if (listener != null) {
+                listener.fireSearchingProgressed((counter++*100)/docs.size());
+            }
+        }
     }
 
     private Set<String> evaluateFillerQuery() throws QueryEvaluationException {
-        try {
-            Set<String> fillers = new HashSet<>();
-            TopDocs hits = searcher.search(fillerQuery);
-            int hitNumber = hits.scoreDocs.length;
-            for (int i = 1; i <= hitNumber; i++) {
-                Document doc = searcher.find(hits.scoreDocs[i-1].doc);
-                fillers.add(doc.get(IndexField.ENTITY_IRI));
-            }
-            return fillers;
+        Set<String> fillers = new HashSet<>();
+        ResultDocumentHandler handler = new ResultDocumentHandler(searcher.getEditorKit());
+        for (SearchQuery query : fillerQuery) {
+            query.evaluate(handler);
         }
-        catch (IOException e) {
-            throw new QueryEvaluationException(e);
-        }
+        Set<SearchResult> results = handler.getSearchResults();
+        results.stream().forEach(result -> fillers.add(result.getSubjectRendering()));
+        return fillers;
     }
 
-    private BooleanQuery createObjectRestrictionQuery(String propertyName, String filler) {
+    private static BooleanQuery createObjectRestrictionQuery(String propertyName, String filler) {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         builder.add(LuceneUtils.createTermQuery(IndexField.OBJECT_PROPERTY_DISPLAY_NAME, propertyName), Occur.MUST);
-        builder.add(LuceneUtils.createTermQuery(IndexField.FILLER_IRI, filler), Occur.MUST);
+        builder.add(LuceneUtils.createTermQuery(IndexField.FILLER_DISPLAY_NAME, filler), Occur.MUST);
         return builder.build();
     }
 
@@ -84,8 +92,8 @@ public class NestedQuery implements SearchQuery {
 
     @Override
     public int hashCode() {
-        return SearchQuery.class.getSimpleName().hashCode() + propertyName.hashCode()
-        + fillerQuery.hashCode() + category.hashCode();
+        return SearchQuery.class.getSimpleName().hashCode() + propertyName.hashCode() + fillerQuery.hashCode()
+                + category.hashCode();
     }
 
     @Override
@@ -105,8 +113,8 @@ public class NestedQuery implements SearchQuery {
     @Override
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append(category.name()).append(": ");
-        sb.append(propertyName).append(": ").append(fillerQuery);
+        sb.append("propertyName").append(": ").append(propertyName).append(",\n");
+        sb.append("fillerQuery").append(": ").append(fillerQuery);
         return sb.toString();
     }
 }
