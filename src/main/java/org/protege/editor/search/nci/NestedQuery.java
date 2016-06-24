@@ -92,7 +92,7 @@ public class NestedQuery implements SearchQuery {
 
     @Override
     public int hashCode() {
-        return SearchQuery.class.getSimpleName().hashCode() + propertyName.hashCode() + fillerQuery.hashCode()
+        return NestedQuery.class.getSimpleName().hashCode() + propertyName.hashCode() + fillerQuery.hashCode()
                 + category.hashCode();
     }
 
@@ -107,7 +107,7 @@ public class NestedQuery implements SearchQuery {
         NestedQuery other = (NestedQuery) obj;
         return this.propertyName.equals(propertyName)
                 && this.fillerQuery.equals(other.fillerQuery)
-                && this.category.equals(other.fillerQuery);
+                && this.category.equals(other.category);
     }
 
     @Override
