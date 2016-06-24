@@ -100,9 +100,10 @@ public class UserQuery implements Iterable<SearchQuery> {
             else if (type.equals(QueryType.ENDS_WITH)) {
                 return createEndsWithMatchQuery(property, searchString, isNegated);
             }
-            else { // QueryType.EXACT_MATCH
+            else if (type.equals(QueryType.EXACT_MATCH)) {
                 return createExactMatchQuery(property, searchString, isNegated);
             }
+            throw new IllegalArgumentException("Unsupported filter query: " + type);
         }
 
         private static BooleanQuery createContainsQuery(OWLProperty property, String searchString, boolean isNegated) {
