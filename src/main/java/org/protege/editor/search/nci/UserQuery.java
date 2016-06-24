@@ -4,16 +4,12 @@ import org.protege.editor.owl.model.search.SearchCategory;
 import org.protege.editor.search.lucene.BasicSearchQuery;
 import org.protege.editor.search.lucene.IndexField;
 import org.protege.editor.search.lucene.LuceneSearcher;
+import org.protege.editor.search.lucene.LuceneUtils;
 import org.protege.editor.search.lucene.SearchQuery;
 
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.PhraseQuery;
-import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.WildcardQuery;
 import org.semanticweb.owlapi.model.OWLDataProperty;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLProperty;
@@ -111,48 +107,44 @@ public class UserQuery implements Iterable<SearchQuery> {
 
         private static BooleanQuery createContainsQuery(OWLProperty property, String searchString, boolean isNegated) {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
-            builder.add(new TermQuery(new Term(getPropertyIriIndexField(property), property.getIRI().toString())), Occur.MUST);
+            builder.add(LuceneUtils.createTermQuery(getPropertyIriIndexField(property), property.getIRI().toString()), Occur.MUST);
             if (isNegated) {
-                builder.add(new TermQuery(new Term(getPropertyValueIndexField(property), searchString)), Occur.MUST_NOT);
-            }
-            else {
-                builder.add(new TermQuery(new Term(getPropertyValueIndexField(property), searchString)), Occur.MUST);
+                builder.add(LuceneUtils.createTermQuery(getPropertyValueIndexField(property), searchString), Occur.MUST_NOT);
+            } else {
+                builder.add(LuceneUtils.createTermQuery(getPropertyValueIndexField(property), searchString), Occur.MUST);
             }
             return builder.build();
         }
 
         private static BooleanQuery createStartsWithQuery(OWLProperty property, String searchString, boolean isNegated) {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
-            builder.add(new TermQuery(new Term(getPropertyIriIndexField(property), property.getIRI().toString())), Occur.MUST);
+            builder.add(LuceneUtils.createTermQuery(getPropertyIriIndexField(property), property.getIRI().toString()), Occur.MUST);
             if (isNegated) {
-                builder.add(new PrefixQuery(new Term(getPropertyValueIndexField(property), searchString + "*")), Occur.MUST_NOT);
-            }
-            else {
-                builder.add(new PrefixQuery(new Term(getPropertyValueIndexField(property), searchString + "*")), Occur.MUST);
+                builder.add(LuceneUtils.createPrefixQuery(getPropertyValueIndexField(property), searchString), Occur.MUST_NOT);
+            } else {
+                builder.add(LuceneUtils.createPrefixQuery(getPropertyValueIndexField(property), searchString), Occur.MUST);
             }
             return builder.build();
         }
 
         private static BooleanQuery createEndsWithMatchQuery(OWLProperty property, String searchString, boolean isNegated) {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
-            builder.add(new TermQuery(new Term(getPropertyIriIndexField(property), property.getIRI().toString())), Occur.MUST);
+            builder.add(LuceneUtils.createTermQuery(getPropertyIriIndexField(property), property.getIRI().toString()), Occur.MUST);
             if (isNegated) {
-                builder.add(new WildcardQuery(new Term(getPropertyValueIndexField(property), "*" + searchString)), Occur.MUST_NOT);
-            }
-            else {
-                builder.add(new WildcardQuery(new Term(getPropertyValueIndexField(property), "*" + searchString)), Occur.MUST);
+                builder.add(LuceneUtils.createSuffixQuery(getPropertyValueIndexField(property), searchString), Occur.MUST_NOT);
+            } else {
+                builder.add(LuceneUtils.createSuffixQuery(getPropertyValueIndexField(property), searchString), Occur.MUST);
             }
             return builder.build();
         }
 
         private static BooleanQuery createExactMatchQuery(OWLProperty property, String searchString, boolean isNegated) {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
-            builder.add(new TermQuery(new Term(getPropertyIriIndexField(property), property.getIRI().toString())), Occur.MUST);
+            builder.add(LuceneUtils.createTermQuery(getPropertyIriIndexField(property), property.getIRI().toString()), Occur.MUST);
             if (isNegated) {
-                builder.add(new PhraseQuery(getPropertyValueIndexField(property), searchString.split("\\s+")), Occur.MUST_NOT);
-            }
-            else {
-                builder.add(new PhraseQuery(getPropertyValueIndexField(property), searchString.split("\\s+")), Occur.MUST);
+                builder.add(LuceneUtils.createPhraseQuery(getPropertyValueIndexField(property), searchString), Occur.MUST_NOT);
+            } else {
+                builder.add(LuceneUtils.createPhraseQuery(getPropertyValueIndexField(property), searchString), Occur.MUST);
             }
             return builder.build();
         }
