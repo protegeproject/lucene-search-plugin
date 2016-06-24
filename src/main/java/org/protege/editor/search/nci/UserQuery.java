@@ -69,10 +69,15 @@ public class UserQuery implements Iterable<SearchQuery> {
             this.searcher = searcher;
         }
 
-        public Builder addBasicQuery(OWLProperty property, String searchString, QueryType type) {
+        public Builder addBasicQuery(OWLProperty property, QueryType type, String searchString, boolean isNegated) {
             queries.add(new BasicSearchQuery(
-                    createFilterQuery(property, searchString, type),
+                    createFilterQuery(property, type, searchString, isNegated),
                     getSearchCategory(property), searcher));
+            return this;
+        }
+
+        public Builder addNegatedQuery(UserQuery filterQuery) {
+            queries.add(new NegatedQuery(filterQuery));
             return this;
         }
 
@@ -89,46 +94,66 @@ public class UserQuery implements Iterable<SearchQuery> {
          * Private builder methods
          */
 
-        private static Query createFilterQuery(OWLProperty property, String searchString, QueryType type) {
+        private static Query createFilterQuery(OWLProperty property, QueryType type, String searchString, boolean isNegated) {
             if (type.equals(QueryType.CONTAINS)) {
-                return createContainsQuery(property, searchString);
+                return createContainsQuery(property, searchString, isNegated);
             }
             else if (type.equals(QueryType.STARTS_WITH)) {
-                return createStartsWithQuery(property, searchString);
+                return createStartsWithQuery(property, searchString, isNegated);
             }
             else if (type.equals(QueryType.ENDS_WITH)) {
-                return createEndsWithMatchQuery(property, searchString);
+                return createEndsWithMatchQuery(property, searchString, isNegated);
             }
             else { // QueryType.EXACT_MATCH
-                return createExactMatchQuery(property, searchString);
+                return createExactMatchQuery(property, searchString, isNegated);
             }
         }
 
-        private static BooleanQuery createContainsQuery(OWLProperty property, String searchString) {
+        private static BooleanQuery createContainsQuery(OWLProperty property, String searchString, boolean isNegated) {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
             builder.add(new TermQuery(new Term(getPropertyIriIndexField(property), property.getIRI().toString())), Occur.MUST);
-            builder.add(new TermQuery(new Term(getPropertyValueIndexField(property), searchString)), Occur.MUST);
+            if (isNegated) {
+                builder.add(new TermQuery(new Term(getPropertyValueIndexField(property), searchString)), Occur.MUST_NOT);
+            }
+            else {
+                builder.add(new TermQuery(new Term(getPropertyValueIndexField(property), searchString)), Occur.MUST);
+            }
             return builder.build();
         }
 
-        private static BooleanQuery createStartsWithQuery(OWLProperty property, String searchString) {
+        private static BooleanQuery createStartsWithQuery(OWLProperty property, String searchString, boolean isNegated) {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
             builder.add(new TermQuery(new Term(getPropertyIriIndexField(property), property.getIRI().toString())), Occur.MUST);
-            builder.add(new PrefixQuery(new Term(getPropertyValueIndexField(property), searchString + "*")), Occur.MUST);
+            if (isNegated) {
+                builder.add(new PrefixQuery(new Term(getPropertyValueIndexField(property), searchString + "*")), Occur.MUST_NOT);
+            }
+            else {
+                builder.add(new PrefixQuery(new Term(getPropertyValueIndexField(property), searchString + "*")), Occur.MUST);
+            }
             return builder.build();
         }
 
-        private static BooleanQuery createEndsWithMatchQuery(OWLProperty property, String searchString) {
+        private static BooleanQuery createEndsWithMatchQuery(OWLProperty property, String searchString, boolean isNegated) {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
             builder.add(new TermQuery(new Term(getPropertyIriIndexField(property), property.getIRI().toString())), Occur.MUST);
-            builder.add(new WildcardQuery(new Term(getPropertyValueIndexField(property), "*" + searchString)), Occur.MUST);
+            if (isNegated) {
+                builder.add(new WildcardQuery(new Term(getPropertyValueIndexField(property), "*" + searchString)), Occur.MUST_NOT);
+            }
+            else {
+                builder.add(new WildcardQuery(new Term(getPropertyValueIndexField(property), "*" + searchString)), Occur.MUST);
+            }
             return builder.build();
         }
 
-        private static BooleanQuery createExactMatchQuery(OWLProperty property, String searchString) {
+        private static BooleanQuery createExactMatchQuery(OWLProperty property, String searchString, boolean isNegated) {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
             builder.add(new TermQuery(new Term(getPropertyIriIndexField(property), property.getIRI().toString())), Occur.MUST);
-            builder.add(new PhraseQuery(getPropertyValueIndexField(property), searchString.split("\\s+")), Occur.MUST);
+            if (isNegated) {
+                builder.add(new PhraseQuery(getPropertyValueIndexField(property), searchString.split("\\s+")), Occur.MUST_NOT);
+            }
+            else {
+                builder.add(new PhraseQuery(getPropertyValueIndexField(property), searchString.split("\\s+")), Occur.MUST);
+            }
             return builder.build();
         }
 
