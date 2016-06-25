@@ -28,6 +28,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.semanticweb.owlapi.model.OWLEntity;
 import org.semanticweb.owlapi.model.OWLException;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyChange;
@@ -207,9 +208,9 @@ public class NciSearchManager extends LuceneSearcher {
         service.submit(new SearchCallable(lastSearchId.incrementAndGet(), userQuery, searchResultHandler));
     }
 
-    public void performSearch(UserQuery userQuery, SearchResultHandler searchResultHandler) {
+    public void performSearch(UserQuery userQuery, NciSearchResultHandler searchResultHandler) {
         buildIndexWhenNecessary();
-        service.submit(new SearchCallable(lastSearchId.incrementAndGet(), userQuery, searchResultHandler));
+        service.submit(new NciSearchCallable(lastSearchId.incrementAndGet(), userQuery, searchResultHandler));
     }
 
     private void buildIndexWhenNecessary() {
@@ -329,6 +330,64 @@ public class NciSearchManager extends LuceneSearcher {
         }
     }
 
+    private class NciSearchCallable implements Runnable {
+        private long searchId;
+        private UserQuery userQuery;
+        private NciSearchResultHandler searchResultHandler;
+
+        private NciSearchCallable(long searchId, UserQuery userQuery, NciSearchResultHandler searchResultHandler) {
+            this.searchId = searchId;
+            this.userQuery = userQuery;
+            this.searchResultHandler = searchResultHandler;
+        }
+
+        @Override
+        public void run() {
+            logger.debug("Starting search {}", searchId);
+            Stopwatch stopwatch = Stopwatch.createStarted();
+            fireSearchStarted();
+            Set<OWLEntity> finalResults = new HashSet<>();
+            for (SearchQuery query : userQuery) {
+                if (!isLatestSearch()) {
+                    // New search started
+                    logger.debug("... terminating search {} prematurely", searchId);
+                    return;
+                }
+                try {
+                    NciResultDocumentHandler handler = new NciResultDocumentHandler(editorKit);
+                    logger.debug("... executing query " + query);
+                    query.evaluate(handler, progress -> fireSearchingProgressed(progress));
+                    if (userQuery.isMatchAll()) {
+                        NciSearchUtils.intersect(finalResults, handler.getSearchResults());
+                    }
+                    else { // MatchAny
+                        NciSearchUtils.union(finalResults, handler.getSearchResults());
+                    }
+                }
+                catch (QueryEvaluationException e) {
+                    logger.error("Error while executing the query: {}", e);
+                }
+            }
+            fireSearchFinished();
+            stopwatch.stop();
+            logger.debug("... finished search {} in {} ms ({} results)", searchId, stopwatch.elapsed(TimeUnit.MILLISECONDS), finalResults.size());
+            showResults(finalResults, searchResultHandler);
+        }
+
+        private void showResults(final Set<OWLEntity> results, final NciSearchResultHandler searchResultHandler) {
+            if (SwingUtilities.isEventDispatchThread()) {
+                searchResultHandler.searchFinished(results);
+            }
+            else {
+                SwingUtilities.invokeLater(() -> searchResultHandler.searchFinished(results));
+            }
+        }
+
+        private boolean isLatestSearch() {
+            return searchId == lastSearchId.get();
+        }
+    }
+ 
     /*
      * Private methods to handle progress monitor
      */
