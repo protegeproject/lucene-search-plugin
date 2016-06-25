@@ -5,18 +5,24 @@ import org.protege.editor.search.lucene.BasicSearchQuery;
 import org.protege.editor.search.lucene.IndexField;
 import org.protege.editor.search.lucene.LuceneSearcher;
 import org.protege.editor.search.lucene.LuceneUtils;
+import org.protege.editor.search.lucene.SearchContext;
 import org.protege.editor.search.lucene.SearchQuery;
 
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
+import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLDataProperty;
+import org.semanticweb.owlapi.model.OWLEntity;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
+import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLProperty;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Josef Hardi <johardi@stanford.edu><br>
@@ -59,16 +65,32 @@ public class UserQuery implements Iterable<SearchQuery> {
 
         private final List<SearchQuery> queries = new ArrayList<>();
 
+        private final SearchContext searchContext;
         private final LuceneSearcher searcher;
 
-        public Builder(LuceneSearcher searcher) {
+        private final Set<OWLEntity> allEntities = new HashSet<>();
+        private final Set<OWLClass> allClasses = new HashSet<>();
+
+        public Builder(SearchContext searchContext, LuceneSearcher searcher) {
+            this.searchContext = searchContext;
             this.searcher = searcher;
         }
 
         public Builder addBasicQuery(OWLProperty property, QueryType type, String searchString, boolean isNegated) {
-            queries.add(new BasicSearchQuery(
-                    createFilterQuery(property, type, searchString, isNegated),
-                    getSearchCategory(property), searcher));
+            if (QueryType.ValueQueryTypes.contains(type)) {
+                queries.add(new BasicSearchQuery(
+                        createFilterQuery(property, type, searchString, isNegated),
+                        getSearchCategory(property), searcher));
+            }
+            else if (QueryType.NonValueQueryTypes.contains(type)) {
+                if (type.equals(QueryType.PROPERTY_VALUE_PRESENT)) {
+                    queries.add(new PropertyValuePresent(createPropertyValueQuery(property), searcher));
+                }
+                else if (type.equals(QueryType.PROPERTY_VALUE_ABSENT)) {
+                    populateAllEntities();
+                    queries.add(new PropertyValueAbsent(createPropertyValueQuery(property), allEntities, searcher));
+                }
+            }
             return this;
         }
 
@@ -82,6 +104,11 @@ public class UserQuery implements Iterable<SearchQuery> {
             return this;
         }
 
+        public Builder addPropertyValuePresentQuery(OWLProperty property, QueryType type) {
+            populateAllEntities();
+            return this;
+        }
+
         public UserQuery build(boolean isMatchAll) {
             return new UserQuery(queries, isMatchAll);
         }
@@ -89,6 +116,22 @@ public class UserQuery implements Iterable<SearchQuery> {
         /*
          * Private builder methods
          */
+
+        private void populateAllEntities() {
+            if (allEntities.isEmpty()) {
+                for (OWLOntology ontology : searchContext.getOntologies()) {
+                    allEntities.addAll(ontology.getSignature());
+                }
+            }
+        }
+
+        private void populateAllClasses() {
+            if (allClasses.isEmpty()) {
+                for (OWLOntology ontology : searchContext.getOntologies()) {
+                    allClasses.addAll(ontology.getClassesInSignature());
+                } 
+            }
+        }
 
         private static Query createFilterQuery(OWLProperty property, QueryType type, String searchString, boolean isNegated) {
             if (type.equals(QueryType.CONTAINS)) {
@@ -103,9 +146,11 @@ public class UserQuery implements Iterable<SearchQuery> {
             else if (type.equals(QueryType.EXACT_MATCH)) {
                 return createExactMatchQuery(property, searchString, isNegated);
             }
-            else if (type.equals(QueryType.PROPERTY_VALUE_PRESENT) || type.equals(QueryType.PROPERTY_VALUE_ABSENT)) {
-                return createPropertyValueQuery(property);
-            }
+            throw new IllegalArgumentException("Unsupported filter query: " + type);
+        }
+
+        private static Query createPropertyValueQuery(OWLProperty property, QueryType type) {
+            
             throw new IllegalArgumentException("Unsupported filter query: " + type);
         }
 
