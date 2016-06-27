@@ -10,6 +10,7 @@ import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.RegexpQuery;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.WildcardQuery;
 
@@ -45,6 +46,10 @@ public class LuceneUtils {
 
     public static WildcardQuery createSuffixQuery(String searchField, String keyword) {
         return new WildcardQuery(new Term(searchField, "*" + keyword));
+    }
+
+    public static RegexpQuery createRegexQuery(String searchField, String regexPattern) {
+        return new RegexpQuery(new Term(searchField, regexPattern));
     }
 
     public static Occur toOccur(Occurance occurance) {
