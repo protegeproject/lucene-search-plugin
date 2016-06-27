@@ -161,8 +161,8 @@ public class LuceneIndexer extends AbstractLuceneIndexer {
                 if (axiom.getSubject() instanceof IRI) {
                     Document doc = new Document();
                     OWLEntity entity = getOWLEntity((IRI) axiom.getSubject());
-                    doc.add(new StringField(IndexField.ENTITY_IRI, getEntityId(entity), Store.YES));
-                    doc.add(new StringField(IndexField.DISPLAY_NAME, getDisplayName(entity), Store.YES));
+                    doc.add(new TextField(IndexField.ENTITY_IRI, getEntityId(entity), Store.YES));
+                    doc.add(new TextField(IndexField.DISPLAY_NAME, getDisplayName(entity), Store.YES));
                     doc.add(new TextField(IndexField.ANNOTATION_IRI, getEntityId(axiom.getProperty()), Store.YES));
                     doc.add(new TextField(IndexField.ANNOTATION_DISPLAY_NAME, getDisplayName(axiom.getProperty()), Store.YES));
                     doc.add(new TextField(IndexField.ANNOTATION_TEXT, getAnnotationText(axiom.getAnnotation()), Store.YES));
@@ -210,8 +210,8 @@ public class LuceneIndexer extends AbstractLuceneIndexer {
                 OWLObject subject = new AxiomSubjectProvider().getSubject(axiom);
                 if (subject instanceof OWLEntity) {
                     OWLEntity entity = (OWLEntity) subject;
-                    doc.add(new StringField(IndexField.ENTITY_IRI, getEntityId(entity), Store.YES));
-                    doc.add(new StringField(IndexField.DISPLAY_NAME, getDisplayName(entity), Store.YES));
+                    doc.add(new TextField(IndexField.ENTITY_IRI, getEntityId(entity), Store.YES));
+                    doc.add(new TextField(IndexField.DISPLAY_NAME, getDisplayName(entity), Store.YES));
                     doc.add(new TextField(IndexField.AXIOM_DISPLAY_NAME, getDisplayName(axiom), Store.YES));
                     doc.add(new StringField(IndexField.AXIOM_TYPE, getType(axiom), Store.YES));
                     documents.add(doc);
