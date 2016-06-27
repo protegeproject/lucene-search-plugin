@@ -33,7 +33,13 @@ public class AnnotationValueQueryBuilder extends SearchQueryBuilder {
 
     @Override
     public SearchQuery buildSearchQueryFor(SearchKeyword keyword) {
-        Query query = LuceneUtils.createQuery(IndexField.ANNOTATION_TEXT, keyword.getString());
+        final Query query;
+        if (keyword.searchByRegex()) {
+            query = LuceneUtils.createRegexQuery(IndexField.ANNOTATION_TEXT, keyword.getString());
+        }
+        else {
+            query = LuceneUtils.createQuery(IndexField.ANNOTATION_TEXT, keyword.getSyntacticString());
+        }
         return new BasicSearchQuery(query, SearchCategory.ANNOTATION_VALUE, searcher);
     }
 
