@@ -5,13 +5,20 @@ import org.protege.editor.search.lucene.AbstractDocumentHandler;
 import org.protege.editor.search.lucene.QueryEvaluationException;
 import org.protege.editor.search.lucene.SearchQuery;
 
-public class NegatedQuery implements SearchQuery {
+import org.semanticweb.owlapi.model.OWLEntity;
 
-    private UserQuery filterQuery;
-    private SearchCategory category;
+import java.util.HashSet;
+import java.util.Set;
 
-    public NegatedQuery(UserQuery filterQuery) {
+public class NegatedQuery extends RequiresPostProcessing {
+
+    private final UserQuery filterQuery;
+    private final Set<OWLEntity> resultSpace;
+    private final SearchCategory category;
+
+    public NegatedQuery(UserQuery filterQuery, Set<OWLEntity> resultSpace) {
         this.filterQuery = filterQuery;
+        this.resultSpace = resultSpace;
         this.category = SearchCategory.OTHER;
     }
 
@@ -27,6 +34,13 @@ public class NegatedQuery implements SearchQuery {
         for (SearchQuery query : filterQuery) {
             query.evaluate(handler, listener);
         }
+    }
+
+    @Override
+    Set<OWLEntity> performPostProcessing(Set<OWLEntity> producedResults) {
+        Set<OWLEntity> finalResults = new HashSet<>(resultSpace);
+        NciSearchUtils.difference(finalResults, producedResults);
+        return finalResults;
     }
 
     @Override

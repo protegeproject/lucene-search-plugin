@@ -95,7 +95,8 @@ public class UserQuery implements Iterable<SearchQuery> {
         }
 
         public Builder addNegatedQuery(UserQuery filterQuery) {
-            queries.add(new NegatedQuery(filterQuery));
+            populateAllEntities();
+            queries.add(new NegatedQuery(filterQuery, allEntities));
             return this;
         }
 
