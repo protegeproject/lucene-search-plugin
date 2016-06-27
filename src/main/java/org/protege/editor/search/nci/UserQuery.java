@@ -75,10 +75,10 @@ public class UserQuery implements Iterable<SearchQuery> {
             this.searcher = searcher;
         }
 
-        public Builder addBasicQuery(OWLProperty property, QueryType type, String searchString, boolean isNegated) {
+        public Builder addBasicQuery(OWLProperty property, QueryType type, String searchString) {
             if (QueryType.ValueQueryTypes.contains(type)) {
                 queries.add(new BasicSearchQuery(
-                        createFilterQuery(property, type, searchString, isNegated),
+                        createFilterQuery(property, type, searchString),
                         getSearchCategory(property), searcher));
             }
             else if (QueryType.NonValueQueryTypes.contains(type)) {
@@ -135,63 +135,47 @@ public class UserQuery implements Iterable<SearchQuery> {
             }
         }
 
-        private static Query createFilterQuery(OWLProperty property, QueryType type, String searchString, boolean isNegated) {
+        private static Query createFilterQuery(OWLProperty property, QueryType type, String searchString) {
             if (type.equals(QueryType.CONTAINS)) {
-                return createContainsQuery(property, searchString, isNegated);
+                return createContainsQuery(property, searchString);
             }
             else if (type.equals(QueryType.STARTS_WITH)) {
-                return createStartsWithQuery(property, searchString, isNegated);
+                return createStartsWithQuery(property, searchString);
             }
             else if (type.equals(QueryType.ENDS_WITH)) {
-                return createEndsWithMatchQuery(property, searchString, isNegated);
+                return createEndsWithMatchQuery(property, searchString);
             }
             else if (type.equals(QueryType.EXACT_MATCH)) {
-                return createExactMatchQuery(property, searchString, isNegated);
+                return createExactMatchQuery(property, searchString);
             }
             throw new IllegalArgumentException("Unsupported filter query: " + type);
         }
 
-        private static BooleanQuery createContainsQuery(OWLProperty property, String searchString, boolean isNegated) {
+        private static BooleanQuery createContainsQuery(OWLProperty property, String searchString) {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
             builder.add(LuceneUtils.createTermQuery(IndexField.ANNOTATION_IRI, property.getIRI().toString()), Occur.MUST);
-            if (isNegated) {
-                builder.add(LuceneUtils.createTermQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST_NOT);
-            } else {
-                builder.add(LuceneUtils.createTermQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST);
-            }
+            builder.add(LuceneUtils.createTermQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST);
             return builder.build();
         }
 
-        private static BooleanQuery createStartsWithQuery(OWLProperty property, String searchString, boolean isNegated) {
+        private static BooleanQuery createStartsWithQuery(OWLProperty property, String searchString) {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
             builder.add(LuceneUtils.createTermQuery(IndexField.ANNOTATION_IRI, property.getIRI().toString()), Occur.MUST);
-            if (isNegated) {
-                builder.add(LuceneUtils.createPrefixQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST_NOT);
-            } else {
-                builder.add(LuceneUtils.createPrefixQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST);
-            }
+            builder.add(LuceneUtils.createPrefixQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST);
             return builder.build();
         }
 
-        private static BooleanQuery createEndsWithMatchQuery(OWLProperty property, String searchString, boolean isNegated) {
+        private static BooleanQuery createEndsWithMatchQuery(OWLProperty property, String searchString) {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
             builder.add(LuceneUtils.createTermQuery(IndexField.ANNOTATION_IRI, property.getIRI().toString()), Occur.MUST);
-            if (isNegated) {
-                builder.add(LuceneUtils.createSuffixQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST_NOT);
-            } else {
-                builder.add(LuceneUtils.createSuffixQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST);
-            }
+            builder.add(LuceneUtils.createSuffixQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST);
             return builder.build();
         }
 
-        private static BooleanQuery createExactMatchQuery(OWLProperty property, String searchString, boolean isNegated) {
+        private static BooleanQuery createExactMatchQuery(OWLProperty property, String searchString) {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
             builder.add(LuceneUtils.createTermQuery(IndexField.ANNOTATION_IRI, property.getIRI().toString()), Occur.MUST);
-            if (isNegated) {
-                builder.add(LuceneUtils.createPhraseQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST_NOT);
-            } else {
-                builder.add(LuceneUtils.createPhraseQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST);
-            }
+            builder.add(LuceneUtils.createPhraseQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST);
             return builder.build();
         }
 
