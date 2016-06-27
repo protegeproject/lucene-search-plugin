@@ -15,6 +15,12 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * @author Josef Hardi <johardi@stanford.edu><br>
+ * Stanford University<br>
+ * Bio-Medical Informatics Research Group<br>
+ * Date: 27/06/2016
+ */
 public class NciResultDocumentHandler extends AbstractDocumentHandler {
 
     private OWLEntityFinder entityFinder;

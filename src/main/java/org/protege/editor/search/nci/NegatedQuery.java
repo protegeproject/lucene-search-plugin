@@ -10,6 +10,12 @@ import org.semanticweb.owlapi.model.OWLEntity;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * @author Josef Hardi <johardi@stanford.edu><br>
+ * Stanford University<br>
+ * Bio-Medical Informatics Research Group<br>
+ * Date: 27/06/2016
+ */
 public class NegatedQuery extends RequiresPostProcessing {
 
     private final UserQuery filterQuery;
@@ -37,7 +43,7 @@ public class NegatedQuery extends RequiresPostProcessing {
     }
 
     @Override
-    Set<OWLEntity> performPostProcessing(Set<OWLEntity> producedResults) {
+    /*default*/ Set<OWLEntity> performPostProcessing(Set<OWLEntity> producedResults) {
         Set<OWLEntity> finalResults = new HashSet<>(resultSpace);
         NciSearchUtils.difference(finalResults, producedResults);
         return finalResults;

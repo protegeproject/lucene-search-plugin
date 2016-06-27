@@ -14,6 +14,12 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * @author Josef Hardi <johardi@stanford.edu><br>
+ * Stanford University<br>
+ * Bio-Medical Informatics Research Group<br>
+ * Date: 27/06/2016
+ */
 public class PropertyValuePresent implements SearchQuery {
 
     private final Query query;
