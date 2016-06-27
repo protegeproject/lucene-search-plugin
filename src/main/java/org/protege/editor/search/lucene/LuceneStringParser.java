@@ -3,7 +3,6 @@ package org.protege.editor.search.lucene;
 import org.protege.editor.owl.model.find.OWLEntityFinderPreferences;
 import org.protege.editor.owl.model.search.SearchInput;
 import org.protege.editor.owl.model.search.SearchKeyword;
-import org.protege.editor.owl.model.search.SearchKeyword.Occurance;
 import org.protege.editor.owl.model.search.SearchStringParser;
 
 import java.util.regex.Matcher;
@@ -43,8 +42,8 @@ public class LuceneStringParser implements SearchStringParser {
     private static SearchKeyword createSearchKeyword(String searchField, String searchString) {
         OWLEntityFinderPreferences prefs = OWLEntityFinderPreferences.getInstance();
         return new SearchKeyword(searchField,
-                appendSearchOperator(searchString),
-                Occurance.INCLUDE,
+                searchString,
+                toLuceneSyntax(searchString),
                 prefs.isCaseSensitive(), // is case-sensitive
                 prefs.isIgnoreWhiteSpace(), // ignore whitespace
                 prefs.isWholeWords(), // search whole words
@@ -52,24 +51,39 @@ public class LuceneStringParser implements SearchStringParser {
                 false); // search by phonetic
     }
 
-    private static String appendSearchOperator(String searchString) {
-        StringBuffer sb = new StringBuffer();
-        for (String s : searchString.split(" ")) {
-            if (s.isEmpty()) continue;
-            char prefix = s.charAt(0);
-            switch (prefix) {
-                case '+': // include sign
-                case '-': sb.append(s); break; // exclude sign
-                default:
-                    if (s.length() < 3) {
-                        sb.append("+" + s);
-                    }
-                    else {
-                        sb.append("+" + s + "*"); // start using a wildcard when input length >= 3
-                    }
+    private static String toLuceneSyntax(String searchString) {
+        OWLEntityFinderPreferences prefs = OWLEntityFinderPreferences.getInstance();
+        if (prefs.isIgnoreWhiteSpace() || prefs.isWholeWords()) {
+            if (prefs.isIgnoreWhiteSpace()) {
+                searchString = searchString.replaceAll("\\s+", "");
             }
-            sb.append(" ");
+            if (prefs.isWholeWords()) {
+                searchString = "\"" + searchString + "\"";
+            }
+            return searchString;
         }
-        return sb.toString();
+        else if (prefs.isUseRegularExpressions()) {
+            return searchString;
+        }
+        else {
+            StringBuffer sb = new StringBuffer();
+            for (String s : searchString.split(" ")) {
+                if (s.isEmpty()) continue;
+                char prefix = s.charAt(0);
+                switch (prefix) {
+                    case '+': // include sign
+                    case '-': sb.append(s); break; // exclude sign
+                    default:
+                        if (s.length() < 3) {
+                            sb.append("+" + s);
+                        }
+                        else {
+                            sb.append("+" + s + "*"); // start using a wildcard when input length >= 3
+                        }
+                }
+                sb.append(" ");
+            }
+            return sb.toString();
+        }
     }
 }
