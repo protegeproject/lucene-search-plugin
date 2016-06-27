@@ -33,7 +33,13 @@ public class DisplayNameQueryBuilder extends SearchQueryBuilder {
 
     @Override
     public SearchQuery buildSearchQueryFor(SearchKeyword keyword) {
-        Query query = LuceneUtils.createQuery(IndexField.DISPLAY_NAME, keyword.getString());
+        final Query query;
+        if (keyword.searchByRegex()) {
+            query = LuceneUtils.createRegexQuery(IndexField.DISPLAY_NAME, keyword.getString());
+        }
+        else {
+            query = LuceneUtils.createQuery(IndexField.DISPLAY_NAME, keyword.getSyntacticString());
+        }
         return new BasicSearchQuery(query, SearchCategory.DISPLAY_NAME, searcher);
     }
 

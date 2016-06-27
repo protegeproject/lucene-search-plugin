@@ -33,7 +33,13 @@ public class LogicalAxiomQueryBuilder extends SearchQueryBuilder {
 
     @Override
     public SearchQuery buildSearchQueryFor(SearchKeyword keyword) {
-        Query query = LuceneUtils.createQuery(IndexField.AXIOM_DISPLAY_NAME, keyword.getString());
+        final Query query;
+        if (keyword.searchByRegex()) {
+            query = LuceneUtils.createRegexQuery(IndexField.AXIOM_DISPLAY_NAME, keyword.getString());
+        }
+        else {
+            query = LuceneUtils.createQuery(IndexField.AXIOM_DISPLAY_NAME, keyword.getSyntacticString());
+        }
         return new BasicSearchQuery(query, SearchCategory.LOGICAL_AXIOM, searcher);
     }
 

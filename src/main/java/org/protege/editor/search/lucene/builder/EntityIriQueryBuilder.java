@@ -33,7 +33,13 @@ public class EntityIriQueryBuilder extends SearchQueryBuilder {
 
     @Override
     public SearchQuery buildSearchQueryFor(SearchKeyword keyword) {
-        Query query = LuceneUtils.createQuery(IndexField.ENTITY_IRI, keyword.getString());
+        final Query query;
+        if (keyword.searchByRegex()) {
+            query = LuceneUtils.createRegexQuery(IndexField.ENTITY_IRI, keyword.getString());
+        }
+        else {
+            query = LuceneUtils.createQuery(IndexField.ENTITY_IRI, keyword.getSyntacticString());
+        }
         return new BasicSearchQuery(query, SearchCategory.IRI, searcher);
     }
 
