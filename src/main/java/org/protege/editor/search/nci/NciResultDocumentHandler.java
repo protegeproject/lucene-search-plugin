@@ -5,6 +5,7 @@ import org.protege.editor.owl.model.find.OWLEntityFinder;
 import org.protege.editor.owl.model.search.SearchCategory;
 import org.protege.editor.search.lucene.AbstractDocumentHandler;
 import org.protege.editor.search.lucene.IndexField;
+import org.protege.editor.search.lucene.SearchQuery;
 
 import org.apache.lucene.document.Document;
 import org.semanticweb.owlapi.model.IRI;
@@ -32,7 +33,13 @@ public class NciResultDocumentHandler extends AbstractDocumentHandler {
         }
     }
 
-    public Set<OWLEntity> getSearchResults() {
-        return results;
+    public Set<OWLEntity> getSearchResults(SearchQuery query) {
+        if (query instanceof RequiresPostProcessing) {
+            RequiresPostProcessing postProcessingQuery = ((RequiresPostProcessing) query);
+            return postProcessingQuery.performPostProcessing(results);
+        }
+        else {
+            return results;
+        }
     }
 }

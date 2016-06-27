@@ -4,7 +4,6 @@ import org.protege.editor.owl.model.search.SearchCategory;
 import org.protege.editor.search.lucene.AbstractDocumentHandler;
 import org.protege.editor.search.lucene.LuceneSearcher;
 import org.protege.editor.search.lucene.QueryEvaluationException;
-import org.protege.editor.search.lucene.SearchQuery;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.search.Query;
@@ -15,17 +14,17 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-public class PropertyValueAbsent implements SearchQuery {
+public class PropertyValueAbsent extends RequiresPostProcessing {
 
     private final Query query;
-    private final Set<OWLEntity> allEntities;
+    private final Set<OWLEntity> resultSpace;
 
     private final SearchCategory category;
     private final LuceneSearcher searcher;
 
-    public PropertyValueAbsent(Query query, Set<OWLEntity> allEntities, LuceneSearcher searcher) {
+    public PropertyValueAbsent(Query query, Set<OWLEntity> resultSpace, LuceneSearcher searcher) {
         this.query = query;
-        this.allEntities = allEntities;
+        this.resultSpace = resultSpace;
         this.category = SearchCategory.OTHER;
         this.searcher = searcher;
     }
@@ -47,7 +46,14 @@ public class PropertyValueAbsent implements SearchQuery {
         }
     }
 
-    public Set<Document> evaluate() throws QueryEvaluationException {
+    @Override
+    /*default*/ Set<OWLEntity> performPostProcessing(Set<OWLEntity> producedResults) {
+        Set<OWLEntity> finalResults = new HashSet<>(resultSpace);
+        NciSearchUtils.difference(finalResults, producedResults);
+        return finalResults;
+    }
+
+    private Set<Document> evaluate() throws QueryEvaluationException {
         try {
             Set<Document> docs = new HashSet<>();
             TopDocs hits = searcher.search(query);

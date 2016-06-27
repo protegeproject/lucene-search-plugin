@@ -358,10 +358,10 @@ public class NciSearchManager extends LuceneSearcher {
                     logger.debug("... executing query " + query);
                     query.evaluate(handler, progress -> fireSearchingProgressed(progress));
                     if (userQuery.isMatchAll()) {
-                        NciSearchUtils.intersect(finalResults, handler.getSearchResults());
+                        NciSearchUtils.intersect(finalResults, handler.getSearchResults(query));
                     }
                     else { // MatchAny
-                        NciSearchUtils.union(finalResults, handler.getSearchResults());
+                        NciSearchUtils.union(finalResults, handler.getSearchResults(query));
                     }
                 }
                 catch (QueryEvaluationException e) {
