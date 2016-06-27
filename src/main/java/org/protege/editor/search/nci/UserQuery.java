@@ -11,7 +11,6 @@ import org.protege.editor.search.lucene.SearchQuery;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
-import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLDataProperty;
 import org.semanticweb.owlapi.model.OWLEntity;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
@@ -69,7 +68,7 @@ public class UserQuery implements Iterable<SearchQuery> {
         private final LuceneSearcher searcher;
 
         private final Set<OWLEntity> allEntities = new HashSet<>();
-        private final Set<OWLClass> allClasses = new HashSet<>();
+        private final Set<OWLEntity> allClasses = new HashSet<>();
 
         public Builder(SearchContext searchContext, LuceneSearcher searcher) {
             this.searchContext = searchContext;
@@ -90,6 +89,13 @@ public class UserQuery implements Iterable<SearchQuery> {
                     populateAllEntities();
                     queries.add(new PropertyValueAbsent(createPropertyValueQuery(property), allEntities, searcher));
                 }
+                else if (type.equals(QueryType.PROPERTY_RESTRICTION_PRESENT)) {
+                    queries.add(new PropertyRestrictionPresent(createPropertyRestrictionQuery(property), searcher));
+                }
+                else if (type.equals(QueryType.PROPERTY_RESTRICTION_ABSENT)) {
+                    populateAllClasses();
+                    queries.add(new PropertyRestrictionAbsent(createPropertyRestrictionQuery(property), allClasses, searcher));
+                }
             }
             return this;
         }
@@ -102,11 +108,6 @@ public class UserQuery implements Iterable<SearchQuery> {
 
         public Builder addNestedQuery(UserQuery fillerFilters, String propertyName) {
             queries.add(new NestedQuery(fillerFilters, propertyName, searcher));
-            return this;
-        }
-
-        public Builder addPropertyValuePresentQuery(OWLProperty property, QueryType type) {
-            populateAllEntities();
             return this;
         }
 
@@ -147,11 +148,6 @@ public class UserQuery implements Iterable<SearchQuery> {
             else if (type.equals(QueryType.EXACT_MATCH)) {
                 return createExactMatchQuery(property, searchString, isNegated);
             }
-            throw new IllegalArgumentException("Unsupported filter query: " + type);
-        }
-
-        private static Query createPropertyValueQuery(OWLProperty property, QueryType type) {
-            
             throw new IllegalArgumentException("Unsupported filter query: " + type);
         }
 
@@ -201,6 +197,10 @@ public class UserQuery implements Iterable<SearchQuery> {
 
         private static Query createPropertyValueQuery(OWLProperty property) {
             return LuceneUtils.createTermQuery(IndexField.ANNOTATION_IRI, property.getIRI().toString());
+        }
+
+        private static Query createPropertyRestrictionQuery(OWLProperty property) {
+            return LuceneUtils.createTermQuery(IndexField.OBJECT_PROPERTY_IRI, property.getIRI().toString());
         }
 
         private static SearchCategory getSearchCategory(OWLProperty property) {
