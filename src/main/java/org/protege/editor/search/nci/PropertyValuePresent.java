@@ -20,9 +20,16 @@ public class PropertyValuePresent extends BasicQuery {
     private final Query luceneQuery;
     private final LuceneSearcher searcher;
 
+    private final String algebraString;
+
     public PropertyValuePresent(Query luceneQuery, LuceneSearcher searcher) {
+        this(luceneQuery, searcher, luceneQuery.toString());
+    }
+
+    public PropertyValuePresent(Query luceneQuery, LuceneSearcher searcher, String algebraString) {
         this.luceneQuery = luceneQuery;
         this.searcher = searcher;
+        this.algebraString = algebraString;
     }
 
     @Override
@@ -33,6 +40,11 @@ public class PropertyValuePresent extends BasicQuery {
     @Override
     public LuceneSearcher getSearcher() {
         return searcher;
+    }
+
+    @Override
+    public String getAlgebraString() {
+        return algebraString;
     }
 
     @Override

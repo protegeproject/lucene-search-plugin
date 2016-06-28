@@ -23,10 +23,17 @@ public class PropertyRestrictionAbsent extends BasicQuery {
 
     private final LuceneSearcher searcher;
 
+    private final String algebraString;
+
     public PropertyRestrictionAbsent(Query luceneQuery, Set<OWLEntity> resultSpace, LuceneSearcher searcher) {
+        this(luceneQuery, resultSpace, searcher, luceneQuery.toString());
+    }
+
+    public PropertyRestrictionAbsent(Query luceneQuery, Set<OWLEntity> resultSpace, LuceneSearcher searcher, String algebraString) {
         this.luceneQuery = luceneQuery;
         this.resultSpace = resultSpace;
         this.searcher = searcher;
+        this.algebraString = algebraString;
     }
 
     @Override
@@ -37,6 +44,11 @@ public class PropertyRestrictionAbsent extends BasicQuery {
     @Override
     public LuceneSearcher getSearcher() {
         return searcher;
+    }
+
+    @Override
+    public String getAlgebraString() {
+        return algebraString;
     }
 
     @Override

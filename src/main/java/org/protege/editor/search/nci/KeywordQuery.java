@@ -20,9 +20,16 @@ public class KeywordQuery extends BasicQuery {
     private final Query luceneQuery;
     private final LuceneSearcher searcher;
 
+    private final String algebraString;
+
     public KeywordQuery(Query luceneQuery, LuceneSearcher searcher) {
+        this(luceneQuery, searcher, luceneQuery.toString());
+    }
+
+    public KeywordQuery(Query luceneQuery, LuceneSearcher searcher, String algebraString) {
         this.luceneQuery = luceneQuery;
         this.searcher = searcher;
+        this.algebraString = algebraString;
     }
 
     @Override
@@ -33,6 +40,11 @@ public class KeywordQuery extends BasicQuery {
     @Override
     public LuceneSearcher getSearcher() {
         return searcher;
+    }
+
+    @Override
+    public String getAlgebraString() {
+        return algebraString;
     }
 
     @Override

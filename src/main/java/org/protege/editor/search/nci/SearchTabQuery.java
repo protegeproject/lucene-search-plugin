@@ -16,6 +16,8 @@ public interface SearchTabQuery {
 
     Set<OWLEntity> evaluate(SearchProgressListener listener) throws QueryEvaluationException;
 
+    String getAlgebraString();
+
     public interface SearchProgressListener {
         
         void fireSearchingProgressed(long progress);

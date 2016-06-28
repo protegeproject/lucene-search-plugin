@@ -37,6 +37,22 @@ public class FilteredQuery extends ComplexQuery {
     }
 
     @Override
+    public String getAlgebraString() {
+        String booleanOperator = isMatchAll ? "AND" : "OR";
+        StringBuilder sb = new StringBuilder();
+        boolean needOperator = false;
+        for (SearchTabQuery filter : filters) {
+            if (needOperator) {
+                sb.append(booleanOperator).append("\n");
+            }
+            sb.append(filter.getAlgebraString());
+            sb.append("\n");
+            needOperator = true;
+        }
+        return sb.toString();
+    }
+
+    @Override
     public Set<OWLEntity> evaluate(SearchProgressListener listener) throws QueryEvaluationException {
         Set<OWLEntity> toReturn = new HashSet<>();
         for (SearchTabQuery filter : filters) {

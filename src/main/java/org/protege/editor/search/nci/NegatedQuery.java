@@ -39,6 +39,25 @@ public class NegatedQuery extends ComplexQuery {
     }
 
     @Override
+    public String getAlgebraString() {
+        String booleanOperator = isMatchAll ? "AND" : "OR";
+        StringBuilder sb = new StringBuilder();
+        sb.append("NOT(");
+        boolean needOperator = false;
+        for (SearchTabQuery filter : filters) {
+            if (needOperator) {
+                sb.append("   ");
+                sb.append(booleanOperator).append(" ");
+            }
+            sb.append(filter.getAlgebraString());
+            sb.append("\n");
+            needOperator = true;
+        }
+        sb.append(")");
+        return sb.toString();
+    }
+
+    @Override
     public Set<OWLEntity> evaluate(SearchProgressListener listener) throws QueryEvaluationException {
         Set<OWLEntity> toReturn = new HashSet<>();
         for (SearchTabQuery filter : filters) {

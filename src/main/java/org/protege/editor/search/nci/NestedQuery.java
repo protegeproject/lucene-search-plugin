@@ -50,6 +50,32 @@ public class NestedQuery extends ComplexQuery {
     }
 
     @Override
+    public String getAlgebraString() {
+        String booleanOperator = isMatchAll ? "AND" : "OR";
+        StringBuilder sb = new StringBuilder();
+        sb.append("(").append(localName(propertyIri));
+        sb.append("\n");
+        boolean needOperator = false;
+        for (SearchTabQuery filter : fillerFilters) {
+            if (needOperator) {
+                sb.append("   ");
+                sb.append(booleanOperator).append(" ");
+            }
+            sb.append(filter.getAlgebraString());
+            sb.append("\n");
+            needOperator = true;
+        }
+        sb.append(")");
+        return sb.toString();
+    }
+
+    private static String localName(String propertyIri) {
+        return (propertyIri.lastIndexOf('#') != 0)
+                ? propertyIri.substring(propertyIri.lastIndexOf('#'))
+                : propertyIri.substring(propertyIri.lastIndexOf('/'));
+    }
+
+    @Override
     public Set<OWLEntity> evaluate(SearchProgressListener listener) throws QueryEvaluationException {
         Set<OWLEntity> toReturn = new HashSet<>();
         Set<OWLEntity> fillers = evaluateFillerQuery(listener);
