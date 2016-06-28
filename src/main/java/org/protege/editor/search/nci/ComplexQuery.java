@@ -6,7 +6,7 @@ package org.protege.editor.search.nci;
  * Bio-Medical Informatics Research Group<br>
  * Date: 28/06/2016
  */
-public abstract class ComplexQuery implements SearchPluginQuery {
+public abstract class ComplexQuery implements SearchTabQuery {
 
     public abstract boolean isMatchAll();
 }

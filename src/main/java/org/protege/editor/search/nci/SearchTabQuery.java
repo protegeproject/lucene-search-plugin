@@ -12,7 +12,7 @@ import java.util.Set;
  * Bio-Medical Informatics Research Group<br>
  * Date: 28/06/2016
  */
-public interface SearchPluginQuery {
+public interface SearchTabQuery {
 
     Set<OWLEntity> evaluate(SearchProgressListener listener) throws QueryEvaluationException;
 

@@ -26,14 +26,14 @@ import java.util.Set;
  */
 public class NestedQuery extends ComplexQuery {
 
-    private final List<SearchPluginQuery> fillerFilters;
+    private final List<SearchTabQuery> fillerFilters;
     private final String propertyIri;
     private final boolean isMatchAll;
 
     private final LuceneSearcher searcher;
 
     // Not allowing external instantiation
-    private NestedQuery(List<SearchPluginQuery> fillerFilters, IRI propertyIri, boolean isMatchAll, LuceneSearcher searcher) {
+    private NestedQuery(List<SearchTabQuery> fillerFilters, IRI propertyIri, boolean isMatchAll, LuceneSearcher searcher) {
         this.fillerFilters = fillerFilters;
         this.propertyIri = propertyIri.toString();
         this.isMatchAll = isMatchAll;
@@ -45,7 +45,7 @@ public class NestedQuery extends ComplexQuery {
         return isMatchAll;
     }
 
-    public List<SearchPluginQuery> getFillerFilters() {
+    public List<SearchTabQuery> getFillerFilters() {
         return Collections.unmodifiableList(fillerFilters);
     }
 
@@ -67,13 +67,13 @@ public class NestedQuery extends ComplexQuery {
 
         private LuceneSearcher searcher;
 
-        private List<SearchPluginQuery> fillerFilters = new ArrayList<>();
+        private List<SearchTabQuery> fillerFilters = new ArrayList<>();
 
         public Builder(LuceneSearcher searcher) {
             this.searcher = searcher;
         }
 
-        public Builder add(SearchPluginQuery fillerFilter) {
+        public Builder add(SearchTabQuery fillerFilter) {
             fillerFilters.add(fillerFilter);
             return this;
         }
@@ -85,7 +85,7 @@ public class NestedQuery extends ComplexQuery {
 
     private Set<OWLEntity> evaluateFillerQuery(SearchProgressListener listener) throws QueryEvaluationException {
         Set<OWLEntity> toReturn = new HashSet<>();
-        for (SearchPluginQuery filter : fillerFilters) {
+        for (SearchTabQuery filter : fillerFilters) {
             Set<OWLEntity> evalResult = filter.evaluate(listener);
             if (isMatchAll) {
                 NciSearchUtils.intersect(toReturn, evalResult);

@@ -18,11 +18,11 @@ import java.util.Set;
  */
 public class FilteredQuery extends ComplexQuery {
 
-    private final List<SearchPluginQuery> filters;
+    private final List<SearchTabQuery> filters;
     private final boolean isMatchAll;
 
     // Not allowing external instantiation
-    private FilteredQuery(List<SearchPluginQuery> filters, boolean isMatchAll) {
+    private FilteredQuery(List<SearchTabQuery> filters, boolean isMatchAll) {
         this.filters = filters;
         this.isMatchAll = isMatchAll;
     }
@@ -32,14 +32,14 @@ public class FilteredQuery extends ComplexQuery {
         return isMatchAll;
     }
 
-    public List<SearchPluginQuery> getFilters() {
+    public List<SearchTabQuery> getFilters() {
         return Collections.unmodifiableList(filters);
     }
 
     @Override
     public Set<OWLEntity> evaluate(SearchProgressListener listener) throws QueryEvaluationException {
         Set<OWLEntity> toReturn = new HashSet<>();
-        for (SearchPluginQuery filter : filters) {
+        for (SearchTabQuery filter : filters) {
             Set<OWLEntity> evalResult = filter.evaluate(listener);
             if (isMatchAll) {
                 NciSearchUtils.intersect(toReturn, evalResult);
@@ -53,13 +53,13 @@ public class FilteredQuery extends ComplexQuery {
 
     public static class Builder {
 
-        private List<SearchPluginQuery> filters = new ArrayList<>();
+        private List<SearchTabQuery> filters = new ArrayList<>();
 
         public Builder() {
             // NO-OP
         }
 
-        public Builder add(SearchPluginQuery filter) {
+        public Builder add(SearchTabQuery filter) {
             filters.add(filter);
             return this;
         }

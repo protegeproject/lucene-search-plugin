@@ -18,12 +18,12 @@ import java.util.Set;
  */
 public class NegatedQuery extends ComplexQuery {
 
-    private final List<SearchPluginQuery> filters;
+    private final List<SearchTabQuery> filters;
     private final Set<OWLEntity> resultSpace;
     private final boolean isMatchAll;
 
     // Not allowing external instantiation
-    private NegatedQuery(List<SearchPluginQuery> filters, Set<OWLEntity> resultSpace, boolean isMatchAll) {
+    private NegatedQuery(List<SearchTabQuery> filters, Set<OWLEntity> resultSpace, boolean isMatchAll) {
         this.filters = filters;
         this.resultSpace = resultSpace;
         this.isMatchAll = isMatchAll;
@@ -34,14 +34,14 @@ public class NegatedQuery extends ComplexQuery {
         return isMatchAll;
     }
 
-    public List<SearchPluginQuery> getFilters() {
+    public List<SearchTabQuery> getFilters() {
         return Collections.unmodifiableList(filters);
     }
 
     @Override
     public Set<OWLEntity> evaluate(SearchProgressListener listener) throws QueryEvaluationException {
         Set<OWLEntity> toReturn = new HashSet<>();
-        for (SearchPluginQuery filter : filters) {
+        for (SearchTabQuery filter : filters) {
             Set<OWLEntity> evalResult = filter.evaluate(listener);
             if (isMatchAll) {
                 NciSearchUtils.intersect(toReturn, evalResult);
@@ -56,13 +56,13 @@ public class NegatedQuery extends ComplexQuery {
 
     public static class Builder {
 
-        private List<SearchPluginQuery> filters = new ArrayList<>();
+        private List<SearchTabQuery> filters = new ArrayList<>();
 
         public Builder() {
             // NO-OP
         }
 
-        public Builder add(SearchPluginQuery filter) {
+        public Builder add(SearchTabQuery filter) {
             filters.add(filter);
             return this;
         }

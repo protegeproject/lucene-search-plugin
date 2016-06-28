@@ -25,7 +25,7 @@ import java.util.Set;
  * Bio-Medical Informatics Research Group<br>
  * Date: 28/06/2016
  */
-public abstract class BasicQuery implements SearchPluginQuery {
+public abstract class BasicQuery implements SearchTabQuery {
 
     public abstract Query getLuceneQuery();
 
