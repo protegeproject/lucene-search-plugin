@@ -1,5 +1,7 @@
 package org.protege.editor.search.nci;
 
+import org.protege.editor.owl.OWLEditorKit;
+import org.protege.editor.owl.model.find.OWLEntityFinder;
 import org.protege.editor.search.lucene.IndexField;
 import org.protege.editor.search.lucene.LuceneSearcher;
 import org.protege.editor.search.lucene.LuceneUtils;
@@ -11,12 +13,14 @@ import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TopDocs;
+import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLEntity;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLProperty;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -164,6 +168,28 @@ public abstract class BasicQuery implements SearchTabQuery {
                     allClasses.addAll(ontology.getClassesInSignature());
                 }
             }
+        }
+    }
+
+    protected class SearchDocumentHandler {
+
+        private OWLEntityFinder entityFinder;
+        private Set<OWLEntity> results = new HashSet<>();
+
+        public SearchDocumentHandler(OWLEditorKit editorKit) {
+            entityFinder = editorKit.getOWLModelManager().getOWLEntityFinder();
+        }
+
+        public void handle(Document doc) {
+            String subjectIri = doc.get(IndexField.ENTITY_IRI);
+            Optional<OWLEntity> entity = entityFinder.getEntities(IRI.create(subjectIri)).stream().findFirst();
+            if (entity.isPresent()) {
+                results.add(entity.get());
+            }
+        }
+
+        public Set<OWLEntity> getSearchResults() {
+            return results;
         }
     }
 }

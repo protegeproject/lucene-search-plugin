@@ -37,7 +37,7 @@ public class PropertyRestrictionPresent extends BasicQuery {
 
     @Override
     public Set<OWLEntity> evaluate(SearchProgressListener listener) throws QueryEvaluationException {
-        NciResultDocumentHandler handler = new NciResultDocumentHandler(searcher.getEditorKit());
+        SearchDocumentHandler handler = new SearchDocumentHandler(searcher.getEditorKit());
         Set<Document> docs = evaluate();
         int counter = 0;
         for (Document doc : docs) {
