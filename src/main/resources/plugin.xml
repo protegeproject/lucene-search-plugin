@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <plugin>
-    <extension id="NciLuceneSearchManager" point="org.protege.editor.owl.searchmanager">
-        <name value="NCI Lucene search" />
-        <class value="org.protege.editor.search.nci.NciSearchManager" />
+    <extension id="SearchTabManager" point="org.protege.editor.owl.searchmanager">
+        <name value="Lucene search tab" />
+        <class value="org.protege.editor.search.nci.SearchTabManager" />
     </extension>
     
     <extension id="ui.preferences.update"
