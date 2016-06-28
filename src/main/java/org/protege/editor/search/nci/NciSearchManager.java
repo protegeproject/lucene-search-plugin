@@ -73,7 +73,7 @@ public class NciSearchManager extends LuceneSearcher {
 
     private SearchStringParser searchStringParser = new LuceneStringParser();
 
-    private NciThesaurusIndexer indexer;
+    private SearchTabIndexer indexer;
 
     private IndexDelegator indexDelegator;
 
@@ -92,7 +92,7 @@ public class NciSearchManager extends LuceneSearcher {
     @Override
     public void initialise() {
         this.editorKit = getEditorKit();
-        this.indexer = new NciThesaurusIndexer(editorKit);
+        this.indexer = new SearchTabIndexer(editorKit);
         categories.add(SearchCategory.DISPLAY_NAME);
         categories.add(SearchCategory.IRI);
         categories.add(SearchCategory.ANNOTATION_VALUE);

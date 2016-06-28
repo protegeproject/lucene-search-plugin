@@ -69,12 +69,12 @@ import java.util.Set;
  * Bio-Medical Informatics Research Group<br>
  * Date: 04/11/2015
  */
-public class NciThesaurusIndexer extends AbstractLuceneIndexer {
+public class SearchTabIndexer extends AbstractLuceneIndexer {
 
     private final OWLEntityFinder entityFinder;
     private final OWLModelManager objectRenderer;
 
-    public NciThesaurusIndexer(OWLEditorKit editorKit) {
+    public SearchTabIndexer(OWLEditorKit editorKit) {
         super();
         entityFinder = editorKit.getOWLModelManager().getOWLEntityFinder();
         objectRenderer = editorKit.getOWLModelManager();
