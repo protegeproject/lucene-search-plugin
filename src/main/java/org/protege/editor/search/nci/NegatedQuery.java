@@ -44,13 +44,13 @@ public class NegatedQuery extends ComplexQuery {
         for (SearchTabQuery filter : filters) {
             Set<OWLEntity> evalResult = filter.evaluate(listener);
             if (isMatchAll) {
-                NciSearchUtils.intersect(toReturn, evalResult);
+                ResultSetUtils.intersect(toReturn, evalResult);
             }
             else { // match any
-                NciSearchUtils.union(toReturn, evalResult);
+                ResultSetUtils.union(toReturn, evalResult);
             }
         }
-        NciSearchUtils.complement(toReturn, resultSpace);
+        ResultSetUtils.complement(toReturn, resultSpace);
         return toReturn;
     }
 

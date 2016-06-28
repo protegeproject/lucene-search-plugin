@@ -11,7 +11,7 @@ import java.util.Set;
  * Bio-Medical Informatics Research Group<br>
  * Date: 27/06/2016
  */
-public class NciSearchUtils {
+public class ResultSetUtils {
 
     /**
      * Performs an intersect operation given {@code set1} and {@code set2}, where the

@@ -55,7 +55,7 @@ public class PropertyValueAbsent extends BasicQuery {
          */
         Set<OWLEntity> producedResults = handler.getSearchResults();
         Set<OWLEntity> finalResults = new HashSet<>(resultSpace);
-        NciSearchUtils.difference(finalResults, producedResults);
+        ResultSetUtils.difference(finalResults, producedResults);
         return finalResults;
     }
 
