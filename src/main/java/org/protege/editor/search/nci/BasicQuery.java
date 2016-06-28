@@ -81,42 +81,70 @@ public abstract class BasicQuery implements SearchTabQuery {
             }
             else if (QueryType.NonValueQueryTypes.contains(type)) {
                 if (type.equals(QueryType.PROPERTY_VALUE_PRESENT)) {
-                    return new PropertyValuePresent(createPropertyValueQuery(property), searcher);
+                    return createProperyValuePresentFilter(property);
                 }
                 else if (type.equals(QueryType.PROPERTY_VALUE_ABSENT)) {
-                    populateAllEntities();
-                    return new PropertyValueAbsent(createPropertyValueQuery(property), allEntities, searcher);
+                    return createPropertyValueAbsentFilter(property);
                 }
                 else if (type.equals(QueryType.PROPERTY_RESTRICTION_PRESENT)) {
-                    return new PropertyRestrictionPresent(createPropertyRestrictionQuery(property), searcher);
+                    return createPropertyRestrictionPresentFilter(property);
                 }
                 else if (type.equals(QueryType.PROPERTY_RESTRICTION_ABSENT)) {
-                    populateAllClasses();
-                    return new PropertyRestrictionAbsent(createPropertyRestrictionQuery(property), allClasses, searcher);
+                    return createPropertyRestrictionAbsentFilter(property);
                 }
             }
             throw new IllegalArgumentException("Unsupported query type: " + type);
         }
 
         public KeywordQuery createContainsFilter(OWLProperty property, String searchString) {
-            return new KeywordQuery(createContainsQuery(property, searchString), searcher);
+            return new KeywordQuery(createContainsQuery(property, searchString), searcher,
+                    String.format("%s contains %s", getDisplayName(property), searchString));
         }
 
         public KeywordQuery createStartsWithFilter(OWLProperty property, String searchString) {
-            return new KeywordQuery(createStartsWithQuery(property, searchString), searcher);
+            return new KeywordQuery(createStartsWithQuery(property, searchString), searcher,
+                    String.format("%s starts with %s", getDisplayName(property), searchString));
         }
 
         public KeywordQuery createEndsWithFilter(OWLProperty property, String searchString) {
-            return new KeywordQuery(createEndsWithQuery(property, searchString), searcher);
+            return new KeywordQuery(createEndsWithQuery(property, searchString), searcher,
+                    String.format("%s ends with %s", getDisplayName(property), searchString));
         }
 
         public KeywordQuery createExactMatchFilter(OWLProperty property, String searchString) {
-            return new KeywordQuery(createExactMatchQuery(property, searchString), searcher);
+            return new KeywordQuery(createExactMatchQuery(property, searchString), searcher,
+                    String.format("%s exact match %s", getDisplayName(property), searchString));
+        }
+
+        public PropertyValuePresent createProperyValuePresentFilter(OWLProperty property) {
+            return new PropertyValuePresent(createPropertyValueQuery(property), searcher,
+                    String.format("PropertyPresent(%s)", getDisplayName(property)));
+        }
+
+        public PropertyValueAbsent createPropertyValueAbsentFilter(OWLProperty property) {
+            populateAllEntities();
+            return new PropertyValueAbsent(createPropertyValueQuery(property), allEntities, searcher,
+                    String.format("PropertyAbsent(%s)", getDisplayName(property)));
+        }
+
+        public PropertyRestrictionPresent createPropertyRestrictionPresentFilter(OWLProperty property) {
+            return new PropertyRestrictionPresent(createPropertyRestrictionQuery(property), searcher,
+                    String.format("PropertyRestrictionPresent(%s)", getDisplayName(property)));
+        }
+
+        public PropertyRestrictionAbsent createPropertyRestrictionAbsentFilter(OWLProperty property) {
+            populateAllClasses();
+            return new PropertyRestrictionAbsent(createPropertyRestrictionQuery(property), allClasses, searcher,
+                    String.format("PropertyRestrictionAbsent(%s)", getDisplayName(property)));
         }
 
         /*
          * Private builder methods
          */
+
+        private String getDisplayName(OWLEntity entity) {
+            return searcher.getEditorKit().getOWLModelManager().getRendering(entity);
+        }
 
         private static BooleanQuery createContainsQuery(OWLProperty property, String searchString) {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
