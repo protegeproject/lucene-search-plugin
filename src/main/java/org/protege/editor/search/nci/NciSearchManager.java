@@ -204,13 +204,13 @@ public class NciSearchManager extends LuceneSearcher {
     @Override
     public void performSearch(String searchString, SearchResultHandler searchResultHandler) {
         buildIndexWhenNecessary();
-        UserQuery userQuery = prepareQuery(searchString);
-        service.submit(new SearchCallable(lastSearchId.incrementAndGet(), userQuery, searchResultHandler));
+        List<SearchQuery> searchQueries = prepareQuery(searchString);
+        service.submit(new SearchCallable(lastSearchId.incrementAndGet(), searchQueries, searchResultHandler));
     }
 
-    public void performSearch(UserQuery userQuery, NciSearchResultHandler searchResultHandler) {
+    public void performSearch(SearchPluginQuery pluginQuery, NciSearchResultHandler searchResultHandler) {
         buildIndexWhenNecessary();
-        service.submit(new NciSearchCallable(lastSearchId.incrementAndGet(), userQuery, searchResultHandler));
+        service.submit(new NciSearchCallable(lastSearchId.incrementAndGet(), pluginQuery, searchResultHandler));
     }
 
     private void buildIndexWhenNecessary() {
@@ -248,12 +248,12 @@ public class NciSearchManager extends LuceneSearcher {
         indexDelegator = IndexDelegator.create(indexDirectory, indexer.getIndexWriterConfig());
     }
 
-    private UserQuery prepareQuery(String searchString) {
+    private List<SearchQuery> prepareQuery(String searchString) {
         SearchInput searchInput = searchStringParser.parse(searchString);
         LuceneSearchQueryBuilder builder = new LuceneSearchQueryBuilder(this);
         builder.setCategories(categories);
         searchInput.accept(builder);
-        return UserQuery.createInstance(builder.build(), true);
+        return builder.build();
     }
 
     private void buildingIndex() {
@@ -274,12 +274,12 @@ public class NciSearchManager extends LuceneSearcher {
 
     private class SearchCallable implements Runnable {
         private long searchId;
-        private UserQuery userQuery;
+        private List<SearchQuery> searchQueries;
         private SearchResultHandler searchResultHandler;
 
-        private SearchCallable(long searchId, UserQuery userQuery, SearchResultHandler searchResultHandler) {
+        private SearchCallable(long searchId, List<SearchQuery> searchQueries, SearchResultHandler searchResultHandler) {
             this.searchId = searchId;
-            this.userQuery = userQuery;
+            this.searchQueries = searchQueries;
             this.searchResultHandler = searchResultHandler;
         }
 
@@ -289,7 +289,7 @@ public class NciSearchManager extends LuceneSearcher {
             Stopwatch stopwatch = Stopwatch.createStarted();
             fireSearchStarted();
             Set<SearchResult> finalResults = new HashSet<>();
-            for (SearchQuery query : userQuery) {
+            for (SearchQuery query : searchQueries) {
                 if (!isLatestSearch()) {
                     // New search started
                     logger.debug("... terminating search {} prematurely", searchId);
@@ -299,12 +299,7 @@ public class NciSearchManager extends LuceneSearcher {
                     ResultDocumentHandler handler = new ResultDocumentHandler(editorKit);
                     logger.debug("... executing query " + query);
                     query.evaluate(handler, progress -> fireSearchingProgressed(progress));
-                    if (userQuery.isMatchAll()) {
-                        SearchUtils.intersect(finalResults, handler.getSearchResults());
-                    }
-                    else { // MatchAny
-                        SearchUtils.union(finalResults, handler.getSearchResults());
-                    }
+                    SearchUtils.intersect(finalResults, handler.getSearchResults());
                 }
                 catch (QueryEvaluationException e) {
                     logger.error("Error while executing the query: {}", e);
@@ -332,12 +327,12 @@ public class NciSearchManager extends LuceneSearcher {
 
     private class NciSearchCallable implements Runnable {
         private long searchId;
-        private UserQuery userQuery;
+        private SearchPluginQuery pluginQuery;
         private NciSearchResultHandler searchResultHandler;
 
-        private NciSearchCallable(long searchId, UserQuery userQuery, NciSearchResultHandler searchResultHandler) {
+        private NciSearchCallable(long searchId, SearchPluginQuery pluginQuery, NciSearchResultHandler searchResultHandler) {
             this.searchId = searchId;
-            this.userQuery = userQuery;
+            this.pluginQuery = pluginQuery;
             this.searchResultHandler = searchResultHandler;
         }
 
@@ -345,33 +340,18 @@ public class NciSearchManager extends LuceneSearcher {
         public void run() {
             logger.debug("Starting search {}", searchId);
             Stopwatch stopwatch = Stopwatch.createStarted();
-            fireSearchStarted();
-            Set<OWLEntity> finalResults = new HashSet<>();
-            for (SearchQuery query : userQuery) {
-                if (!isLatestSearch()) {
-                    // New search started
-                    logger.debug("... terminating search {} prematurely", searchId);
-                    return;
-                }
-                try {
-                    NciResultDocumentHandler handler = new NciResultDocumentHandler(editorKit);
-                    logger.debug("... executing query " + query);
-                    query.evaluate(handler, progress -> fireSearchingProgressed(progress));
-                    if (userQuery.isMatchAll()) {
-                        NciSearchUtils.intersect(finalResults, handler.getSearchResults(query));
-                    }
-                    else { // MatchAny
-                        NciSearchUtils.union(finalResults, handler.getSearchResults(query));
-                    }
-                }
-                catch (QueryEvaluationException e) {
-                    logger.error("Error while executing the query: {}", e);
-                }
+            try {
+                logger.debug("... executing query " + pluginQuery);
+                fireSearchStarted();
+                Set<OWLEntity> finalResults = pluginQuery.evaluate(progress -> fireSearchingProgressed(progress));
+                fireSearchFinished();
+                stopwatch.stop();
+                logger.debug("... finished search {} in {} ms ({} results)", searchId, stopwatch.elapsed(TimeUnit.MILLISECONDS), finalResults.size());
+                showResults(finalResults, searchResultHandler);
             }
-            fireSearchFinished();
-            stopwatch.stop();
-            logger.debug("... finished search {} in {} ms ({} results)", searchId, stopwatch.elapsed(TimeUnit.MILLISECONDS), finalResults.size());
-            showResults(finalResults, searchResultHandler);
+            catch (QueryEvaluationException e) {
+                logger.error("Error while executing the query: {}", e);
+            }
         }
 
         private void showResults(final Set<OWLEntity> results, final NciSearchResultHandler searchResultHandler) {
@@ -381,10 +361,6 @@ public class NciSearchManager extends LuceneSearcher {
             else {
                 SwingUtilities.invokeLater(() -> searchResultHandler.searchFinished(results));
             }
-        }
-
-        private boolean isLatestSearch() {
-            return searchId == lastSearchId.get();
         }
     }
  

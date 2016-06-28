@@ -14,18 +14,16 @@ import java.util.Set;
  * @author Josef Hardi <johardi@stanford.edu><br>
  * Stanford University<br>
  * Bio-Medical Informatics Research Group<br>
- * Date: 27/06/2016
+ * Date: 28/06/2016
  */
-public class NegatedQuery extends ComplexQuery {
+public class FilteredQuery extends ComplexQuery {
 
     private final List<SearchPluginQuery> filters;
-    private final Set<OWLEntity> resultSpace;
     private final boolean isMatchAll;
 
     // Not allowing external instantiation
-    private NegatedQuery(List<SearchPluginQuery> filters, Set<OWLEntity> resultSpace, boolean isMatchAll) {
+    private FilteredQuery(List<SearchPluginQuery> filters, boolean isMatchAll) {
         this.filters = filters;
-        this.resultSpace = resultSpace;
         this.isMatchAll = isMatchAll;
     }
 
@@ -50,7 +48,6 @@ public class NegatedQuery extends ComplexQuery {
                 NciSearchUtils.union(toReturn, evalResult);
             }
         }
-        NciSearchUtils.complement(toReturn, resultSpace);
         return toReturn;
     }
 
@@ -67,8 +64,8 @@ public class NegatedQuery extends ComplexQuery {
             return this;
         }
 
-        public NegatedQuery build(Set<OWLEntity> resultSpace, boolean isMatchAll) {
-            return new NegatedQuery(filters, resultSpace, isMatchAll);
+        public FilteredQuery build(boolean isMatchAll) {
+            return new FilteredQuery(filters, isMatchAll);
         }
     }
 
@@ -76,9 +73,8 @@ public class NegatedQuery extends ComplexQuery {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + NegatedQuery.class.getSimpleName().hashCode();
+        result = prime * result + FilteredQuery.class.getSimpleName().hashCode();
         result = prime * result + filters.hashCode();
-        result = prime * result + resultSpace.hashCode();
         result = prime * result + (isMatchAll ? 1 : 0);
         return result;
     }
@@ -91,19 +87,17 @@ public class NegatedQuery extends ComplexQuery {
         if (obj == this) {
             return true;
         }
-        if (!(obj instanceof NegatedQuery)) {
+        if (!(obj instanceof FilteredQuery)) {
             return false;
         }
-        NegatedQuery other = (NegatedQuery) obj;
-        return this.filters.equals(other.filters) && this.resultSpace.equals(other.resultSpace) && this.isMatchAll == other.isMatchAll;
+        FilteredQuery other = (FilteredQuery) obj;
+        return this.filters.equals(filters) && this.isMatchAll == other.isMatchAll;
     }
 
     @Override
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append("NOT(");
         sb.append("Filters:").append(filters);
-        sb.append(")");
         return sb.toString();
     }
 }

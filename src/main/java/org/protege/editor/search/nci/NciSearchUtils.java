@@ -64,4 +64,21 @@ public class NciSearchUtils {
     public static void difference(final Set<OWLEntity> set1, final Set<OWLEntity> set2) {
         set1.removeAll(set2);
     }
+
+    /**
+     * Performs a complement operation given {@code set1} and {@code set2}, such that
+     * the {@code set2} will have members that do not belong to {@code set1}. The end
+     * result will be stored in {@code set1}.
+     *
+     * @param set1
+     *          The first set of the search results
+     * @param set2
+     *          The second set of the search results
+     */
+    public static void complement(final Set<OWLEntity> set1, final Set<OWLEntity> set2) {
+        Set<OWLEntity> cache = new HashSet<OWLEntity>(set1);
+        set1.clear();
+        set1.addAll(set2);
+        set1.removeAll(cache);
+    }
 }

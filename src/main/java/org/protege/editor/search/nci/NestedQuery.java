@@ -1,22 +1,21 @@
 package org.protege.editor.search.nci;
 
-import org.protege.editor.owl.model.search.SearchCategory;
-import org.protege.editor.owl.model.search.SearchResult;
-import org.protege.editor.search.lucene.AbstractDocumentHandler;
 import org.protege.editor.search.lucene.IndexField;
 import org.protege.editor.search.lucene.LuceneSearcher;
 import org.protege.editor.search.lucene.LuceneUtils;
 import org.protege.editor.search.lucene.QueryEvaluationException;
-import org.protege.editor.search.lucene.ResultDocumentHandler;
-import org.protege.editor.search.lucene.SearchQuery;
 
-import org.apache.lucene.document.Document;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.Query;
+import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLEntity;
 
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -25,85 +24,102 @@ import java.util.Set;
  * Bio-Medical Informatics Research Group<br>
  * Date: 27/06/2016
  */
-public class NestedQuery implements SearchQuery {
+public class NestedQuery extends ComplexQuery {
 
-    private UserQuery fillerQuery;
-    private String propertyName;
-    private SearchCategory category;
+    private final List<SearchPluginQuery> fillerFilters;
+    private final String propertyIri;
+    private final boolean isMatchAll;
 
-    private LuceneSearcher searcher;
+    private final LuceneSearcher searcher;
 
-    public NestedQuery(UserQuery fillerQuery, String propertyName, LuceneSearcher searcher) {
-        this.fillerQuery = fillerQuery;
-        this.propertyName = propertyName;
-        this.category = SearchCategory.OTHER;
+    // Not allowing external instantiation
+    private NestedQuery(List<SearchPluginQuery> fillerFilters, IRI propertyIri, boolean isMatchAll, LuceneSearcher searcher) {
+        this.fillerFilters = fillerFilters;
+        this.propertyIri = propertyIri.toString();
+        this.isMatchAll = isMatchAll;
         this.searcher = searcher;
     }
 
     @Override
-    public void evaluate(AbstractDocumentHandler handler) throws QueryEvaluationException {
-        evaluate(handler, null);
+    public boolean isMatchAll() {
+        return isMatchAll;
+    }
+
+    public List<SearchPluginQuery> getFillerFilters() {
+        return Collections.unmodifiableList(fillerFilters);
     }
 
     @Override
-    public void evaluate(AbstractDocumentHandler handler, SearchProgressListener listener) throws QueryEvaluationException {
-        Set<String> fillers = evaluateFillerQuery();
-        Set<Document> docs = new HashSet<>();
-        for (String fillerName : fillers) {
-            BooleanQuery query = createObjectRestrictionQuery(propertyName, fillerName);
-            docs.addAll(evaluateQuery(query));
-        }
-        int counter = 0;
-        for (Document doc : docs) {
-            handler.handle(category, doc);
-            if (listener != null) {
-                listener.fireSearchingProgressed((counter++*100)/docs.size());
+    public Set<OWLEntity> evaluate(SearchProgressListener listener) throws QueryEvaluationException {
+        Set<OWLEntity> toReturn = new HashSet<>();
+        Set<OWLEntity> fillers = evaluateFillerQuery(listener);
+        for (OWLEntity filler : fillers) {
+            if (filler instanceof OWLClass) {
+                Query luceneQuery = createObjectRestrictionQuery(propertyIri, filler.getIRI().toString());
+                KeywordQuery query = new KeywordQuery(luceneQuery, searcher);
+                toReturn.addAll(query.evaluate(listener));
             }
         }
+        return toReturn;
     }
 
-    private Set<String> evaluateFillerQuery() throws QueryEvaluationException {
-        Set<String> fillers = new HashSet<>();
-        ResultDocumentHandler handler = new ResultDocumentHandler(searcher.getEditorKit());
-        for (SearchQuery query : fillerQuery) {
-            query.evaluate(handler);
+    public static class Builder {
+
+        private LuceneSearcher searcher;
+
+        private List<SearchPluginQuery> fillerFilters = new ArrayList<>();
+
+        public Builder(LuceneSearcher searcher) {
+            this.searcher = searcher;
         }
-        Set<SearchResult> results = handler.getSearchResults();
-        results.stream().forEach(result -> fillers.add(result.getSubjectRendering()));
-        return fillers;
+
+        public Builder add(SearchPluginQuery fillerFilter) {
+            fillerFilters.add(fillerFilter);
+            return this;
+        }
+
+        public NestedQuery build(IRI propertyIri, boolean isMatchAll) {
+            return new NestedQuery(fillerFilters, propertyIri, isMatchAll, searcher);
+        }
     }
 
-    private static BooleanQuery createObjectRestrictionQuery(String propertyName, String filler) {
+    private Set<OWLEntity> evaluateFillerQuery(SearchProgressListener listener) throws QueryEvaluationException {
+        Set<OWLEntity> toReturn = new HashSet<>();
+        for (SearchPluginQuery filter : fillerFilters) {
+            Set<OWLEntity> evalResult = filter.evaluate(listener);
+            if (isMatchAll) {
+                NciSearchUtils.intersect(toReturn, evalResult);
+            }
+            else { // match any
+                NciSearchUtils.union(toReturn, evalResult);
+            }
+        }
+        return toReturn;
+    }
+
+    private BooleanQuery createObjectRestrictionQuery(String propertyIri, String fillerIri) {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
-        builder.add(LuceneUtils.createTermQuery(IndexField.OBJECT_PROPERTY_DISPLAY_NAME, propertyName), Occur.MUST);
-        builder.add(LuceneUtils.createTermQuery(IndexField.FILLER_DISPLAY_NAME, filler), Occur.MUST);
+        builder.add(LuceneUtils.createTermQuery(IndexField.OBJECT_PROPERTY_IRI, propertyIri), Occur.MUST);
+        builder.add(LuceneUtils.createTermQuery(IndexField.FILLER_IRI, fillerIri), Occur.MUST);
         return builder.build();
-    }
-
-    private Set<Document> evaluateQuery(BooleanQuery query) throws QueryEvaluationException {
-        try {
-            Set<Document> docs = new HashSet<>();
-            TopDocs hits = searcher.search(query);
-            int hitNumber = hits.scoreDocs.length;
-            for (int i = 1; i <= hitNumber; i++) {
-                Document doc = searcher.find(hits.scoreDocs[i-1].doc);
-                docs.add(doc);
-            }
-            return docs;
-        }
-        catch (IOException e) {
-            throw new QueryEvaluationException(e);
-        }
     }
 
     @Override
     public int hashCode() {
-        return NestedQuery.class.getSimpleName().hashCode() + propertyName.hashCode() + fillerQuery.hashCode()
-                + category.hashCode();
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + NestedQuery.class.getSimpleName().hashCode();
+        result = prime * result + fillerFilters.hashCode();
+        result = prime * result + propertyIri.hashCode();
+        result = prime * result + (isMatchAll ? 1 : 0);
+        return result;
     }
 
     @Override
     public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
         if (obj == this) {
             return true;
         }
@@ -111,16 +127,14 @@ public class NestedQuery implements SearchQuery {
             return false;
         }
         NestedQuery other = (NestedQuery) obj;
-        return this.propertyName.equals(propertyName)
-                && this.fillerQuery.equals(other.fillerQuery)
-                && this.category.equals(other.category);
+        return this.propertyIri.equals(other.propertyIri) && this.fillerFilters.equals(other.fillerFilters) && this.isMatchAll == other.isMatchAll;
     }
 
     @Override
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append("propertyName").append(": ").append(propertyName).append(",\n");
-        sb.append("fillerQuery").append(": ").append(fillerQuery);
+        sb.append("propertyIri: ").append(propertyIri).append(",\n");
+        sb.append("fillerFilters: ").append(fillerFilters);
         return sb.toString();
     }
 }
