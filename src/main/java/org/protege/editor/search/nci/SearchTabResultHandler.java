@@ -10,7 +10,7 @@ import java.util.Collection;
  * Bio-Medical Informatics Research Group<br>
  * Date: 27/06/2016
  */
-public interface SearchPluginResultHandler {
+public interface SearchTabResultHandler {
 
     void searchFinished(Collection<OWLEntity> searchResults);
 }

@@ -208,7 +208,7 @@ public class NciSearchManager extends LuceneSearcher {
         service.submit(new SearchCallable(lastSearchId.incrementAndGet(), searchQueries, searchResultHandler));
     }
 
-    public void performSearch(SearchPluginQuery pluginQuery, SearchPluginResultHandler searchResultHandler) {
+    public void performSearch(SearchPluginQuery pluginQuery, SearchTabResultHandler searchResultHandler) {
         buildIndexWhenNecessary();
         service.submit(new NciSearchCallable(lastSearchId.incrementAndGet(), pluginQuery, searchResultHandler));
     }
@@ -328,9 +328,9 @@ public class NciSearchManager extends LuceneSearcher {
     private class NciSearchCallable implements Runnable {
         private long searchId;
         private SearchPluginQuery pluginQuery;
-        private SearchPluginResultHandler searchResultHandler;
+        private SearchTabResultHandler searchResultHandler;
 
-        private NciSearchCallable(long searchId, SearchPluginQuery pluginQuery, SearchPluginResultHandler searchResultHandler) {
+        private NciSearchCallable(long searchId, SearchPluginQuery pluginQuery, SearchTabResultHandler searchResultHandler) {
             this.searchId = searchId;
             this.pluginQuery = pluginQuery;
             this.searchResultHandler = searchResultHandler;
@@ -354,7 +354,7 @@ public class NciSearchManager extends LuceneSearcher {
             }
         }
 
-        private void showResults(final Set<OWLEntity> results, final SearchPluginResultHandler searchResultHandler) {
+        private void showResults(final Set<OWLEntity> results, final SearchTabResultHandler searchResultHandler) {
             if (SwingUtilities.isEventDispatchThread()) {
                 searchResultHandler.searchFinished(results);
             }
