@@ -59,9 +59,9 @@ import com.google.common.base.Stopwatch;
  * Bio-Medical Informatics Research Group<br>
  * Date: 13/11/2015
  */
-public class NciSearchManager extends LuceneSearcher {
+public class SearchTabManager extends LuceneSearcher {
 
-    private static final Logger logger = LoggerFactory.getLogger(NciSearchManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(SearchTabManager.class);
 
     private OWLEditorKit editorKit;
 
@@ -85,7 +85,7 @@ public class NciSearchManager extends LuceneSearcher {
 
     private final List<ProgressMonitor> progressMonitors = new ArrayList<>();
 
-    public NciSearchManager() {
+    public SearchTabManager() {
         // NO-OP
     }
 
