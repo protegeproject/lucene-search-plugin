@@ -42,7 +42,7 @@ public class IndexDelegator implements Disposable {
         this.directory = directory;
     }
 
-    public static IndexDelegator create(Directory directory, IndexWriterConfig writerConfig) throws IOException {
+    public static IndexDelegator getInstance(Directory directory, IndexWriterConfig writerConfig) throws IOException {
         IndexWriter writer = new IndexWriter(directory, writerConfig);
         return new IndexDelegator(writer, directory);
     }

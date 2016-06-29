@@ -255,7 +255,7 @@ public class LuceneSearchManager extends LuceneSearcher {
 
     private void setupIndexDelegator() throws IOException {
         Directory indexDirectory = getIndexDirectory();
-        IndexDelegator newDelegator = IndexDelegator.create(indexDirectory, getIndexer().getIndexWriterConfig());
+        IndexDelegator newDelegator = IndexDelegator.getInstance(indexDirectory, getIndexer().getIndexWriterConfig());
         setIndexDelegator(newDelegator);
     }
 
