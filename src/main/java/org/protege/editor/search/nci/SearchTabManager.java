@@ -83,6 +83,8 @@ public class SearchTabManager extends LuceneSearcher {
 
     private OWLModelManagerListener modelManagerListener;
 
+    private OWLOntology currentActiveOntology;
+
     private final List<ProgressMonitor> progressMonitors = new ArrayList<>();
 
     public SearchTabManager() {
@@ -97,6 +99,7 @@ public class SearchTabManager extends LuceneSearcher {
         categories.add(SearchCategory.IRI);
         categories.add(SearchCategory.ANNOTATION_VALUE);
         categories.add(SearchCategory.LOGICAL_AXIOM);
+        currentActiveOntology = editorKit.getOWLModelManager().getActiveOntology();
         ontologyChangeListener = new OWLOntologyChangeListener() {
             public void ontologiesChanged(List<? extends OWLOntologyChange> changes) throws OWLException {
                 updateIndex(changes);
@@ -105,6 +108,17 @@ public class SearchTabManager extends LuceneSearcher {
         modelManagerListener = new OWLModelManagerListener() {
             public void handleChange(OWLModelManagerChangeEvent event) {
                 if (isCacheChangingEvent(event)) {
+                    /*
+                     * A workaround Protege signals ACTIVE_ONTOLOGY_CHANGED twice when opening an ontology.
+                     * The loadOrCreateIndexDirectory() method shouldn't be called twice if the ontologies
+                     * are the same.
+                     */
+                    OWLOntology newActiveOntology = editorKit.getOWLModelManager().getActiveOntology();
+                    if (currentActiveOntology != null && currentActiveOntology.equals(newActiveOntology)) {
+                        return;
+                    }
+                    currentActiveOntology = newActiveOntology;
+                    loadOrCreateIndexDirectory();
                     markIndexAsStale(false);
                 }
                 else if (isCacheMutatingEvent(event)) {
@@ -157,6 +171,7 @@ public class SearchTabManager extends LuceneSearcher {
                 logger.info("Rebuilding index");
                 OWLOntology activeOntology = editorKit.getOWLModelManager().getActiveOntology();
                 LuceneSearchPreferences.removeIndexLocation(activeOntology);
+                indexDirectory = null;
                 indexDelegator = null;
             }
         }
@@ -164,8 +179,7 @@ public class SearchTabManager extends LuceneSearcher {
     }
 
     private void saveIndex() {
-        OWLOntology activeOntology = editorKit.getOWLModelManager().getActiveOntology();
-        LuceneSearchPreferences.setIndexSnapshot(activeOntology);
+        LuceneSearchPreferences.setIndexSnapshot(currentActiveOntology);
     }
 
     @Override
@@ -179,7 +193,7 @@ public class SearchTabManager extends LuceneSearcher {
             return;
         }
         editorKit.getOWLModelManager().removeOntologyChangeListener(ontologyChangeListener);
-        editorKit.getOWLModelManager().removeListener(modelManagerListener);
+        editorKit.getModelManager().removeListener(modelManagerListener);
     }
 
     @Override
@@ -203,37 +217,54 @@ public class SearchTabManager extends LuceneSearcher {
 
     @Override
     public void performSearch(String searchString, SearchResultHandler searchResultHandler) {
-        buildIndexWhenNecessary();
-        List<SearchQuery> searchQueries = prepareQuery(searchString);
-        service.submit(new SearchCallable(lastSearchId.incrementAndGet(), searchQueries, searchResultHandler));
-    }
-
-    public void performSearch(SearchTabQuery pluginQuery, SearchTabResultHandler searchResultHandler) {
-        buildIndexWhenNecessary();
-        service.submit(new NciSearchCallable(lastSearchId.incrementAndGet(), pluginQuery, searchResultHandler));
-    }
-
-    private void buildIndexWhenNecessary() {
         try {
             if (lastSearchId.getAndIncrement() == 0) {
-                Directory directory = loadOrCreateIndexDirectory();
-                if (!DirectoryReader.indexExists(directory)) {
+                Directory indexDirectory = getIndexDirectory();
+                if (!DirectoryReader.indexExists(indexDirectory)) {
                     service.submit(this::buildingIndex);
                 }
             }
+            List<SearchQuery> searchQueries = prepareQuery(searchString);
+            service.submit(new SearchCallable(lastSearchId.incrementAndGet(), searchQueries, searchResultHandler));
         }
         catch (IOException e) {
-            logger.error("Search failed to perform", e);
+            logger.error("Failed to perform search", e);
         }
     }
 
-    private Directory loadOrCreateIndexDirectory() throws IOException {
-        OWLOntology activeOntology = editorKit.getOWLModelManager().getActiveOntology();
-        String indexLocation = LuceneSearchPreferences.getIndexLocation(activeOntology);
-        Directory directory = FSDirectory.open(Paths.get(indexLocation));
-        setIndexDirectory(directory);
-        logger.info("Using index located at {}", indexLocation);
-        return directory;
+    public void performSearch(SearchTabQuery pluginQuery, SearchTabResultHandler searchResultHandler) {
+        try {
+            if (lastSearchId.getAndIncrement() == 0) {
+                Directory indexDirectory = getIndexDirectory();
+                if (!DirectoryReader.indexExists(indexDirectory)) {
+                    service.submit(this::buildingIndex);
+                }
+            }
+            service.submit(new SearchTabCallable(lastSearchId.incrementAndGet(), pluginQuery, searchResultHandler));
+        }
+        catch (IOException e) {
+            logger.error("Failed to perform search", e);
+        }
+    }
+
+    private void loadOrCreateIndexDirectory() {
+        try {
+            if (!currentActiveOntology.isEmpty()) {
+                String indexLocation = LuceneSearchPreferences.getIndexLocation(currentActiveOntology);
+                Directory directory = FSDirectory.open(Paths.get(indexLocation));
+                setIndexDirectory(directory);
+            }
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Failed to load index directory", e);
+        }
+    }
+
+    private Directory getIndexDirectory() {
+        if (indexDirectory == null) {
+            loadOrCreateIndexDirectory();
+        }
+        return indexDirectory;
     }
 
     private void setIndexDirectory(Directory indexDirectory) throws IOException {
@@ -242,10 +273,22 @@ public class SearchTabManager extends LuceneSearcher {
     }
 
     private void fireIndexDirectoryChange() throws IOException {
-        if (indexDelegator != null) {
-            indexDelegator.dispose();
+        if (DirectoryReader.indexExists(indexDirectory)) {
+            setupIndexDelegator();
         }
-        indexDelegator = IndexDelegator.getInstance(indexDirectory, indexer.getIndexWriterConfig());
+    }
+
+    private void setupIndexDelegator() throws IOException {
+        Directory indexDirectory = getIndexDirectory();
+        IndexDelegator newDelegator = IndexDelegator.getInstance(indexDirectory, indexer.getIndexWriterConfig());
+        setIndexDelegator(newDelegator);
+    }
+
+    private void setIndexDelegator(IndexDelegator indexDelegator) throws IOException {
+        if (this.indexDelegator != null) {
+            this.indexDelegator.dispose();
+        }
+        this.indexDelegator = indexDelegator;
     }
 
     private List<SearchQuery> prepareQuery(String searchString) {
@@ -259,6 +302,7 @@ public class SearchTabManager extends LuceneSearcher {
     private void buildingIndex() {
         fireIndexingStarted();
         try {
+            setupIndexDelegator();
             indexer.doIndex(indexDelegator,
                     new SearchContext(editorKit),
                     progress -> fireIndexingProgressed(progress));
@@ -325,12 +369,12 @@ public class SearchTabManager extends LuceneSearcher {
         }
     }
 
-    private class NciSearchCallable implements Runnable {
+    private class SearchTabCallable implements Runnable {
         private long searchId;
         private SearchTabQuery pluginQuery;
         private SearchTabResultHandler searchResultHandler;
 
-        private NciSearchCallable(long searchId, SearchTabQuery pluginQuery, SearchTabResultHandler searchResultHandler) {
+        private SearchTabCallable(long searchId, SearchTabQuery pluginQuery, SearchTabResultHandler searchResultHandler) {
             this.searchId = searchId;
             this.pluginQuery = pluginQuery;
             this.searchResultHandler = searchResultHandler;
