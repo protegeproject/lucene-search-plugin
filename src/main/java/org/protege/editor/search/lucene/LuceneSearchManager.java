@@ -68,6 +68,8 @@ public class LuceneSearchManager extends LuceneSearcher {
 
     private OWLModelManagerListener modelManagerListener;
 
+    private OWLOntology currentActiveOntology;
+
     private final List<ProgressMonitor> progressMonitors = new ArrayList<>();
 
     public LuceneSearchManager() {
@@ -90,6 +92,16 @@ public class LuceneSearchManager extends LuceneSearcher {
         modelManagerListener = new OWLModelManagerListener() {
             public void handleChange(OWLModelManagerChangeEvent event) {
                 if (isCacheChangingEvent(event)) {
+                    /*
+                     * A workaround Protege signals ACTIVE_ONTOLOGY_CHANGED twice when opening an ontology.
+                     * The loadOrCreateIndexDirectory() method shouldn't be called twice if the ontologies
+                     * are the same.
+                     */
+                    OWLOntology newActiveOntology = editorKit.getOWLModelManager().getActiveOntology();
+                    if (currentActiveOntology != null && currentActiveOntology.equals(newActiveOntology)) {
+                        return;
+                    }
+                    currentActiveOntology = newActiveOntology;
                     loadOrCreateIndexDirectory();
                     markIndexAsStale(false);
                 }
@@ -141,8 +153,8 @@ public class LuceneSearchManager extends LuceneSearcher {
         if (forceDelete) {
             if (indexDirectory != null) { // remove the index
                 logger.info("Rebuilding index");
-                OWLOntology activeOntology = editorKit.getOWLModelManager().getActiveOntology();
-                LuceneSearchPreferences.removeIndexLocation(activeOntology);
+                LuceneSearchPreferences.removeIndexLocation(currentActiveOntology);
+                indexDirectory = null;
                 indexDelegator = null;
             }
         }
@@ -150,8 +162,7 @@ public class LuceneSearchManager extends LuceneSearcher {
     }
 
     private void saveIndex() {
-        OWLOntology activeOntology = editorKit.getOWLModelManager().getActiveOntology();
-        LuceneSearchPreferences.setIndexSnapshot(activeOntology);
+        LuceneSearchPreferences.setIndexSnapshot(currentActiveOntology);
     }
 
     @Override
@@ -165,7 +176,7 @@ public class LuceneSearchManager extends LuceneSearcher {
             return;
         }
         editorKit.getOWLModelManager().removeOntologyChangeListener(ontologyChangeListener);
-        editorKit.getOWLModelManager().removeListener(modelManagerListener);
+        editorKit.getModelManager().removeListener(modelManagerListener);
     }
 
     @Override
@@ -206,9 +217,8 @@ public class LuceneSearchManager extends LuceneSearcher {
 
     private void loadOrCreateIndexDirectory() {
         try {
-            OWLOntology activeOntology = editorKit.getOWLModelManager().getActiveOntology();
-            if (!activeOntology.isEmpty()) {
-                String indexLocation = LuceneSearchPreferences.getIndexLocation(activeOntology);
+            if (!currentActiveOntology.isEmpty()) {
+                String indexLocation = LuceneSearchPreferences.getIndexLocation(currentActiveOntology);
                 Directory directory = FSDirectory.open(Paths.get(indexLocation));
                 setIndexDirectory(directory);
             }
