@@ -67,6 +67,8 @@ public class LuceneSearchManager extends LuceneSearcher {
 
     private OWLModelManagerListener modelManagerListener;
 
+    private OWLOntology currentActiveOntology;
+
     private final List<ProgressMonitor> progressMonitors = new ArrayList<>();
 
     public LuceneSearchManager() {
@@ -77,6 +79,7 @@ public class LuceneSearchManager extends LuceneSearcher {
     public void initialise() {
         this.editorKit = getEditorKit();
         this.indexer = new LuceneIndexer(editorKit);
+        this.currentActiveOntology = editorKit.getOWLModelManager().getActiveOntology();
         categories.add(SearchCategory.DISPLAY_NAME);
         categories.add(SearchCategory.IRI);
         categories.add(SearchCategory.ANNOTATION_VALUE);
@@ -89,6 +92,17 @@ public class LuceneSearchManager extends LuceneSearcher {
         modelManagerListener = new OWLModelManagerListener() {
             public void handleChange(OWLModelManagerChangeEvent event) {
                 if (isCacheChangingEvent(event)) {
+                    /*
+                     * A workaround Protege signals ACTIVE_ONTOLOGY_CHANGED twice when opening an ontology.
+                     * The loadOrCreateIndexDirectory() method shouldn't be called twice if the ontologies
+                     * are the same.
+                     */
+                    OWLOntology newActiveOntology = editorKit.getOWLModelManager().getActiveOntology();
+                    if (currentActiveOntology != null && currentActiveOntology.equals(newActiveOntology)) {
+                        return;
+                    }
+                    currentActiveOntology = newActiveOntology;
+                    loadOrCreateIndexDirectory();
                     markIndexAsStale(false);
                 }
                 else if (isCacheMutatingEvent(event)) {
@@ -139,8 +153,8 @@ public class LuceneSearchManager extends LuceneSearcher {
         if (forceDelete) {
             if (indexDirectory != null) { // remove the index
                 logger.info("Rebuilding index");
-                OWLOntology activeOntology = editorKit.getOWLModelManager().getActiveOntology();
-                LuceneSearchPreferences.removeIndexLocation(activeOntology);
+                LuceneSearchPreferences.removeIndexLocation(currentActiveOntology);
+                indexDirectory = null;
                 indexDelegator = null;
             }
         }
@@ -148,8 +162,7 @@ public class LuceneSearchManager extends LuceneSearcher {
     }
 
     private void saveIndex() {
-        OWLOntology activeOntology = editorKit.getOWLModelManager().getActiveOntology();
-        LuceneSearchPreferences.setIndexSnapshot(activeOntology);
+        LuceneSearchPreferences.setIndexSnapshot(currentActiveOntology);
     }
 
     @Override
@@ -163,7 +176,7 @@ public class LuceneSearchManager extends LuceneSearcher {
             return;
         }
         editorKit.getOWLModelManager().removeOntologyChangeListener(ontologyChangeListener);
-        editorKit.getOWLModelManager().removeListener(modelManagerListener);
+        editorKit.getModelManager().removeListener(modelManagerListener);
     }
 
     @Override
@@ -189,8 +202,8 @@ public class LuceneSearchManager extends LuceneSearcher {
     public void performSearch(String searchString, SearchResultHandler searchResultHandler) {
         try {
             if (lastSearchId.getAndIncrement() == 0) {
-                Directory directory = loadOrCreateIndexDirectory();
-                if (!DirectoryReader.indexExists(directory)) {
+                Directory indexDirectory = getIndexDirectory();
+                if (!DirectoryReader.indexExists(indexDirectory)) {
                     service.submit(this::buildingIndex);
                 }
             }
@@ -198,17 +211,28 @@ public class LuceneSearchManager extends LuceneSearcher {
             service.submit(new SearchCallable(lastSearchId.incrementAndGet(), searchQueries, searchResultHandler));
         }
         catch (IOException e) {
-            logger.error("Search failed to perform", e);
+            logger.error("Failed to perform search", e);
         }
     }
 
-    private Directory loadOrCreateIndexDirectory() throws IOException {
-        OWLOntology activeOntology = editorKit.getOWLModelManager().getActiveOntology();
-        String indexLocation = LuceneSearchPreferences.getIndexLocation(activeOntology);
-        Directory directory = FSDirectory.open(Paths.get(indexLocation));
-        setIndexDirectory(directory);
-        logger.info("Using index located at {}", indexLocation);
-        return directory;
+    private void loadOrCreateIndexDirectory() {
+        try {
+            if (!currentActiveOntology.isEmpty()) {
+                String indexLocation = LuceneSearchPreferences.getIndexLocation(currentActiveOntology);
+                Directory directory = FSDirectory.open(Paths.get(indexLocation));
+                setIndexDirectory(directory);
+            }
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Failed to load index directory", e);
+        }
+    }
+
+    private Directory getIndexDirectory() {
+        if (indexDirectory == null) {
+            loadOrCreateIndexDirectory();
+        }
+        return indexDirectory;
     }
 
     private void setIndexDirectory(Directory indexDirectory) throws IOException {
@@ -217,10 +241,22 @@ public class LuceneSearchManager extends LuceneSearcher {
     }
 
     private void fireIndexDirectoryChange() throws IOException {
-        if (indexDelegator != null) {
-            indexDelegator.dispose();
+        if (DirectoryReader.indexExists(indexDirectory)) {
+            setupIndexDelegator();
         }
-        indexDelegator = IndexDelegator.create(indexDirectory, indexer.getIndexWriterConfig());
+    }
+
+    private void setupIndexDelegator() throws IOException {
+        Directory indexDirectory = getIndexDirectory();
+        IndexDelegator newDelegator = IndexDelegator.create(indexDirectory, indexer.getIndexWriterConfig());
+        setIndexDelegator(newDelegator);
+    }
+
+    private void setIndexDelegator(IndexDelegator indexDelegator) throws IOException {
+        if (this.indexDelegator != null) {
+            this.indexDelegator.dispose();
+        }
+        this.indexDelegator = indexDelegator;
     }
 
     private List<SearchQuery> prepareQuery(String searchString) {
@@ -234,6 +270,7 @@ public class LuceneSearchManager extends LuceneSearcher {
     private void buildingIndex() {
         fireIndexingStarted();
         try {
+            setupIndexDelegator();
             indexer.doIndex(indexDelegator,
                     new SearchContext(editorKit),
                     progress -> fireIndexingProgressed(progress));
