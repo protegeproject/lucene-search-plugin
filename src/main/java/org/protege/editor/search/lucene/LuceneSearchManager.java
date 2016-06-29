@@ -90,6 +90,7 @@ public class LuceneSearchManager extends LuceneSearcher {
         modelManagerListener = new OWLModelManagerListener() {
             public void handleChange(OWLModelManagerChangeEvent event) {
                 if (isCacheChangingEvent(event)) {
+                    loadOrCreateIndexDirectory();
                     markIndexAsStale(false);
                 }
                 else if (isCacheMutatingEvent(event)) {
@@ -190,8 +191,10 @@ public class LuceneSearchManager extends LuceneSearcher {
     public void performSearch(String searchString, SearchResultHandler searchResultHandler) {
         try {
             if (lastSearchId.getAndIncrement() == 0) {
-                Directory directory = loadOrCreateIndexDirectory();
-                if (!DirectoryReader.indexExists(directory)) {
+                if (indexDirectory == null) {
+                    loadOrCreateIndexDirectory();
+                }
+                if (!DirectoryReader.indexExists(indexDirectory)) {
                     service.submit(this::buildingIndex);
                 }
             }
@@ -199,17 +202,22 @@ public class LuceneSearchManager extends LuceneSearcher {
             service.submit(new SearchCallable(lastSearchId.incrementAndGet(), searchQueries, searchResultHandler));
         }
         catch (IOException e) {
-            logger.error("Search failed to perform", e);
+            logger.error("Failed to perform search", e);
         }
     }
 
-    private Directory loadOrCreateIndexDirectory() throws IOException {
-        OWLOntology activeOntology = editorKit.getOWLModelManager().getActiveOntology();
-        String indexLocation = LuceneSearchPreferences.getIndexLocation(activeOntology);
-        Directory directory = FSDirectory.open(Paths.get(indexLocation));
-        setIndexDirectory(directory);
-        logger.info("Using index located at {}", indexLocation);
-        return directory;
+    private void loadOrCreateIndexDirectory() {
+        try {
+            OWLOntology activeOntology = editorKit.getOWLModelManager().getActiveOntology();
+            if (!activeOntology.isEmpty()) {
+                String indexLocation = LuceneSearchPreferences.getIndexLocation(activeOntology);
+                Directory directory = FSDirectory.open(Paths.get(indexLocation));
+                setIndexDirectory(directory);
+            }
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Failed to load index directory", e);
+        }
     }
 
     private void setIndexDirectory(Directory indexDirectory) throws IOException {
