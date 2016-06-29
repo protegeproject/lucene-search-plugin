@@ -191,9 +191,7 @@ public class LuceneSearchManager extends LuceneSearcher {
     public void performSearch(String searchString, SearchResultHandler searchResultHandler) {
         try {
             if (lastSearchId.getAndIncrement() == 0) {
-                if (indexDirectory == null) {
-                    loadOrCreateIndexDirectory();
-                }
+                Directory indexDirectory = getIndexDirectory();
                 if (!DirectoryReader.indexExists(indexDirectory)) {
                     service.submit(this::buildingIndex);
                 }
@@ -220,16 +218,35 @@ public class LuceneSearchManager extends LuceneSearcher {
         }
     }
 
+    private Directory getIndexDirectory() {
+        if (indexDirectory == null) {
+            loadOrCreateIndexDirectory();
+        }
+        return indexDirectory;
+    }
+
     private void setIndexDirectory(Directory indexDirectory) throws IOException {
         this.indexDirectory = indexDirectory;
         fireIndexDirectoryChange();
     }
 
     private void fireIndexDirectoryChange() throws IOException {
-        if (indexDelegator != null) {
-            indexDelegator.dispose();
+        if (DirectoryReader.indexExists(indexDirectory)) {
+            setupIndexDelegator();
         }
-        indexDelegator = IndexDelegator.create(indexDirectory, indexer.getIndexWriterConfig());
+    }
+
+    private void setupIndexDelegator() throws IOException {
+        Directory indexDirectory = getIndexDirectory();
+        IndexDelegator newDelegator = IndexDelegator.create(indexDirectory, indexer.getIndexWriterConfig());
+        setIndexDelegator(newDelegator);
+    }
+
+    private void setIndexDelegator(IndexDelegator indexDelegator) throws IOException {
+        if (this.indexDelegator != null) {
+            this.indexDelegator.dispose();
+        }
+        this.indexDelegator = indexDelegator;
     }
 
     private List<SearchQuery> prepareQuery(String searchString) {
@@ -243,6 +260,7 @@ public class LuceneSearchManager extends LuceneSearcher {
     private void buildingIndex() {
         fireIndexingStarted();
         try {
+            setupIndexDelegator();
             indexer.doIndex(indexDelegator,
                     new SearchMetadataImportContext(editorKit),
                     progress -> fireIndexingProgressed(progress));
