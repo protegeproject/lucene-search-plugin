@@ -80,6 +80,7 @@ public class LuceneSearchManager extends LuceneSearcher {
     public void initialise() {
         this.editorKit = getEditorKit();
         this.indexer = new LuceneIndexer(editorKit);
+        this.currentActiveOntology = editorKit.getOWLModelManager().getActiveOntology();
         categories.add(SearchCategory.DISPLAY_NAME);
         categories.add(SearchCategory.IRI);
         categories.add(SearchCategory.ANNOTATION_VALUE);
