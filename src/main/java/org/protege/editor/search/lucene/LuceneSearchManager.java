@@ -57,7 +57,7 @@ public class LuceneSearchManager extends LuceneSearcher {
 
     private SearchStringParser searchStringParser = new LuceneStringParser();
 
-    private LuceneIndexer indexer;
+    private AbstractLuceneIndexer indexer;
 
     private IndexDelegator indexDelegator;
 
@@ -78,12 +78,11 @@ public class LuceneSearchManager extends LuceneSearcher {
     @Override
     public void initialise() {
         this.editorKit = getEditorKit();
-        this.indexer = new LuceneIndexer(editorKit);
-        this.currentActiveOntology = editorKit.getOWLModelManager().getActiveOntology();
         categories.add(SearchCategory.DISPLAY_NAME);
         categories.add(SearchCategory.IRI);
         categories.add(SearchCategory.ANNOTATION_VALUE);
         categories.add(SearchCategory.LOGICAL_AXIOM);
+        currentActiveOntology = editorKit.getOWLModelManager().getActiveOntology();
         ontologyChangeListener = new OWLOntologyChangeListener() {
             public void ontologiesChanged(List<? extends OWLOntologyChange> changes) {
                 updateIndex(changes);
@@ -139,9 +138,9 @@ public class LuceneSearchManager extends LuceneSearcher {
     private void updatingIndex(List<? extends OWLOntologyChange> changes) {
         try {
             RemoveChangeSet removeChangeSet = RemoveChangeSet.create(changes, new RemoveChangeSetHandler(editorKit));
-            indexer.doRemove(indexDelegator, removeChangeSet);
+            getIndexer().doRemove(indexDelegator, removeChangeSet);
             AddChangeSet addChangeSet = AddChangeSet.create(changes, new AddChangeSetHandler(editorKit));
-            indexer.doAppend(indexDelegator, addChangeSet);
+            getIndexer().doAppend(indexDelegator, addChangeSet);
         }
         catch (IOException e) {
             logger.error("... update index failed");
@@ -177,6 +176,13 @@ public class LuceneSearchManager extends LuceneSearcher {
         }
         editorKit.getOWLModelManager().removeOntologyChangeListener(ontologyChangeListener);
         editorKit.getModelManager().removeListener(modelManagerListener);
+    }
+
+    public AbstractLuceneIndexer getIndexer() {
+        if (indexer == null) {
+            indexer = new LuceneIndexer(editorKit);
+        }
+        return indexer;
     }
 
     @Override
@@ -248,7 +254,7 @@ public class LuceneSearchManager extends LuceneSearcher {
 
     private void setupIndexDelegator() throws IOException {
         Directory indexDirectory = getIndexDirectory();
-        IndexDelegator newDelegator = IndexDelegator.create(indexDirectory, indexer.getIndexWriterConfig());
+        IndexDelegator newDelegator = IndexDelegator.getInstance(indexDirectory, getIndexer().getIndexWriterConfig());
         setIndexDelegator(newDelegator);
     }
 
@@ -271,7 +277,7 @@ public class LuceneSearchManager extends LuceneSearcher {
         fireIndexingStarted();
         try {
             setupIndexDelegator();
-            indexer.doIndex(indexDelegator,
+            getIndexer().doIndex(indexDelegator,
                     new SearchContext(editorKit),
                     progress -> fireIndexingProgressed(progress));
             saveIndex();
