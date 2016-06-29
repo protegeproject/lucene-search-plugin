@@ -8,6 +8,7 @@ target/
 META-INF/
 
 *.iml
+.idea/*
 
 pom.xml.releaseBackup
 release.properties/

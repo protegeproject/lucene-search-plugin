@@ -5,10 +5,49 @@
         <name value="Lucene search tab" />
         <class value="org.protege.editor.search.nci.SearchTabManager" />
     </extension>
-    
+
+    <!-- Preferences -->
+
     <extension id="ui.preferences.update"
                point="org.protege.editor.core.application.preferencespanel">
         <label value="Lucene Search"/>
         <class value="org.protege.editor.search.lucene.SearchPreferencesPanel"/>
+    </extension>
+
+    <!-- Tabs -->
+
+    <extension id="LuceneQueryTab"
+               point="org.protege.editor.core.application.WorkspaceTab">
+        <label value="Lucene Query"/>
+        <class value="org.protege.editor.owl.ui.OWLWorkspaceViewsTab"/>
+        <index value="X"/>
+        <editorKitId value="OWLEditorKit"/>
+        <defaultViewConfigFileName value="viewconfig.xml"/>
+    </extension>
+
+    <!-- Views -->
+
+    <extension id="QueryEditorView"
+               point="org.protege.editor.core.application.ViewComponent">
+        <label value="Lucene Query Editor"/>
+        <class value="org.protege.editor.search.ui.QueryEditorView"/>
+        <headerColor value="@org.protege.ontologycolor"/>
+        <category value="Lucene"/>
+    </extension>
+
+    <extension id="QueryResultsView"
+               point="org.protege.editor.core.application.ViewComponent">
+        <label value="Lucene Query Results"/>
+        <class value="org.protege.editor.search.ui.QueryResultsView"/>
+        <headerColor value="@org.protege.ontologycolor"/>
+        <category value="Lucene"/>
+    </extension>
+
+    <extension id="CombinedLuceneQueryView"
+               point="org.protege.editor.core.application.ViewComponent">
+        <label value="Lucene Query"/>
+        <class value="org.protege.editor.search.ui.CombinedLuceneQueryView"/>
+        <headerColor value="@org.protege.ontologycolor"/>
+        <category value="Lucene"/>
     </extension>
 </plugin>

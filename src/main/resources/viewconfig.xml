@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<layout>
+    <VSNode splits="0.55 0.45">
+        <CNode>
+            <Component label="Lucene Query Editor">
+                <Property id="pluginId" value="org.protege.editor.search.QueryEditorView"/>
+            </Component>
+        </CNode>
+        <CNode>
+            <Component label="Lucene Query Results">
+                <Property id="pluginId" value="org.protege.editor.search.QueryResultsView"/>
+            </Component>
+        </CNode>
+    </VSNode>
+</layout>
