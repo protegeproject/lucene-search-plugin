@@ -245,7 +245,7 @@ public class SearchTabManager extends LuceneSearcher {
         if (indexDelegator != null) {
             indexDelegator.dispose();
         }
-        indexDelegator = IndexDelegator.create(indexDirectory, indexer.getIndexWriterConfig());
+        indexDelegator = IndexDelegator.getInstance(indexDirectory, indexer.getIndexWriterConfig());
     }
 
     private List<SearchQuery> prepareQuery(String searchString) {
