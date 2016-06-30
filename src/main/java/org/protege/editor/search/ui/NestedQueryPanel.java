@@ -15,7 +15,7 @@ import java.util.List;
  * Stanford University
  */
 public class NestedQueryPanel extends QueryPanel {
-    private static final long serialVersionUID = 2866861625595434385L;
+    private static final long serialVersionUID = -2307034097209935650L;
     private static final String NAME = "Nested Query";
     private OwlEntityComboBox propertyComboBox;
     private QueryEditorPanel editorPanel;
@@ -63,22 +63,6 @@ public class NestedQueryPanel extends QueryPanel {
         propSelectionPanel.add(propertyComboBox, new GridBagConstraints(1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.HORIZONTAL, new Insets(13, 3, 6, 8), 0, 0));
         propSelectionPanel.setBorder(new MatteBorder(0, 1, 0, 1, LuceneUiHelper.Utils.MATTE_BORDER_COLOR));
         return propSelectionPanel;
-    }
-
-    private JButton getCloseButton() {
-        JButton closeBtn = new JButton(LuceneUiHelper.Utils.getIcon(LuceneUiHelper.Utils.CLOSE_ICON_FILENAME, 11, 11));
-        closeBtn.addActionListener(e -> {
-            JPanel btnHoldingPanel = (JPanel) closeBtn.getParent().getParent().getParent();
-            JPanel queriesPanel = (JPanel) btnHoldingPanel.getParent();
-            queriesPanel.remove(btnHoldingPanel);
-            Container lastPanel = queriesPanel.getParent();
-            while(lastPanel != null) {
-                lastPanel.revalidate();
-                lastPanel.repaint();
-                lastPanel = lastPanel.getParent();
-            }
-        });
-        return closeBtn;
     }
 
     @Override

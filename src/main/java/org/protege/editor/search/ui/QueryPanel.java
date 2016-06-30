@@ -4,6 +4,8 @@ import org.protege.editor.owl.OWLEditorKit;
 
 import javax.swing.*;
 
+import java.awt.*;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -29,4 +31,23 @@ public abstract class QueryPanel extends JPanel {
 
     abstract boolean isNestedQuery();
 
+    JButton getCloseButton() {
+        JButton closeBtn = new JButton(LuceneUiHelper.Utils.getIcon(LuceneUiHelper.Utils.CLOSE_ICON_FILENAME, 11, 11));
+        closeBtn.addActionListener(e -> {
+            boolean removedPanel = false;
+            JPanel queriesPanel = (JPanel) this.getParent();
+            queriesPanel.remove(this);
+            Container lastPanel = queriesPanel.getParent();
+            while(lastPanel != null) {
+                if(lastPanel instanceof QueryEditorPanel && !removedPanel) {
+                    ((QueryEditorPanel) lastPanel).removeQueryPanel(this);
+                    removedPanel = true;
+                }
+                lastPanel.revalidate();
+                lastPanel.repaint();
+                lastPanel = lastPanel.getParent();
+            }
+        });
+        return closeBtn;
+    }
 }

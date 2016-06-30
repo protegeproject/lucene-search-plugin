@@ -33,7 +33,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class QueryEditorPanel extends JPanel implements Disposable {
-    private static final long serialVersionUID = -4412332384143006925L;
+    private static final long serialVersionUID = -8667573656000040388L;
     private static Logger logger = LoggerFactory.getLogger(QueryEditorPanel.class.getName());
     private JButton addQueryBtn, addNegatedQueryBtn, addNestedQueryBtn, clearBtn, searchBtn;
     private JRadioButton matchAll, matchAny;
@@ -41,7 +41,6 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     private List<QueryPanel> queries = new ArrayList<>();
     private JPanel queriesPanel;
     private OWLEditorKit editorKit;
-
     private SearchTabManager searchManager;
     private BasicQuery.Factory queryFactory;
 
@@ -52,28 +51,34 @@ public class QueryEditorPanel extends JPanel implements Disposable {
      */
     public QueryEditorPanel(OWLEditorKit editorKit) {
         this.editorKit = checkNotNull(editorKit);
-        SearchManager searchManager = editorKit.getSearchManager();
-        if (searchManager instanceof SearchTabManager) {
-            this.searchManager = (SearchTabManager) searchManager;
-            this.queryFactory = new BasicQuery.Factory(new SearchContext(editorKit), this.searchManager);
-        }
-        // else { TODO: What happen if the search manager is not SearchTabManager
+        initSearchManager();
         initUi();
     }
 
+    /**
+     * Constructor for an inner query editor panel
+     *
+     * @param editorKit OWL Editor Kit
+     * @param allowNestedQueries    true if nested queries should be allowed, false otherwise
+     * @param allowNegatedQueries   true if negated queries should be allowed, false otherwise
+     * @param allowSearch   true if search should be allowed in this panel, false otherwise
+     */
     public QueryEditorPanel(OWLEditorKit editorKit, boolean allowNestedQueries, boolean allowNegatedQueries, boolean allowSearch) {
         this.editorKit = checkNotNull(editorKit);
         this.allowNestedQueries = checkNotNull(allowNestedQueries);
         this.allowNegatedQueries = checkNotNull(allowNegatedQueries);
         this.allowSearch = checkNotNull(allowSearch);
         isNested = true;
-        SearchManager searchManager = editorKit.getSearchManager();
-        if (searchManager instanceof SearchTabManager) {
-            this.searchManager = (SearchTabManager) searchManager;
-            this.queryFactory = new BasicQuery.Factory(new SearchContext(editorKit), this.searchManager);
-        }
-        // else { TODO: What happen if the search manager is not SearchTabManager
+        initSearchManager();
         initUi();
+    }
+
+    private void initSearchManager() {
+        SearchManager sm = editorKit.getSearchManager();
+        if (sm instanceof SearchTabManager) {
+            searchManager = (SearchTabManager) sm;
+            queryFactory = new BasicQuery.Factory(new SearchContext(editorKit), searchManager);
+        }
     }
 
     private void initUi() {
@@ -99,12 +104,12 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     }
 
     private ActionListener searchBtnListener = e -> {
-        
         if (searchManager == null) {
-            throw new RuntimeException("Unable to perform search. Please change to 'Lucene search tab' in Protege preferences under 'General > Search type' option");
+            JOptionPane.showMessageDialog(editorKit.getOWLWorkspace(), new JLabel("Unable to perform Lucene search. Ensure that" +
+                            "'Lucene search tab' is selected in the Protege preferences (under the 'General' tab, in the 'Search type' option)."),
+                    "Lucene Search Manager not selected", JOptionPane.INFORMATION_MESSAGE);
         }
-        
-        // build an lucene query object from all the query clauses
+        // build a lucene query object from all the query clauses
         FilteredQuery.Builder builder = new FilteredQuery.Builder();
         for(QueryPanel queryPanel : queries) {
             if(queryPanel.isBasicQuery()) {
@@ -214,6 +219,10 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         refresh();
     }
 
+    public void removeQueryPanel(QueryPanel queryPanel) {
+        queries.remove(queryPanel);
+    }
+
     private void clearQueryPanel() {
         queries.clear();
         queriesPanel.removeAll();
@@ -309,6 +318,8 @@ public class QueryEditorPanel extends JPanel implements Disposable {
 
     @Override
     public void dispose() {
-        searchBtn.removeActionListener(searchBtnListener);
+        if(allowSearch) {
+            searchBtn.removeActionListener(searchBtnListener);
+        }
     }
 }

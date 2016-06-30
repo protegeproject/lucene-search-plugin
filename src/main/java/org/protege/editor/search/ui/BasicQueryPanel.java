@@ -20,7 +20,7 @@ import java.util.List;
  * Stanford University
  */
 public class BasicQueryPanel extends QueryPanel {
-    private static final long serialVersionUID = -2169622017720350105L;
+    private static final long serialVersionUID = -4710626661733986365L;
     private OwlEntityComboBox propertyComboBox;
     private JComboBox<QueryType> queryTypeComboBox;
     private JComboBox<Boolean> valueComboBox;
@@ -31,7 +31,7 @@ public class BasicQueryPanel extends QueryPanel {
     /**
      * Constructor
      *
-     * @param editorKit
+     * @param editorKit OWL Editor Kit
      */
     public BasicQueryPanel(OWLEditorKit editorKit) {
         super(editorKit);
@@ -118,22 +118,6 @@ public class BasicQueryPanel extends QueryPanel {
             }
         }
     };
-
-    private JButton getCloseButton() {
-        JButton closeBtn = new JButton(LuceneUiHelper.Utils.getIcon(LuceneUiHelper.Utils.CLOSE_ICON_FILENAME, 11, 11));
-        closeBtn.addActionListener(e -> {
-            JPanel btnHoldingPanel = (JPanel) closeBtn.getParent();
-            JPanel queriesPanel = (JPanel) btnHoldingPanel.getParent();
-            queriesPanel.remove(btnHoldingPanel);
-            Container lastPanel = queriesPanel.getParent();
-            while(lastPanel != null) {
-                lastPanel.revalidate();
-                lastPanel.repaint();
-                lastPanel = lastPanel.getParent();
-            }
-        });
-        return closeBtn;
-    }
 
     public OWLProperty getSelectedProperty() {
         return (OWLProperty) propertyComboBox.getSelectedItem();

@@ -38,8 +38,6 @@ public class QueryResultsPanel extends JPanel implements Disposable {
     private JLabel statusLbl;
     private JButton exportBtn;
 
-    private SearchTabManager searchManager;
-
     /**
      * Constructor
      *
@@ -49,8 +47,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         this.editorKit = checkNotNull(editorKit);
         SearchManager searchManager = editorKit.getSearchManager();
         if (searchManager instanceof SearchTabManager) {
-            this.searchManager = (SearchTabManager) searchManager;
-            this.searchManager.addSearchListener(luceneListener);
+            ((SearchTabManager) searchManager).addSearchListener(luceneListener);
         }
         initUi();
     }
@@ -242,14 +239,20 @@ public class QueryResultsPanel extends JPanel implements Disposable {
 
     private void exportResults() {
         boolean success = false;
-        try {
-            success = ExportDialogPanel.showDialog(editorKit, getResults());
-        } catch (IOException e) {
-            ErrorLogPanel.showErrorDialog(e);
-        }
-        if(success) {
-            JOptionPane.showMessageDialog(this, new JLabel("The results have been successfully exported to CSV file."),
-                    "Results exported to CSV file", JOptionPane.INFORMATION_MESSAGE);
+        List<OWLEntity> results = getResults();
+        if (!results.isEmpty()) {
+            try {
+                success = ExportDialogPanel.showDialog(editorKit, results);
+            } catch (IOException e) {
+                ErrorLogPanel.showErrorDialog(e);
+            }
+            if (success) {
+                JOptionPane.showMessageDialog(editorKit.getOWLWorkspace(), new JLabel("The results have been successfully exported to CSV file."),
+                        "Results exported to CSV file", JOptionPane.INFORMATION_MESSAGE);
+            }
+        } else {
+            JOptionPane.showMessageDialog(editorKit.getOWLWorkspace(), new JLabel("There are no results to export."),
+                    "No results to export", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 

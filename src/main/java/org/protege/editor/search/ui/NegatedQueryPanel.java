@@ -45,22 +45,6 @@ public class NegatedQueryPanel extends QueryPanel {
         add(editorPanel, BorderLayout.CENTER);
     }
 
-    private JButton getCloseButton() {
-        JButton closeBtn = new JButton(LuceneUiHelper.Utils.getIcon(LuceneUiHelper.Utils.CLOSE_ICON_FILENAME, 11, 11));
-        closeBtn.addActionListener(e -> {
-            JPanel btnHoldingPanel = (JPanel) closeBtn.getParent().getParent();
-            JPanel queriesPanel = (JPanel) btnHoldingPanel.getParent();
-            queriesPanel.remove(btnHoldingPanel);
-            Container lastPanel = queriesPanel.getParent();
-            while(lastPanel != null) {
-                lastPanel.revalidate();
-                lastPanel.repaint();
-                lastPanel = lastPanel.getParent();
-            }
-        });
-        return closeBtn;
-    }
-
     @Override
     boolean isBasicQuery() {
         return false;
