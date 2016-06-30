@@ -2,7 +2,7 @@ package org.protege.editor.search.ui;
 
 import org.protege.editor.core.Disposable;
 import org.protege.editor.owl.OWLEditorKit;
-import org.protege.editor.owl.model.search.SearchManager;
+import org.protege.editor.search.lucene.LuceneSearcher;
 import org.protege.editor.search.lucene.SearchContext;
 import org.protege.editor.search.nci.BasicQuery;
 import org.protege.editor.search.nci.FilteredQuery;
@@ -41,8 +41,6 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     private List<QueryPanel> queries = new ArrayList<>();
     private JPanel queriesPanel;
     private OWLEditorKit editorKit;
-    private SearchTabManager searchManager;
-    private BasicQuery.Factory queryFactory;
 
     /**
      * Constructor
@@ -51,7 +49,6 @@ public class QueryEditorPanel extends JPanel implements Disposable {
      */
     public QueryEditorPanel(OWLEditorKit editorKit) {
         this.editorKit = checkNotNull(editorKit);
-        initSearchManager();
         initUi();
     }
 
@@ -69,16 +66,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         this.allowNegatedQueries = checkNotNull(allowNegatedQueries);
         this.allowSearch = checkNotNull(allowSearch);
         isNested = true;
-        initSearchManager();
         initUi();
-    }
-
-    private void initSearchManager() {
-        SearchManager sm = editorKit.getSearchManager();
-        if (sm instanceof SearchTabManager) {
-            searchManager = (SearchTabManager) sm;
-            queryFactory = new BasicQuery.Factory(new SearchContext(editorKit), searchManager);
-        }
     }
 
     private void initUi() {
@@ -104,51 +92,56 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     }
 
     private ActionListener searchBtnListener = e -> {
-        if (searchManager == null) {
+        if (editorKit.getSearchManager() instanceof SearchTabManager) {
+            SearchTabManager searchManager = (SearchTabManager) editorKit.getSearchManager();
+            BasicQuery.Factory queryFactory = new BasicQuery.Factory(new SearchContext(editorKit), searchManager);
+
+            // build a lucene query object from all the query clauses
+            FilteredQuery.Builder builder = new FilteredQuery.Builder();
+            for(QueryPanel queryPanel : queries) {
+                if(queryPanel.isBasicQuery()) {
+                    BasicQuery basicQuery = getBasicQuery((BasicQueryPanel) queryPanel, queryFactory);
+                    builder.add(basicQuery);
+                    
+                } else if(queryPanel.isNegatedQuery()) {
+                    NegatedQuery negatedQuery = getNegatedQuery((NegatedQueryPanel) queryPanel, queryFactory, searchManager);
+                    builder.add(negatedQuery);
+
+                } else if(queryPanel.isNestedQuery()) {
+                    NestedQuery nestedQuery = getNestedQuery((NestedQueryPanel) queryPanel, queryFactory, searchManager);
+                    builder.add(nestedQuery);
+                }
+            }
+            MatchCriteria match = getMatchCriteria();
+            boolean isMatchAll = (match == MatchCriteria.MATCH_ALL) ? true : false;
+            FilteredQuery userQuery = builder.build(isMatchAll);
+            searchManager.performSearch(userQuery);
+        }
+        else {
             JOptionPane.showMessageDialog(editorKit.getOWLWorkspace(), new JLabel("Unable to perform Lucene search. Ensure that" +
-                            "'Lucene search tab' is selected in the Protege preferences (under the 'General' tab, in the 'Search type' option)."),
+                            " 'Lucene search tab' is selected in the Protege preferences (under the 'General' tab, in the 'Search type' option)."),
                     "Lucene Search Manager not selected", JOptionPane.INFORMATION_MESSAGE);
         }
-        // build a lucene query object from all the query clauses
-        FilteredQuery.Builder builder = new FilteredQuery.Builder();
-        for(QueryPanel queryPanel : queries) {
-            if(queryPanel.isBasicQuery()) {
-                BasicQuery basicQuery = getBasicQuery((BasicQueryPanel) queryPanel);
-                builder.add(basicQuery);
-                
-            } else if(queryPanel.isNegatedQuery()) {
-                NegatedQuery negatedQuery = getNegatedQuery((NegatedQueryPanel) queryPanel);
-                builder.add(negatedQuery);
-
-            } else if(queryPanel.isNestedQuery()) {
-                NestedQuery nestedQuery = getNestedQuery((NestedQueryPanel) queryPanel);
-                builder.add(nestedQuery);
-            }
-        }
-        MatchCriteria match = getMatchCriteria();
-        boolean isMatchAll = (match == MatchCriteria.MATCH_ALL) ? true : false;
-        FilteredQuery userQuery = builder.build(isMatchAll);
-        searchManager.performSearch(userQuery);
     };
 
-    private BasicQuery getBasicQuery(BasicQueryPanel queryPanel) {
+    private BasicQuery getBasicQuery(BasicQueryPanel queryPanel, BasicQuery.Factory queryFactory) {
         OWLProperty property = queryPanel.getSelectedProperty();
         QueryType queryType = queryPanel.getSelectedQueryType();
         String value = queryPanel.getInputStringValue();
         return queryFactory.createQuery(property, queryType, value);
     }
 
-    private NegatedQuery getNegatedQuery(NegatedQueryPanel queryPanel) {
+    private NegatedQuery getNegatedQuery(NegatedQueryPanel queryPanel, BasicQuery.Factory queryFactory, LuceneSearcher searcher) {
         NegatedQuery.Builder builder = new NegatedQuery.Builder(new SearchContext(editorKit));
         QueryEditorPanel editorPanel = queryPanel.getQueryEditorPanel();
         List<QueryPanel> queryList = editorPanel.getQueryPanels();
         for(QueryPanel q : queryList) {
             SearchTabQuery query = null;
             if (q.isBasicQuery()) {
-                query = getBasicQuery((BasicQueryPanel) q);
+                query = getBasicQuery((BasicQueryPanel) q, queryFactory);
             }
             else if (q.isNestedQuery()) {
-                query = getNestedQuery((NestedQueryPanel) q);
+                query = getNestedQuery((NestedQueryPanel) q, queryFactory, searcher);
             }
             if (query != null) {
                 builder.add(query);
@@ -159,17 +152,17 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         return builder.build(isMatchAll);
     }
     
-    private NestedQuery getNestedQuery(NestedQueryPanel queryPanel) {
-        NestedQuery.Builder builder = new NestedQuery.Builder(searchManager);
+    private NestedQuery getNestedQuery(NestedQueryPanel queryPanel, BasicQuery.Factory queryFactory, LuceneSearcher searcher) {
+        NestedQuery.Builder builder = new NestedQuery.Builder(searcher);
         QueryEditorPanel editorPanel = queryPanel.getQueryEditorPanel();
         List<QueryPanel> queryList = editorPanel.getQueryPanels();
         for(QueryPanel q : queryList) {
             SearchTabQuery query = null;
             if (q.isBasicQuery()) {
-                query = getBasicQuery((BasicQueryPanel) q);
+                query = getBasicQuery((BasicQueryPanel) q, queryFactory);
             }
             else if (q.isNegatedQuery()) {
-                query = getNegatedQuery((NegatedQueryPanel) q);
+                query = getNegatedQuery((NegatedQueryPanel) q, queryFactory, searcher);
             }
             if (query != null) {
                 builder.add(query);
