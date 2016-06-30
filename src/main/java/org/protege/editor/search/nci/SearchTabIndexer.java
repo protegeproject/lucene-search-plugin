@@ -154,7 +154,7 @@ public class SearchTabIndexer extends AbstractLuceneIndexer {
                     OWLEntity entity = getOWLEntity((IRI) axiom.getSubject());
                     doc.add(new TextField(IndexField.ENTITY_IRI, getEntityId(entity), Store.YES));
                     doc.add(new TextField(IndexField.DISPLAY_NAME, getDisplayName(entity), Store.YES));
-                    doc.add(new TextField(IndexField.ANNOTATION_IRI, getEntityId(axiom.getProperty()), Store.YES));
+                    doc.add(new StringField(IndexField.ANNOTATION_IRI, getEntityId(axiom.getProperty()), Store.YES));
                     doc.add(new TextField(IndexField.ANNOTATION_DISPLAY_NAME, getDisplayName(axiom.getProperty()), Store.YES));
                     doc.add(new TextField(IndexField.ANNOTATION_TEXT, getAnnotationText(axiom.getAnnotation()), Store.YES));
                     documents.add(doc);
@@ -176,9 +176,9 @@ public class SearchTabIndexer extends AbstractLuceneIndexer {
                         Document doc = new Document();
                         doc.add(new TextField(IndexField.ENTITY_IRI, getEntityId(cls), Store.YES));
                         doc.add(new TextField(IndexField.DISPLAY_NAME, getDisplayName(cls), Store.YES));
-                        doc.add(new TextField(IndexField.OBJECT_PROPERTY_IRI, getEntityId(property), Store.YES));
+                        doc.add(new StringField(IndexField.OBJECT_PROPERTY_IRI, getEntityId(property), Store.YES));
                         doc.add(new TextField(IndexField.OBJECT_PROPERTY_DISPLAY_NAME, getDisplayName(property), Store.YES));
-                        doc.add(new TextField(IndexField.FILLER_IRI, getEntityId(filler), Store.YES));
+                        doc.add(new StringField(IndexField.FILLER_IRI, getEntityId(filler), Store.YES));
                         doc.add(new TextField(IndexField.FILLER_DISPLAY_NAME, getDisplayName(filler), Store.YES));
                         documents.add(doc);
                     }
