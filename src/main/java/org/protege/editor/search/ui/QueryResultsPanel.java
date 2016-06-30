@@ -4,8 +4,8 @@ import org.protege.editor.core.Disposable;
 import org.protege.editor.core.ui.error.ErrorLogPanel;
 import org.protege.editor.owl.OWLEditorKit;
 import org.protege.editor.owl.model.find.OWLEntityFinder;
-import org.protege.editor.owl.ui.renderer.OWLCellRenderer;
 import org.protege.editor.owl.model.search.SearchManager;
+import org.protege.editor.owl.ui.renderer.OWLCellRenderer;
 import org.protege.editor.search.nci.SearchTabManager;
 import org.semanticweb.owlapi.model.OWLEntity;
 
@@ -15,7 +15,7 @@ import javax.swing.border.MatteBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
@@ -29,7 +29,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class QueryResultsPanel extends JPanel implements Disposable {
-    private static final long serialVersionUID = -7541052466202147909L;
+    private static final long serialVersionUID = 3455626165441568874L;
     private OWLEditorKit editorKit;
     private JList<OWLEntity> results;
     private List<OWLEntity> resultsList, txtFieldFilteredResults;
@@ -59,6 +59,8 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         results.setCellRenderer(new OWLCellRenderer(editorKit));
         results.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         results.setFixedCellHeight(21);
+        results.addMouseListener(listMouseListener);
+        results.addKeyListener(listKeyListener);
 
         JPanel resultsPanel = new JPanel(new BorderLayout());
         JScrollPane scrollPane = new JScrollPane(results);
@@ -108,6 +110,33 @@ public class QueryResultsPanel extends JPanel implements Disposable {
             }
         }
     };
+
+    private MouseListener listMouseListener = new MouseAdapter() {
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            if(e.getClickCount() == 2) {
+                selectEntity();
+            }
+            super.mouseReleased(e);
+        }
+    };
+
+    private KeyListener listKeyListener = new KeyAdapter() {
+        @Override
+        public void keyReleased(KeyEvent e) {
+            if(e.getKeyChar() == KeyEvent.VK_ENTER) {
+                selectEntity();
+            }
+        }
+    };
+
+    private void selectEntity() {
+        OWLEntity selectedEntity = getSelectedEntity();
+        if (selectedEntity != null) {
+            editorKit.getOWLWorkspace().getOWLSelectionModel().setSelectedEntity(selectedEntity);
+            editorKit.getOWLWorkspace().displayOWLEntity(selectedEntity);
+        }
+    }
 
     public OWLEntity getSelectedEntity() {
         return results.getSelectedValue();
