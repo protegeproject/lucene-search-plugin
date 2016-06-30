@@ -67,7 +67,7 @@ public class LuceneSearchPreferences {
     }
 
     public static boolean useUserHomeDirectoryAsBaseDirectory() {
-        return getPreferences().getBoolean(USE_HOME_DIR, false);
+        return getPreferences().getBoolean(USE_HOME_DIR, true);
     }
 
     /**
