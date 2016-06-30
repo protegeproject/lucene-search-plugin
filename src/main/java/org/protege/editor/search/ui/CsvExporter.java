@@ -163,9 +163,8 @@ public class CsvExporter {
                     output += fileDelimiter;
                 }
             }
-        }
-        if(!output.isEmpty()) {
-            logger.info("Property values: " + output);
+        } else {
+            output += fileDelimiter;
         }
         return output;
     }
