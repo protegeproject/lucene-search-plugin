@@ -2,8 +2,16 @@ package org.protege.editor.search.ui;
 
 import org.protege.editor.core.Disposable;
 import org.protege.editor.owl.OWLEditorKit;
+import org.protege.editor.search.lucene.SearchContext;
+import org.protege.editor.search.nci.BasicQuery;
+import org.protege.editor.search.nci.FilteredQuery;
+import org.protege.editor.search.nci.NegatedQuery;
+import org.protege.editor.search.nci.NestedQuery;
 import org.protege.editor.search.nci.QueryType;
+import org.protege.editor.search.nci.SearchTabManager;
+import org.protege.editor.search.nci.SearchTabQuery;
 import org.semanticweb.owlapi.model.OWLEntity;
+import org.semanticweb.owlapi.model.OWLProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +41,9 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     private JPanel queriesPanel;
     private OWLEditorKit editorKit;
 
+    private SearchTabManager searchManager;
+    private BasicQuery.Factory queryFactory;
+
     /**
      * Constructor
      *
@@ -53,6 +64,8 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     }
 
     private void initUi() {
+        searchManager = (SearchTabManager) editorKit.getSearchManager();
+        queryFactory = new BasicQuery.Factory(new SearchContext(editorKit), searchManager);
         setLayout(new BorderLayout());
         setBorder(LuceneUiHelper.Utils.EMPTY_BORDER);
         JPanel queriesPanelHolder = new JPanel(new BorderLayout());
@@ -76,68 +89,74 @@ public class QueryEditorPanel extends JPanel implements Disposable {
 
     private ActionListener searchBtnListener = e -> {
         // build an lucene query object from all the query clauses
-        Object luceneQuery;
-
+        FilteredQuery.Builder builder = new FilteredQuery.Builder();
         for(QueryPanel queryPanel : queries) {
             if(queryPanel.isBasicQuery()) {
-                BasicQueryPanel q = (BasicQueryPanel) queryPanel;
-                Object query = getBasicQueryObject(q);
-
-                // TODO: add query to luceneQuery
-
+                BasicQuery basicQuery = getBasicQuery((BasicQueryPanel) queryPanel);
+                builder.add(basicQuery);
+                
             } else if(queryPanel.isNegatedQuery()) {
-                NegatedQueryPanel q = (NegatedQueryPanel) queryPanel;
-                Object query = getNegatedQuery(q);
-
-                // TODO: add to luceneQuery
+                NegatedQuery negatedQuery = getNegatedQuery((NegatedQueryPanel) queryPanel);
+                builder.add(negatedQuery);
 
             } else if(queryPanel.isNestedQuery()) {
-                NestedQueryPanel q = (NestedQueryPanel) queryPanel;
-                QueryEditorPanel editorPanel = q.getQueryEditorPanel();
-                List<QueryPanel> queryList = editorPanel.getQueryPanels();
-
-                List queryClauses = new ArrayList<>();
-                for(QueryPanel clausePanel : queryList) {
-                    Object query = null;
-                    if(clausePanel.isBasicQuery()) {
-                        query = getBasicQueryObject((BasicQueryPanel) clausePanel);
-                    } else if(clausePanel.isNegatedQuery()) {
-                        query = getNegatedQuery((NegatedQueryPanel) clausePanel);
-                    }
-                    queryClauses.add(query);
-                }
-                MatchCriteria matchCriteria = editorPanel.getMatchCriteria();
-                OWLEntity selectedProperty = q.getSelectedProperty();
-
-                // TODO: create nested query with the list of query clauses, match criteria, and selected property, and add to luceneQuery
-
+                NestedQuery nestedQuery = getNestedQuery((NestedQueryPanel) queryPanel);
+                builder.add(nestedQuery);
             }
         }
+        MatchCriteria match = getMatchCriteria();
+        boolean isMatchAll = (match == MatchCriteria.MATCH_ALL) ? true : false;
+        FilteredQuery userQuery = builder.build(isMatchAll);
+        searchManager.performSearch(userQuery);
     };
 
-    private Object getBasicQueryObject(BasicQueryPanel queryPanel) {
-        OWLEntity property = queryPanel.getSelectedProperty();
+    private BasicQuery getBasicQuery(BasicQueryPanel queryPanel) {
+        OWLProperty property = queryPanel.getSelectedProperty();
         QueryType queryType = queryPanel.getSelectedQueryType();
         String value = queryPanel.getInputStringValue();
-
-        // TODO: build basic query clause with above details
-
-        return null;
+        return queryFactory.createQuery(property, queryType, value);
     }
 
-    private Object getNegatedQuery(NegatedQueryPanel queryPanel) {
+    private NegatedQuery getNegatedQuery(NegatedQueryPanel queryPanel) {
+        NegatedQuery.Builder builder = new NegatedQuery.Builder(new SearchContext(editorKit));
         QueryEditorPanel editorPanel = queryPanel.getQueryEditorPanel();
         List<QueryPanel> queryList = editorPanel.getQueryPanels();
-        List queryClauses = new ArrayList<>();
         for(QueryPanel q : queryList) {
-            Object query = getBasicQueryObject((BasicQueryPanel) q);
-            queryClauses.add(query);
+            SearchTabQuery query = null;
+            if (q.isBasicQuery()) {
+                query = getBasicQuery((BasicQueryPanel) q);
+            }
+            else if (q.isNestedQuery()) {
+                query = getNestedQuery((NestedQueryPanel) q);
+            }
+            if (query != null) {
+                builder.add(query);
+            }
         }
         MatchCriteria match = editorPanel.getMatchCriteria();
-
-        // TODO: build negated query with the list of query clauses and match criteria
-
-        return null;
+        boolean isMatchAll = (match == MatchCriteria.MATCH_ALL) ? true : false;
+        return builder.build(isMatchAll);
+    }
+    
+    private NestedQuery getNestedQuery(NestedQueryPanel queryPanel) {
+        NestedQuery.Builder builder = new NestedQuery.Builder(searchManager);
+        QueryEditorPanel editorPanel = queryPanel.getQueryEditorPanel();
+        List<QueryPanel> queryList = editorPanel.getQueryPanels();
+        for(QueryPanel q : queryList) {
+            SearchTabQuery query = null;
+            if (q.isBasicQuery()) {
+                query = getBasicQuery((BasicQueryPanel) q);
+            }
+            else if (q.isNegatedQuery()) {
+                query = getNegatedQuery((NegatedQueryPanel) q);
+            }
+            if (query != null) {
+                builder.add(query);
+            }
+        }
+        MatchCriteria match = editorPanel.getMatchCriteria();
+        boolean isMatchAll = (match == MatchCriteria.MATCH_ALL) ? true : false;
+        return builder.build(queryPanel.getSelectedProperty().getIRI(), isMatchAll);
     }
 
     public List<QueryPanel> getQueryPanels() {
