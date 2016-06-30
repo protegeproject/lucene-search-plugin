@@ -5,6 +5,8 @@ import org.protege.editor.core.ui.error.ErrorLogPanel;
 import org.protege.editor.owl.OWLEditorKit;
 import org.protege.editor.owl.model.find.OWLEntityFinder;
 import org.protege.editor.owl.ui.renderer.OWLCellRenderer;
+import org.protege.editor.owl.model.search.SearchManager;
+import org.protege.editor.search.nci.SearchTabManager;
 import org.semanticweb.owlapi.model.OWLEntity;
 
 import javax.swing.*;
@@ -36,6 +38,8 @@ public class QueryResultsPanel extends JPanel implements Disposable {
     private JLabel statusLbl;
     private JButton exportBtn;
 
+    private SearchTabManager searchManager;
+
     /**
      * Constructor
      *
@@ -43,6 +47,11 @@ public class QueryResultsPanel extends JPanel implements Disposable {
      */
     public QueryResultsPanel(OWLEditorKit editorKit) {
         this.editorKit = checkNotNull(editorKit);
+        SearchManager searchManager = editorKit.getSearchManager();
+        if (searchManager instanceof SearchTabManager) {
+            this.searchManager = (SearchTabManager) searchManager;
+            this.searchManager.addSearchListener(luceneListener);
+        }
         initUi();
     }
 
