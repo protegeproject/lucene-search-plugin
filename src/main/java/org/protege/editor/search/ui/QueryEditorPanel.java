@@ -2,6 +2,7 @@ package org.protege.editor.search.ui;
 
 import org.protege.editor.core.Disposable;
 import org.protege.editor.owl.OWLEditorKit;
+import org.protege.editor.owl.model.search.SearchManager;
 import org.protege.editor.search.lucene.SearchContext;
 import org.protege.editor.search.nci.BasicQuery;
 import org.protege.editor.search.nci.FilteredQuery;
@@ -51,6 +52,12 @@ public class QueryEditorPanel extends JPanel implements Disposable {
      */
     public QueryEditorPanel(OWLEditorKit editorKit) {
         this.editorKit = checkNotNull(editorKit);
+        SearchManager searchManager = editorKit.getSearchManager();
+        if (searchManager instanceof SearchTabManager) {
+            this.searchManager = (SearchTabManager) searchManager;
+            this.queryFactory = new BasicQuery.Factory(new SearchContext(editorKit), this.searchManager);
+        }
+        // else { TODO: What happen if the search manager is not SearchTabManager
         initUi();
     }
 
@@ -60,12 +67,16 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         this.allowNegatedQueries = checkNotNull(allowNegatedQueries);
         this.allowSearch = checkNotNull(allowSearch);
         isNested = true;
+        SearchManager searchManager = editorKit.getSearchManager();
+        if (searchManager instanceof SearchTabManager) {
+            this.searchManager = (SearchTabManager) searchManager;
+            this.queryFactory = new BasicQuery.Factory(new SearchContext(editorKit), this.searchManager);
+        }
+        // else { TODO: What happen if the search manager is not SearchTabManager
         initUi();
     }
 
     private void initUi() {
-        searchManager = (SearchTabManager) editorKit.getSearchManager();
-        queryFactory = new BasicQuery.Factory(new SearchContext(editorKit), searchManager);
         setLayout(new BorderLayout());
         setBorder(LuceneUiHelper.Utils.EMPTY_BORDER);
         JPanel queriesPanelHolder = new JPanel(new BorderLayout());
@@ -88,6 +99,11 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     }
 
     private ActionListener searchBtnListener = e -> {
+        
+        if (searchManager == null) {
+            throw new RuntimeException("Unable to perform search. Please change to 'Lucene search tab' in Protege preferences under 'General > Search type' option");
+        }
+        
         // build an lucene query object from all the query clauses
         FilteredQuery.Builder builder = new FilteredQuery.Builder();
         for(QueryPanel queryPanel : queries) {
