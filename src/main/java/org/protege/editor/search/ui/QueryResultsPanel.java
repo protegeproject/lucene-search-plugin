@@ -27,7 +27,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class QueryResultsPanel extends JPanel implements Disposable {
-    private static final long serialVersionUID = 8945037730875981058L;
+    private static final long serialVersionUID = -7541052466202147909L;
     private OWLEditorKit editorKit;
     private JList<OWLEntity> results;
     private List<OWLEntity> resultsList, txtFieldFilteredResults;
@@ -35,8 +35,6 @@ public class QueryResultsPanel extends JPanel implements Disposable {
     private JTextField filterTextField;
     private JLabel statusLbl;
     private JButton exportBtn;
-
-    // TODO revisit properties checkboxes: keep general 'properties' or break down into specific property types?
 
     /**
      * Constructor
@@ -51,10 +49,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
     private void initUi() {
         setLayout(new BorderLayout());
 
-        // TODO: remove. testing only
-        Set<OWLEntity> entities = editorKit.getOWLModelManager().getActiveOntology().getSignature();
-        resultsList = new ArrayList<>(entities);
-        results = new JList<>(entities.toArray(new OWLEntity[entities.size()]));
+        results = new JList<>();
         results.setCellRenderer(new OWLCellRenderer(editorKit));
         results.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         results.setFixedCellHeight(21);
@@ -93,14 +88,24 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         }
     };
 
+    private LuceneListener luceneListener = new LuceneListener() {
+        @Override
+        public void searchStarted(LuceneEvent event) {
+            statusLbl.setText("Performing search...");
+        }
+
+        @Override
+        public void searchFinished(LuceneEvent event) {
+            Optional<Collection<OWLEntity>> optCollection = event.getResults();
+            if(optCollection.isPresent()) {
+                setResults(optCollection.get());
+            }
+        }
+    };
+
     public OWLEntity getSelectedEntity() {
         return results.getSelectedValue();
     }
-
-    /* TODO Lucene listener:
-           on 'start-search' change statusLbl to "Performing query..."
-           on 'end-search' change statusLbl to "x matches found"
-     */
 
     private JPanel getHeaderPanel() {
         JPanel header = new JPanel(new BorderLayout());
@@ -239,8 +244,8 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         }
     }
 
-    public void setResults(List<OWLEntity> entities) {
-        resultsList = checkNotNull(entities);
+    public void setResults(Collection<OWLEntity> entities) {
+        resultsList = new ArrayList<>(checkNotNull(entities));
         Collections.sort(resultsList);
         updateResultsLabel(entities);
         results.setListData(resultsList.toArray(new OWLEntity[entities.size()]));

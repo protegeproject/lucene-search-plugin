@@ -7,6 +7,8 @@ package org.protege.editor.search.ui;
  */
 public interface LuceneListener {
 
-    void statusChanged(LuceneEvent event);
+    void searchStarted(LuceneEvent event);
+
+    void searchFinished(LuceneEvent event);
 
 }
