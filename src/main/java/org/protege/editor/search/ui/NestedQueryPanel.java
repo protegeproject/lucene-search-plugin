@@ -2,6 +2,7 @@ package org.protege.editor.search.ui;
 
 import org.protege.editor.owl.OWLEditorKit;
 import org.semanticweb.owlapi.model.OWLEntity;
+import org.semanticweb.owlapi.model.OWLProperty;
 
 import javax.swing.*;
 import javax.swing.border.MatteBorder;
@@ -95,8 +96,8 @@ public class NestedQueryPanel extends QueryPanel {
         return true;
     }
 
-    public OWLEntity getSelectedProperty() {
-        return (OWLEntity) propertyComboBox.getSelectedItem();
+    public OWLProperty getSelectedProperty() {
+        return (OWLProperty) propertyComboBox.getSelectedItem();
     }
 
     public QueryEditorPanel getQueryEditorPanel() {
