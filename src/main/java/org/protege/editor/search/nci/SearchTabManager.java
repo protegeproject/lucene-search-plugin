@@ -232,7 +232,7 @@ public class SearchTabManager extends LuceneSearcher {
         }
     }
 
-    public void performSearch(SearchTabQuery pluginQuery, SearchTabResultHandler searchResultHandler) {
+    public void performSearch(SearchTabQuery userQuery) {
         try {
             if (lastSearchId.getAndIncrement() == 0) {
                 Directory indexDirectory = getIndexDirectory();
@@ -240,7 +240,7 @@ public class SearchTabManager extends LuceneSearcher {
                     service.submit(this::buildingIndex);
                 }
             }
-            service.submit(new SearchTabCallable(lastSearchId.incrementAndGet(), pluginQuery, searchResultHandler));
+            service.submit(new SearchTabCallable(lastSearchId.incrementAndGet(), userQuery));
         }
         catch (IOException e) {
             logger.error("Failed to perform search", e);
@@ -372,12 +372,10 @@ public class SearchTabManager extends LuceneSearcher {
     private class SearchTabCallable implements Runnable {
         private long searchId;
         private SearchTabQuery pluginQuery;
-        private SearchTabResultHandler searchResultHandler;
 
-        private SearchTabCallable(long searchId, SearchTabQuery pluginQuery, SearchTabResultHandler searchResultHandler) {
+        private SearchTabCallable(long searchId, SearchTabQuery pluginQuery) {
             this.searchId = searchId;
             this.pluginQuery = pluginQuery;
-            this.searchResultHandler = searchResultHandler;
         }
 
         @Override
@@ -391,20 +389,15 @@ public class SearchTabManager extends LuceneSearcher {
                 fireSearchFinished();
                 stopwatch.stop();
                 logger.debug("... finished search {} in {} ms ({} results)", searchId, stopwatch.elapsed(TimeUnit.MILLISECONDS), finalResults.size());
-                showResults(finalResults, searchResultHandler);
+                showResults(finalResults);
             }
             catch (QueryEvaluationException e) {
                 logger.error("Error while executing the query: {}", e);
             }
         }
 
-        private void showResults(final Set<OWLEntity> results, final SearchTabResultHandler searchResultHandler) {
-            if (SwingUtilities.isEventDispatchThread()) {
-                searchResultHandler.searchFinished(results);
-            }
-            else {
-                SwingUtilities.invokeLater(() -> searchResultHandler.searchFinished(results));
-            }
+        private void showResults(final Set<OWLEntity> results) {
+            // TODO broadcast to listeners
         }
     }
  
