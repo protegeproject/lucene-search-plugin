@@ -1,8 +1,10 @@
 package org.protege.editor.search.nci;
 
 import org.protege.editor.search.lucene.QueryEvaluationException;
+import org.protege.editor.search.lucene.SearchContext;
 
 import org.semanticweb.owlapi.model.OWLEntity;
+import org.semanticweb.owlapi.model.OWLOntology;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -77,8 +79,12 @@ public class NegatedQuery extends ComplexQuery {
 
         private List<SearchTabQuery> filters = new ArrayList<>();
 
-        public Builder() {
-            // NO-OP
+        private final Set<OWLEntity> allEntities = new HashSet<>();
+
+        public Builder(SearchContext searchContext) {
+            for (OWLOntology ontology : searchContext.getOntologies()) {
+                allEntities.addAll(ontology.getSignature());
+            }
         }
 
         public Builder add(SearchTabQuery filter) {
@@ -86,8 +92,8 @@ public class NegatedQuery extends ComplexQuery {
             return this;
         }
 
-        public NegatedQuery build(Set<OWLEntity> resultSpace, boolean isMatchAll) {
-            return new NegatedQuery(filters, resultSpace, isMatchAll);
+        public NegatedQuery build(boolean isMatchAll) {
+            return new NegatedQuery(filters, allEntities, isMatchAll);
         }
     }
 
