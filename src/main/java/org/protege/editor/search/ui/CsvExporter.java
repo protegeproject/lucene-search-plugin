@@ -67,12 +67,10 @@ public class CsvExporter {
         ont = editorKit.getOWLModelManager().getActiveOntology();
     }
 
-    // TODO: Work in progress
     public void export() throws IOException {
+        logger.info("Exporting Lucene search results to: " + outputFile.getAbsolutePath());
         FileWriter fw = new FileWriter(outputFile);
         String header = getHeader();
-        logger.info("exporting to: " + outputFile.getAbsolutePath());
-
         OWLReasoner reasoner = null;
         if(isIncludingSuperclasses()) {
             reasoner = LuceneUiHelper.getInstance(editorKit).getReasoner();
@@ -89,8 +87,8 @@ public class CsvExporter {
                 }
             }
             if(!properties.isEmpty()) {
-                for (int i = 0; i < properties.size(); i++) {
-                    row += getPropertyValues(e, properties.get(i));
+                for (OWLEntity property : properties) {
+                    row += getPropertyValues(e, property);
                 }
             }
             rows.add(row);
@@ -106,6 +104,7 @@ public class CsvExporter {
         }
         fw.flush();
         fw.close();
+        logger.info(" ... done exporting");
     }
 
     private String getHeader() {
@@ -117,15 +116,14 @@ public class CsvExporter {
             header += "Superclass(es)" + fileDelimiter;
         }
         if(!properties.isEmpty()) {
-            for (int i = 0; i < properties.size(); i++) {
-                header += getEntityRendering(properties.get(i)) + fileDelimiter;
+            for (OWLEntity property : properties) {
+                header += getEntityRendering(property) + fileDelimiter;
             }
         }
         return header;
     }
 
     private String getPropertyValues(OWLEntity entity, OWLEntity prop) {
-        logger.info("\tGetting values for property " + getEntityRendering(prop) + " on " + getEntityRendering(entity));
         List<String> values = new ArrayList<>();
         if(prop.isOWLAnnotationProperty()) {
             Set<OWLAnnotationAssertionAxiom> axioms = ont.getAnnotationAssertionAxioms(entity.getIRI());
@@ -133,20 +131,17 @@ public class CsvExporter {
                 if(ax.getProperty().equals(prop)) {
                     OWLAnnotationValue annValue = ax.getValue();
                     if(annValue instanceof IRI) {
-                        logger.info("\t   value is IRI");
                         values.add(annValue.toString());
                     } else if(annValue instanceof OWLLiteral) {
-                        logger.info("\t   value is owl literal");
                         String literalStr =  ((OWLLiteral) annValue).getLiteral();
                         literalStr = literalStr.replaceAll("\"", "'");
-                        values.add("\"" + literalStr + "\"");
-                        logger.info("\t\tliteral: " + literalStr);
+                        values.add(literalStr);
                     } else if(annValue instanceof OWLAnonymousIndividual) {
                         values.add("AnonymousIndividual-" + ((OWLAnonymousIndividual)annValue).getID().getID());
                     }
                 }
             }
-        } else if(prop.isOWLDataProperty() && entity.isOWLNamedIndividual()) {
+        } else if(prop.isOWLDataProperty()) {
             // TODO
         } else if(prop.isOWLObjectProperty()) {
             // TODO
@@ -155,12 +150,13 @@ public class CsvExporter {
         String output = "";
         if(!values.isEmpty()) {
             Iterator<String> iter = values.iterator();
+            output += "\"";
             while (iter.hasNext()) {
-                output += iter.next();
+                output += "'" + iter.next() + "'";
                 if (iter.hasNext()) {
                     output += propertyValuesDelimiter;
                 } else {
-                    output += fileDelimiter;
+                    output += "\"" + fileDelimiter;
                 }
             }
         } else {
@@ -180,7 +176,6 @@ public class CsvExporter {
                 output += propertyValuesDelimiter;
             }
         }
-        logger.info("\t" + output);
         return output;
     }
 
