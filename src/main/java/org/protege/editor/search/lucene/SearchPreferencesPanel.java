@@ -1,6 +1,7 @@
 package org.protege.editor.search.lucene;
 
 import org.protege.editor.core.ui.preferences.PreferencesLayoutPanel;
+import org.protege.editor.core.ui.util.JOptionPaneEx;
 import org.protege.editor.owl.ui.preferences.OWLPreferencesPanel;
 
 import java.awt.BorderLayout;
@@ -9,9 +10,11 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextField;
 
 /**
@@ -25,7 +28,6 @@ public class SearchPreferencesPanel extends OWLPreferencesPanel {
     private static final long serialVersionUID = -818021477356581474L;
 
     private JTextField txtIndexLocation = new JTextField(40);
-    private JTable tblIndexLocation = new IndexInfoTable();
 
     private JRadioButton rbUserHomeDir = new JRadioButton("User home directory");
     private JRadioButton rbTempDir = new JRadioButton("System temporary directory");
@@ -80,9 +82,30 @@ public class SearchPreferencesPanel extends OWLPreferencesPanel {
         });
         
         panel.addGroup("Stored indexes");
+        IndexInfoTable tblIndexLocation = new IndexInfoTable();
         JScrollPane scpIndexLocation = new JScrollPane(tblIndexLocation);
         scpIndexLocation.setPreferredSize(new Dimension(650, 300));
         panel.addGroupComponent(scpIndexLocation);
+        
+        JButton btnRemoveSelected = new JButton("Remove selected index");
+        btnRemoveSelected.addActionListener(l -> {
+            int selectedRow = tblIndexLocation.getSelectedRow();
+            if (selectedRow != -1) {
+                String locationKey = (String) tblIndexLocation.getValueAt(selectedRow, 0); // 0 = first column
+                String msg = String.format("<html>Are you sure want to remove index for ontology '%s'?<br/>"
+                        + "<br/>"
+                        + "This action will remove the index directory on the disk.<br/>"
+                        + "<br/>"
+                        + "Index directory location:<br/>"
+                        + "%s</html>", locationKey, (String) tblIndexLocation.getValueAt(selectedRow, 1));
+                int answer = JOptionPaneEx.showConfirmDialog(this, "Remove selected index", new JLabel(msg),
+                        JOptionPane.QUESTION_MESSAGE, JOptionPane.OK_CANCEL_OPTION, null);
+                if (answer == JOptionPane.OK_OPTION) {
+                    tblIndexLocation.removeIndex(selectedRow);
+                }
+            }
+        });
+        panel.addGroupComponent(btnRemoveSelected);
     }
 
     @Override
