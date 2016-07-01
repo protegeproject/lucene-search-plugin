@@ -11,7 +11,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -27,6 +31,7 @@ public class LuceneSearchPreferences {
     public static final String PREFERENCES_KEY = "SearchIndexPreferences";
 
     public static final String BASE_DIR = "BASE_DIR";
+    public static final String INDEXED_ONTOLOGY = "INDEXED_ONTOLOGY";
 
     public static final String PREFIX_INDEX_DIR = "ProtegeIndex";
 
@@ -67,7 +72,7 @@ public class LuceneSearchPreferences {
     }
 
     public static boolean useUserHomeDirectoryAsBaseDirectory() {
-        return getPreferences().getBoolean(USE_HOME_DIR, false);
+        return getPreferences().getBoolean(USE_HOME_DIR, true);
     }
 
     /**
@@ -113,6 +118,17 @@ public class LuceneSearchPreferences {
     }
 
     /**
+     * Returns a map of ontology id and the associated index location in the file system
+     */
+    public static Map<String, String> getIndexLocationMap() {
+        Map<String, String> toReturn = new HashMap<>();
+        for (String locationKey : getPreferences().getStringList(INDEXED_ONTOLOGY, new ArrayList<String>())) {
+            toReturn.put(locationKey, getPreferences().getString(locationKey, null));
+        }
+        return toReturn;
+    }
+
+    /**
      * Construct a full index path location given the ontology object.
      *
      * @param ontology
@@ -123,8 +139,15 @@ public class LuceneSearchPreferences {
         String directoryName = createUniqueName(ontology.getOntologyID());
         String directoryPath = getBaseDirectory() + fsSeparator + directoryName;
         logger.info("Created new index directory at " + directoryPath);
-        getPreferences().putString(getLocationKey(ontology), directoryPath);
+        registerLocation(getLocationKey(ontology), directoryPath);
         return directoryPath;
+    }
+
+    private static void registerLocation(String locationKey, String directoryPath) {
+        getPreferences().putString(locationKey, directoryPath);
+        List<String> currentList = getPreferences().getStringList(INDEXED_ONTOLOGY, new ArrayList<String>());
+        currentList.add(locationKey);
+        getPreferences().putStringList(INDEXED_ONTOLOGY, currentList);
     }
 
     public static String getIndexLocation(OWLOntology ontology) {
@@ -158,8 +181,8 @@ public class LuceneSearchPreferences {
         try {
             Optional<String> location = getPreferenceValue(getLocationKey(ontology));
             if (location.isPresent()) {
-                getPreferences().putString(getLocationKey(ontology), null); // remove preference by set null value
-                getPreferences().putString(getHashKey(ontology), null);
+                unregisterLocation(getLocationKey(ontology));
+                unsetIndexSnapshot(getHashKey(ontology));
                 FileUtils.deleteDirectory(new File(location.get()));
             }
         }
@@ -168,8 +191,19 @@ public class LuceneSearchPreferences {
         }
     }
 
+    private static void unregisterLocation(String locationKey) {
+        getPreferences().putString(locationKey, null); // remove preference by set null value
+        List<String> currentList = getPreferences().getStringList(INDEXED_ONTOLOGY, new ArrayList<String>());
+        currentList.remove(locationKey);
+        getPreferences().putStringList(INDEXED_ONTOLOGY, currentList);
+    }
+
     public static void setIndexSnapshot(OWLOntology ontology) {
         getPreferences().putString(getHashKey(ontology), ontology.hashCode()+"");
+    }
+
+    private static void unsetIndexSnapshot(String hashKey) {
+        getPreferences().putString(hashKey, null);
     }
 
     /**
