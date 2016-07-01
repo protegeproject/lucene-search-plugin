@@ -1,0 +1,110 @@
+package org.protege.editor.search.lucene;
+
+import java.awt.Color;
+import java.awt.Component;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import javax.swing.JTable;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumnModel;
+
+/**
+ * @author Josef Hardi <johardi@stanford.edu><br>
+ * Stanford University<br>
+ * Bio-Medical Informatics Research Group<br>
+ * Date: 30/06/2016
+ */
+public class IndexInfoTable extends JTable {
+
+    private static final long serialVersionUID = 8148865819337287518L;
+
+    public IndexInfoTable() {
+        setModel(new IndexLocationTableModel());
+        setRowHeight(getRowHeight() + 10);
+        setGridColor(Color.LIGHT_GRAY);
+        setShowHorizontalLines(true);
+        setShowVerticalLines(false);
+        resizeColumnWidth();
+        setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+    }
+
+    private void resizeColumnWidth()
+    {
+       final TableColumnModel columnModel = getColumnModel();
+       for (int column = 0; column < getColumnCount(); column++) {
+          int width = 50; // Min width
+          for (int row = 0; row < getRowCount(); row++) {
+             TableCellRenderer renderer = getCellRenderer(row, column);
+             Component comp = prepareRenderer(renderer, row, column);
+             width = Math.max(comp.getPreferredSize().width + 8, width);
+          }
+          columnModel.getColumn(column).setPreferredWidth(width);
+       }
+    }
+
+    class IndexLocationTableModel extends AbstractTableModel {
+
+        private static final long serialVersionUID = 1L;
+
+        private Map<String, String> indexLocationMap = LuceneSearchPreferences.getIndexLocationMap();
+        private List<String> ontologyIds = new ArrayList<>();
+
+        public IndexLocationTableModel() {
+            ontologyIds.addAll(indexLocationMap.keySet());
+        }
+
+        public int getRowCount() {
+            return indexLocationMap.size();
+        }
+
+        public int getColumnCount() {
+            return 3;
+        }
+
+        public String getColumnName(int column) {
+            switch (column) {
+                case 0:
+                    return "Ontology ID";
+                case 1:
+                    return "Index location path";
+                case 2:
+                    return "Last modified";
+                default:
+                    return "";
+                }
+        }
+
+        public Object getValueAt(int row, int column) {
+            String path = indexLocationMap.get(ontologyIds.get(row));
+            switch (column) {
+                case 0: // "Ontology ID"
+                    return ontologyIds.get(row);
+                case 1: // "Index location path"
+                    if (path == null) {
+                        path = "(path not found)";
+                    }
+                    return path;
+                case 2: // "Last modified"
+                    if (path == null) {
+                        return "N/A";
+                    }
+                    File f = new File(path);
+                    if (f.exists()) {
+                        Date now = new Date();
+                        return TimeUnit.MILLISECONDS.toDays(now.getTime() - f.lastModified()) + " days ago";
+                    }
+                    else {
+                        return "(file not found)";
+                    }
+                default:
+                    return "";
+            }
+        }
+    }
+}

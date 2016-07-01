@@ -4,11 +4,14 @@ import org.protege.editor.core.ui.preferences.PreferencesLayoutPanel;
 import org.protege.editor.owl.ui.preferences.OWLPreferencesPanel;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextField;
 
 /**
@@ -22,6 +25,7 @@ public class SearchPreferencesPanel extends OWLPreferencesPanel {
     private static final long serialVersionUID = -818021477356581474L;
 
     private JTextField txtIndexLocation = new JTextField(40);
+    private JTable tblIndexLocation = new IndexInfoTable();
 
     private JRadioButton rbUserHomeDir = new JRadioButton("User home directory");
     private JRadioButton rbTempDir = new JRadioButton("System temporary directory");
@@ -74,6 +78,11 @@ public class SearchPreferencesPanel extends OWLPreferencesPanel {
             txtIndexLocation.requestFocus();
             txtIndexLocation.selectAll();
         });
+        
+        panel.addGroup("Stored indexes");
+        JScrollPane scpIndexLocation = new JScrollPane(tblIndexLocation);
+        scpIndexLocation.setPreferredSize(new Dimension(650, 300));
+        panel.addGroupComponent(scpIndexLocation);
     }
 
     @Override
