@@ -5,6 +5,7 @@ import java.awt.Component;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -48,15 +49,27 @@ public class IndexInfoTable extends JTable {
        }
     }
 
+    public void removeIndex(int selectedRow) {
+        String locationKey = (String) getValueAt(selectedRow, 0); // 0 = first column
+        LuceneSearchPreferences.removeIndexLocation(locationKey);
+        ((AbstractTableModel) getModel()).fireTableDataChanged();
+    }
+
     class IndexLocationTableModel extends AbstractTableModel {
 
         private static final long serialVersionUID = 1L;
 
-        private Map<String, String> indexLocationMap = LuceneSearchPreferences.getIndexLocationMap();
-        private List<String> ontologyIds = new ArrayList<>();
+        private List<String> locationKeys = new ArrayList<>();
+
+        private Map<String, String> indexLocationMap = new HashMap<>();
 
         public IndexLocationTableModel() {
-            ontologyIds.addAll(indexLocationMap.keySet());
+            initialize();
+            addTableModelListener(e -> {
+                locationKeys.clear();
+                indexLocationMap = LuceneSearchPreferences.getIndexLocationMap();
+                locationKeys.addAll(indexLocationMap.keySet());
+            });
         }
 
         public int getRowCount() {
@@ -81,10 +94,10 @@ public class IndexInfoTable extends JTable {
         }
 
         public Object getValueAt(int row, int column) {
-            String path = indexLocationMap.get(ontologyIds.get(row));
+            String path = indexLocationMap.get(locationKeys.get(row));
             switch (column) {
                 case 0: // "Ontology ID"
-                    return ontologyIds.get(row);
+                    return locationKeys.get(row);
                 case 1: // "Index location path"
                     if (path == null) {
                         path = "(path not found)";
@@ -105,6 +118,11 @@ public class IndexInfoTable extends JTable {
                 default:
                     return "";
             }
+        }
+
+        private void initialize() {
+            indexLocationMap = LuceneSearchPreferences.getIndexLocationMap();
+            locationKeys.addAll(indexLocationMap.keySet());
         }
     }
 }

@@ -123,7 +123,10 @@ public class LuceneSearchPreferences {
     public static Map<String, String> getIndexLocationMap() {
         Map<String, String> toReturn = new HashMap<>();
         for (String locationKey : getPreferences().getStringList(INDEXED_ONTOLOGY, new ArrayList<String>())) {
-            toReturn.put(locationKey, getPreferences().getString(locationKey, null));
+            Optional<String> value = getPreferenceValue(locationKey);
+            if (value.isPresent()) {
+                toReturn.put(locationKey, value.get());
+            }
         }
         return toReturn;
     }
@@ -178,11 +181,15 @@ public class LuceneSearchPreferences {
     }
 
     public static void removeIndexLocation(OWLOntology ontology) {
+        removeIndexLocation(getLocationKey(ontology));
+    }
+
+    public static void removeIndexLocation(String locationKey) {
         try {
-            Optional<String> location = getPreferenceValue(getLocationKey(ontology));
+            Optional<String> location = getPreferenceValue(locationKey);
             if (location.isPresent()) {
-                unregisterLocation(getLocationKey(ontology));
-                unsetIndexSnapshot(getHashKey(ontology));
+                unregisterLocation(locationKey);
+                unsetIndexSnapshot(getHashKey(locationKey));
                 FileUtils.deleteDirectory(new File(location.get()));
             }
         }
@@ -225,7 +232,11 @@ public class LuceneSearchPreferences {
     }
 
     private static String getHashKey(OWLOntology ontology) {
-        return "SIGN:" + ontology.getOntologyID().getDefaultDocumentIRI().get().toString();
+        return getHashKey(getLocationKey(ontology));
+    }
+
+    private static String getHashKey(String locationKey) {
+        return "SIGN:" + locationKey;
     }
 
     private static String getDefaultBaseDirectory() {
