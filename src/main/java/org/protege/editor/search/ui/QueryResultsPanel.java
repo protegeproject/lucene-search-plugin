@@ -4,9 +4,7 @@ import org.protege.editor.core.Disposable;
 import org.protege.editor.core.ui.error.ErrorLogPanel;
 import org.protege.editor.owl.OWLEditorKit;
 import org.protege.editor.owl.model.find.OWLEntityFinder;
-import org.protege.editor.owl.model.search.SearchManager;
 import org.protege.editor.owl.ui.renderer.OWLCellRenderer;
-import org.protege.editor.search.nci.SearchTabManager;
 import org.semanticweb.owlapi.model.OWLEntity;
 
 import javax.swing.*;
@@ -29,7 +27,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class QueryResultsPanel extends JPanel implements Disposable {
-    private static final long serialVersionUID = 3455626165441568874L;
+    private static final long serialVersionUID = -5693579697780941285L;
     private OWLEditorKit editorKit;
     private JList<OWLEntity> results;
     private List<OWLEntity> resultsList, txtFieldFilteredResults;
@@ -45,10 +43,6 @@ public class QueryResultsPanel extends JPanel implements Disposable {
      */
     public QueryResultsPanel(OWLEditorKit editorKit) {
         this.editorKit = checkNotNull(editorKit);
-        SearchManager searchManager = editorKit.getSearchManager();
-        if (searchManager instanceof SearchTabManager) {
-            ((SearchTabManager) searchManager).addSearchListener(luceneListener);
-        }
         initUi();
     }
 
@@ -93,21 +87,6 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         @Override
         public void changedUpdate(DocumentEvent e) {
             filterTextField();
-        }
-    };
-
-    private LuceneListener luceneListener = new LuceneListener() {
-        @Override
-        public void searchStarted(LuceneEvent event) {
-            statusLbl.setText("Performing search...");
-        }
-
-        @Override
-        public void searchFinished(LuceneEvent event) {
-            Optional<Collection<OWLEntity>> optCollection = event.getResults();
-            if(optCollection.isPresent()) {
-                setResults(optCollection.get());
-            }
         }
     };
 
@@ -238,6 +217,9 @@ public class QueryResultsPanel extends JPanel implements Disposable {
     }
 
     private void filterTextField() {
+        if(resultsList.isEmpty()) {
+            return;
+        }
         String toMatch = filterTextField.getText();
         if(toMatch.isEmpty()) {
             results.setListData(resultsList.toArray(new OWLEntity[resultsList.size()]));

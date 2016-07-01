@@ -4,13 +4,7 @@ import org.protege.editor.core.Disposable;
 import org.protege.editor.owl.OWLEditorKit;
 import org.protege.editor.search.lucene.LuceneSearcher;
 import org.protege.editor.search.lucene.SearchContext;
-import org.protege.editor.search.nci.BasicQuery;
-import org.protege.editor.search.nci.FilteredQuery;
-import org.protege.editor.search.nci.NegatedQuery;
-import org.protege.editor.search.nci.NestedQuery;
-import org.protege.editor.search.nci.QueryType;
-import org.protege.editor.search.nci.SearchTabManager;
-import org.protege.editor.search.nci.SearchTabQuery;
+import org.protege.editor.search.nci.*;
 import org.semanticweb.owlapi.model.OWLEntity;
 import org.semanticweb.owlapi.model.OWLProperty;
 import org.slf4j.Logger;
@@ -22,6 +16,7 @@ import javax.swing.border.MatteBorder;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,7 +28,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class QueryEditorPanel extends JPanel implements Disposable {
-    private static final long serialVersionUID = -8667573656000040388L;
+    private static final long serialVersionUID = -7199369739268268605L;
     private static Logger logger = LoggerFactory.getLogger(QueryEditorPanel.class.getName());
     private JButton addQueryBtn, addNegatedQueryBtn, addNestedQueryBtn, clearBtn, searchBtn;
     private JRadioButton matchAll, matchAny;
@@ -113,9 +108,11 @@ public class QueryEditorPanel extends JPanel implements Disposable {
                 }
             }
             MatchCriteria match = getMatchCriteria();
-            boolean isMatchAll = (match == MatchCriteria.MATCH_ALL) ? true : false;
+            boolean isMatchAll = (match == MatchCriteria.MATCH_ALL);
             FilteredQuery userQuery = builder.build(isMatchAll);
-            searchManager.performSearch(userQuery);
+            if(userQuery != null) {
+                searchManager.performSearch(userQuery, this::handleResults);
+            }
         }
         else {
             JOptionPane.showMessageDialog(editorKit.getOWLWorkspace(), new JLabel("Unable to perform Lucene search. Ensure that" +
@@ -123,6 +120,22 @@ public class QueryEditorPanel extends JPanel implements Disposable {
                     "Lucene Search Manager not selected", JOptionPane.INFORMATION_MESSAGE);
         }
     };
+
+    private void handleResults(Collection<OWLEntity> results) {
+        LuceneQueryPanel queryPanel = getLuceneQueryPanel();
+        queryPanel.getResultsPanel().setResults(results);
+    }
+
+    private LuceneQueryPanel getLuceneQueryPanel() {
+        Component comp = this.getParent();
+        while(comp != null) {
+            if(comp instanceof LuceneQueryPanel) {
+                return (LuceneQueryPanel) comp;
+            }
+            comp = comp.getParent();
+        }
+        return null;
+    }
 
     private BasicQuery getBasicQuery(BasicQueryPanel queryPanel, BasicQuery.Factory queryFactory) {
         OWLProperty property = queryPanel.getSelectedProperty();
@@ -273,7 +286,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         // TODO: remove
         JButton testDialog = new JButton("Test Popup Dialog");
         testDialog.addActionListener(e -> {
-            Optional<OWLEntity> ent = CombinedLuceneQueryPanel.showDialog(editorKit);
+            Optional<OWLEntity> ent = LuceneQueryPanel.showDialog(editorKit);
             if(ent.isPresent()) {
                 logger.info("[LucenePopupDialog]    Selected entity: " + ent.get().getIRI());
             } else {

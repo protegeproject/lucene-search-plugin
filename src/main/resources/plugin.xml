@@ -27,26 +27,10 @@
 
     <!-- Views -->
 
-    <extension id="QueryEditorView"
-               point="org.protege.editor.core.application.ViewComponent">
-        <label value="Lucene Query Editor"/>
-        <class value="org.protege.editor.search.ui.QueryEditorView"/>
-        <headerColor value="@org.protege.ontologycolor"/>
-        <category value="Lucene"/>
-    </extension>
-
-    <extension id="QueryResultsView"
-               point="org.protege.editor.core.application.ViewComponent">
-        <label value="Lucene Query Results"/>
-        <class value="org.protege.editor.search.ui.QueryResultsView"/>
-        <headerColor value="@org.protege.ontologycolor"/>
-        <category value="Lucene"/>
-    </extension>
-
-    <extension id="CombinedLuceneQueryView"
+    <extension id="LuceneQueryView"
                point="org.protege.editor.core.application.ViewComponent">
         <label value="Lucene Query"/>
-        <class value="org.protege.editor.search.ui.CombinedLuceneQueryView"/>
+        <class value="org.protege.editor.search.ui.LuceneQueryView"/>
         <headerColor value="@org.protege.ontologycolor"/>
         <category value="Lucene"/>
     </extension>

@@ -1,59 +1,30 @@
 package org.protege.editor.search.nci;
 
-import org.protege.editor.owl.OWLEditorKit;
-import org.protege.editor.owl.model.event.EventType;
-import org.protege.editor.owl.model.event.OWLModelManagerChangeEvent;
-import org.protege.editor.owl.model.event.OWLModelManagerListener;
-import org.protege.editor.owl.model.search.SearchCategory;
-import org.protege.editor.owl.model.search.SearchInput;
-import org.protege.editor.owl.model.search.SearchResult;
-import org.protege.editor.owl.model.search.SearchResultHandler;
-import org.protege.editor.owl.model.search.SearchStringParser;
-import org.protege.editor.search.lucene.AddChangeSet;
-import org.protege.editor.search.lucene.AddChangeSetHandler;
-import org.protege.editor.search.lucene.IndexDelegator;
-import org.protege.editor.search.lucene.LuceneSearchPreferences;
-import org.protege.editor.search.lucene.LuceneSearchQueryBuilder;
-import org.protege.editor.search.lucene.LuceneSearcher;
-import org.protege.editor.search.lucene.LuceneStringParser;
-import org.protege.editor.search.lucene.QueryEvaluationException;
-import org.protege.editor.search.lucene.RemoveChangeSet;
-import org.protege.editor.search.lucene.RemoveChangeSetHandler;
-import org.protege.editor.search.lucene.ResultDocumentHandler;
-import org.protege.editor.search.lucene.SearchContext;
-import org.protege.editor.search.lucene.SearchQuery;
-import org.protege.editor.search.lucene.SearchUtils;
-import org.protege.editor.search.ui.LuceneEvent;
-import org.protege.editor.search.ui.LuceneListener;
-
+import com.google.common.base.Stopwatch;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.semanticweb.owlapi.model.OWLEntity;
-import org.semanticweb.owlapi.model.OWLException;
-import org.semanticweb.owlapi.model.OWLOntology;
-import org.semanticweb.owlapi.model.OWLOntologyChange;
-import org.semanticweb.owlapi.model.OWLOntologyChangeListener;
+import org.protege.editor.owl.OWLEditorKit;
+import org.protege.editor.owl.model.event.EventType;
+import org.protege.editor.owl.model.event.OWLModelManagerChangeEvent;
+import org.protege.editor.owl.model.event.OWLModelManagerListener;
+import org.protege.editor.owl.model.search.*;
+import org.protege.editor.search.lucene.*;
+import org.protege.editor.search.ui.LuceneListener;
+import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.util.ProgressMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-
-import javax.swing.SwingUtilities;
-
-import com.google.common.base.Stopwatch;
 
 /**
  * Author: Josef Hardi <josef.hardi@stanford.edu><br>
@@ -240,7 +211,7 @@ public class SearchTabManager extends LuceneSearcher {
         }
     }
 
-    public void performSearch(SearchTabQuery userQuery) {
+    public void performSearch(SearchTabQuery userQuery, SearchTabResultHandler searchTabResultHandler) {
         try {
             if (lastSearchId.getAndIncrement() == 0) {
                 Directory indexDirectory = getIndexDirectory();
@@ -248,7 +219,7 @@ public class SearchTabManager extends LuceneSearcher {
                     service.submit(this::buildingIndex);
                 }
             }
-            service.submit(new SearchTabCallable(lastSearchId.incrementAndGet(), userQuery));
+            service.submit(new SearchTabCallable(lastSearchId.incrementAndGet(), userQuery, searchTabResultHandler));
         }
         catch (IOException e) {
             logger.error("Failed to perform search", e);
@@ -380,10 +351,12 @@ public class SearchTabManager extends LuceneSearcher {
     private class SearchTabCallable implements Runnable {
         private long searchId;
         private SearchTabQuery pluginQuery;
+        private SearchTabResultHandler searchTabResultHandler;
 
-        private SearchTabCallable(long searchId, SearchTabQuery pluginQuery) {
+        private SearchTabCallable(long searchId, SearchTabQuery pluginQuery, SearchTabResultHandler searchTabResultHandler) {
             this.searchId = searchId;
             this.pluginQuery = pluginQuery;
+            this.searchTabResultHandler = searchTabResultHandler;
         }
 
         @Override
@@ -392,7 +365,6 @@ public class SearchTabManager extends LuceneSearcher {
             Stopwatch stopwatch = Stopwatch.createStarted();
             try {
                 logger.debug("... executing query " + pluginQuery);
-                startSearch();
                 fireSearchStarted();
                 Set<OWLEntity> finalResults = pluginQuery.evaluate(progress -> fireSearchingProgressed(progress));
                 fireSearchFinished();
@@ -405,16 +377,8 @@ public class SearchTabManager extends LuceneSearcher {
             }
         }
 
-        private void startSearch() {
-            for (LuceneListener ll : searchListeners) {
-                ll.searchStarted(LuceneEvent.SEARCH_STARTED);
-            }
-        }
-
         private void showResults(final Set<OWLEntity> results) {
-            for (LuceneListener ll : searchListeners) {
-                ll.searchFinished(LuceneEvent.SEARCH_FINISHED(results));
-            }
+            searchTabResultHandler.searchFinished(results);
         }
     }
  

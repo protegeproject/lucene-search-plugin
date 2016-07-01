@@ -15,8 +15,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Center for Biomedical Informatics Research <br>
  * Stanford University
  */
-public class CombinedLuceneQueryPanel extends JPanel {
-    private static final long serialVersionUID = -7327709698448640714L;
+public class LuceneQueryPanel extends JPanel {
+    private static final long serialVersionUID = 1998678969701208859L;
     private OWLEditorKit editorKit;
     private QueryResultsPanel resultsPanel;
     private QueryEditorPanel editorPanel;
@@ -26,7 +26,7 @@ public class CombinedLuceneQueryPanel extends JPanel {
      *
      * @param editorKit OWL Editor Kit
      */
-    public CombinedLuceneQueryPanel(OWLEditorKit editorKit) {
+    public LuceneQueryPanel(OWLEditorKit editorKit) {
         this.editorKit = checkNotNull(editorKit);
         initUi();
     }
@@ -42,9 +42,13 @@ public class CombinedLuceneQueryPanel extends JPanel {
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, editorPanel, resultsPanel);
         splitPane.setPreferredSize(new Dimension(1300, 600));
         splitPane.setBorder(LuceneUiHelper.Utils.EMPTY_BORDER);
-        splitPane.setDividerLocation(700);
-        splitPane.setResizeWeight(0.6d);
         add(splitPane, BorderLayout.CENTER);
+        splitPane.setDividerLocation(0.5);
+        splitPane.setResizeWeight(0.5);
+    }
+
+    public QueryResultsPanel getResultsPanel() {
+        return resultsPanel;
     }
 
     public OWLEntity getSelectedEntity() {
@@ -52,7 +56,7 @@ public class CombinedLuceneQueryPanel extends JPanel {
     }
 
     public static Optional<OWLEntity> showDialog(OWLEditorKit editorKit) {
-        CombinedLuceneQueryPanel panel = new CombinedLuceneQueryPanel(editorKit);
+        LuceneQueryPanel panel = new LuceneQueryPanel(editorKit);
         int response = JOptionPaneEx.showConfirmDialog(
                 editorKit.getOWLWorkspace(), "Lucene Query Dialog", panel, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION, null);
         if (response == JOptionPane.OK_OPTION) {
