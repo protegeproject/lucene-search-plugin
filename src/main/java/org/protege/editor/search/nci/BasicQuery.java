@@ -67,16 +67,16 @@ public abstract class BasicQuery implements SearchTabQuery {
         public BasicQuery createQuery(OWLProperty property, QueryType type, String searchString) {
             if (QueryType.ValueQueryTypes.contains(type)) {
                 if (type.equals(QueryType.CONTAINS)) {
-                    return createContainsFilter(property, searchString);
+                    return createContainsFilter(property, toLowerCase(searchString));
                 }
                 else if (type.equals(QueryType.STARTS_WITH)) {
-                    return createStartsWithFilter(property, searchString);
+                    return createStartsWithFilter(property, toLowerCase(searchString));
                 }
                 else if (type.equals(QueryType.ENDS_WITH)) {
-                    return createEndsWithFilter(property, searchString);
+                    return createEndsWithFilter(property, toLowerCase(searchString));
                 }
                 else if (type.equals(QueryType.EXACT_MATCH)) {
-                    return createExactMatchFilter(property, searchString);
+                    return createExactMatchFilter(property, toLowerCase(searchString));
                 }
             }
             else if (QueryType.NonValueQueryTypes.contains(type)) {
@@ -197,6 +197,10 @@ public abstract class BasicQuery implements SearchTabQuery {
                 }
             }
         }
+    }
+
+    private static String toLowerCase(String string) {
+        return string.toLowerCase();
     }
 
     protected class SearchDocumentHandler {
