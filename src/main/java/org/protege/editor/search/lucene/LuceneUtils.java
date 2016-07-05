@@ -45,6 +45,10 @@ public class LuceneUtils {
         return new WildcardQuery(new Term(searchField, "*" + keyword));
     }
 
+    public static WildcardQuery createLikeQuery(String searchField, String keyword) {
+        return new WildcardQuery(new Term(searchField, "*" + keyword + "*"));
+    }
+
     public static RegexpQuery createRegexQuery(String searchField, String regexPattern) {
         return new RegexpQuery(new Term(searchField, regexPattern));
     }
