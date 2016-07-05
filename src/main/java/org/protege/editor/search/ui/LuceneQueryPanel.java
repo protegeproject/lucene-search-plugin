@@ -16,10 +16,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class LuceneQueryPanel extends JPanel {
-    private static final long serialVersionUID = 1998678969701208859L;
+    private static final long serialVersionUID = -5335464226244411871L;
     private OWLEditorKit editorKit;
     private QueryResultsPanel resultsPanel;
     private QueryEditorPanel editorPanel;
+    private boolean painted;
+    private JSplitPane splitPane;
 
     /**
      * Constructor
@@ -39,12 +41,20 @@ public class LuceneQueryPanel extends JPanel {
         editorPanel.setBorder(LuceneUiHelper.Utils.MATTE_BORDER);
         resultsPanel.setBorder(LuceneUiHelper.Utils.MATTE_BORDER);
 
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, editorPanel, resultsPanel);
+        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, editorPanel, resultsPanel);
         splitPane.setPreferredSize(new Dimension(1300, 600));
         splitPane.setBorder(LuceneUiHelper.Utils.EMPTY_BORDER);
         add(splitPane, BorderLayout.CENTER);
-        splitPane.setDividerLocation(0.5);
         splitPane.setResizeWeight(0.5);
+    }
+
+    @Override
+    public void paint(Graphics g) {
+        super.paint(g);
+        if (!painted) {
+            painted = true;
+            splitPane.setDividerLocation(0.5);
+        }
     }
 
     public QueryResultsPanel getResultsPanel() {
