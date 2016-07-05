@@ -113,8 +113,7 @@ public class SearchTabManager extends LuceneSearcher {
     }
 
     private boolean isCacheMutatingEvent(OWLModelManagerChangeEvent event) {
-        return event.isType(EventType.ENTITY_RENDERER_CHANGED)
-                || event.isType(EventType.ENTITY_RENDERING_CHANGED);
+        return event.isType(EventType.ENTITY_RENDERING_CHANGED);
     }
 
     private boolean isCacheSavingEvent(OWLModelManagerChangeEvent event) {
