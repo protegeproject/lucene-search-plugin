@@ -38,11 +38,15 @@ public class LuceneUtils {
     }
 
     public static PrefixQuery createPrefixQuery(String searchField, String keyword) {
-        return new PrefixQuery(new Term(searchField, keyword + "*"));
+        return new PrefixQuery(new Term(searchField, keyword));
     }
 
     public static WildcardQuery createSuffixQuery(String searchField, String keyword) {
         return new WildcardQuery(new Term(searchField, "*" + keyword));
+    }
+
+    public static WildcardQuery createLikeQuery(String searchField, String keyword) {
+        return new WildcardQuery(new Term(searchField, "*" + keyword + "*"));
     }
 
     public static RegexpQuery createRegexQuery(String searchField, String regexPattern) {
