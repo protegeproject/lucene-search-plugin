@@ -14,6 +14,8 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.RAMDirectory;
+import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyChange;
 import org.semanticweb.owlapi.model.OWLOntologyChangeListener;
@@ -22,6 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -92,9 +96,9 @@ public class LuceneSearchManager extends LuceneSearcher {
             public void handleChange(OWLModelManagerChangeEvent event) {
                 if (isCacheChangingEvent(event)) {
                     /*
-                     * A workaround Protege signals ACTIVE_ONTOLOGY_CHANGED twice when opening an ontology.
-                     * The loadOrCreateIndexDirectory() method shouldn't be called twice if the ontologies
-                     * are the same.
+                     * A workaround: Protege signals ACTIVE_ONTOLOGY_CHANGED twice when opening an ontology.
+                     * The loadOrCreateIndexDirectory() method shouldn't be called twice if new active
+                     * ontology is the same with the current active ontology.
                      */
                     OWLOntology newActiveOntology = editorKit.getOWLModelManager().getActiveOntology();
                     if (currentActiveOntology != null && currentActiveOntology.equals(newActiveOntology)) {
@@ -223,14 +227,39 @@ public class LuceneSearchManager extends LuceneSearcher {
     private void loadOrCreateIndexDirectory() {
         try {
             if (!currentActiveOntology.isEmpty()) {
-                String indexLocation = LuceneSearchPreferences.getIndexLocation(currentActiveOntology);
-                Directory directory = FSDirectory.open(Paths.get(indexLocation));
+                Directory directory = null;
+                if (shouldStoreInDisk()) {
+                    String indexLocation = LuceneSearchPreferences.getIndexLocation(currentActiveOntology);
+                    directory = FSDirectory.open(Paths.get(indexLocation));
+                }
+                else {
+                    logger.info("Storing index into RAM memory");
+                    directory = new RAMDirectory();
+                }
                 setIndexDirectory(directory);
             }
         }
         catch (IOException e) {
-            throw new RuntimeException("Failed to load index directory", e);
+            throw new RuntimeException("Failed to setup index directory", e);
         }
+    }
+
+    private boolean shouldStoreInDisk() {
+        if (LuceneSearchPreferences.useCustomSizeForDiskStoring()) {
+            IRI documentIri = editorKit.getOWLModelManager().getOWLOntologyManager().getOntologyDocumentIRI(currentActiveOntology);
+            try {
+                URL resourceUrl = documentIri.toURI().toURL();
+                URLConnection connection = resourceUrl.openConnection();
+                connection.connect();
+                int resourceSize = connection.getContentLength();
+                return resourceSize > LuceneSearchPreferences.getMaxSizeForDiskStoring()*1024*1024; // in bytes
+            }
+            catch (IOException e) {
+                logger.error("Unable to open the ontology " + documentIri);
+                throw new RuntimeException(e);
+            }
+        }
+        return true;
     }
 
     private Directory getIndexDirectory() {

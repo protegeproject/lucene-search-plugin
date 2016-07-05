@@ -11,11 +11,17 @@ import java.awt.event.KeyEvent;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
 import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.text.NumberFormatter;
 
 /**
  * Author: Josef Hardi <josef.hardi@stanford.edu><br>
@@ -32,6 +38,8 @@ public class SearchPreferencesPanel extends OWLPreferencesPanel {
     private JRadioButton rbUserHomeDir = new JRadioButton("User home directory");
     private JRadioButton rbTempDir = new JRadioButton("System temporary directory");
     private JRadioButton rbCustomLocation = new JRadioButton("User custom location");
+
+    private JSpinner spnOntologySize = new JSpinner();
 
     @Override
     public void initialise() throws Exception {
@@ -106,6 +114,29 @@ public class SearchPreferencesPanel extends OWLPreferencesPanel {
             }
         });
         panel.addGroupComponent(btnRemoveSelected);
+        panel.addVerticalPadding();
+
+        panel.addGroup("Advanced option");
+        JPanel pnlAdvancedOption = new JPanel();
+        JCheckBox useCustomInDiskIndexing = new JCheckBox("Set Lucene to store the index into the disk when the ontology file size exceeds");
+        useCustomInDiskIndexing.setSelected(LuceneSearchPreferences.useCustomSizeForDiskStoring());
+        useCustomInDiskIndexing.addActionListener(evt -> {
+            LuceneSearchPreferences.setEnableCustomSizeForDiskStoring(useCustomInDiskIndexing.isSelected());
+            spnOntologySize.setEnabled(useCustomInDiskIndexing.isSelected());
+        });
+        pnlAdvancedOption.add(useCustomInDiskIndexing);
+        spnOntologySize.setEnabled(useCustomInDiskIndexing.isSelected());
+        JFormattedTextField txtOntologySize = ((JSpinner.NumberEditor) spnOntologySize.getEditor()).getTextField();
+        txtOntologySize.setText(LuceneSearchPreferences.getMaxSizeForDiskStoring()+"");
+        ((NumberFormatter) txtOntologySize.getFormatter()).setAllowsInvalid(false);
+        spnOntologySize.addChangeListener(e -> {
+            SpinnerNumberModel model = (SpinnerNumberModel) spnOntologySize.getModel();
+            int value = model.getNumber().intValue();
+            LuceneSearchPreferences.setMaxSizeForDiskStoring(value);
+        });
+        pnlAdvancedOption.add(spnOntologySize);
+        pnlAdvancedOption.add(new JLabel(" MB"));
+        panel.addGroupComponent(pnlAdvancedOption);
     }
 
     @Override
