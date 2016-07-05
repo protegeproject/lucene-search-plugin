@@ -149,7 +149,7 @@ public abstract class BasicQuery implements SearchTabQuery {
         private static BooleanQuery createContainsQuery(OWLProperty property, String searchString) {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
             builder.add(LuceneUtils.createTermQuery(IndexField.ANNOTATION_IRI, property.getIRI().toString()), Occur.MUST);
-            builder.add(LuceneUtils.createTermQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST);
+            builder.add(LuceneUtils.createLikeQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST);
             return builder.build();
         }
 
