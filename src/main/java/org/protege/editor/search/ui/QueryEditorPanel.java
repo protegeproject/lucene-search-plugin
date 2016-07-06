@@ -152,7 +152,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         OWLProperty property = queryPanel.getSelectedProperty();
         QueryType queryType = queryPanel.getSelectedQueryType();
         String value = queryPanel.getInputStringValue();
-        if(property != null && queryType != null && value != null && !value.isEmpty()) {
+        if(queryType != null) {
             return queryFactory.createQuery(property, queryType, value);
         } else {
             return null;
