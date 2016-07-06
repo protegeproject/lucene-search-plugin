@@ -31,7 +31,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class QueryEditorPanel extends JPanel implements Disposable {
-    private static final long serialVersionUID = -7199369739268268605L;
+    private static final long serialVersionUID = -605434716375681991L;
     private static Logger logger = LoggerFactory.getLogger(QueryEditorPanel.class.getName());
     private JButton addQueryBtn, addNegatedQueryBtn, addNestedQueryBtn, clearBtn, searchBtn;
     private JRadioButton matchAll, matchAny;
@@ -95,11 +95,13 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     private OWLModelManagerListener activeOntologyChanged = e -> {
         if (e.isType(EventType.ACTIVE_ONTOLOGY_CHANGED) || e.isType(EventType.ONTOLOGY_LOADED)) {
             clearQueryPanel();
+            addBasicQuery();
         }
     };
 
     private OWLOntologyChangeListener ontologyChangeListener = changes -> {
         clearQueryPanel();
+        addBasicQuery();
     };
 
     private ActionListener searchBtnListener = e -> {
