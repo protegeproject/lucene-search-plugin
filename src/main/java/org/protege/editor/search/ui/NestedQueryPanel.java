@@ -55,14 +55,18 @@ public class NestedQueryPanel extends QueryPanel {
     }
 
     private JPanel getPropertySelectionPanel() {
-        List<OWLEntity> list = LuceneUiHelper.getInstance(editorKit).getPropertiesInSignature();
-        propertyComboBox = new OwlEntityComboBox(editorKit, list);
+        propertyComboBox = new OwlEntityComboBox(editorKit);
+        propertyComboBox.addItems(getProperties());
         JLabel propSelectionLbl = new JLabel("Property");
         JPanel propSelectionPanel = new JPanel(new GridBagLayout());
         propSelectionPanel.add(propSelectionLbl, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_TRAILING, GridBagConstraints.NONE, new Insets(13, 11, 6, 3), 0, 0));
         propSelectionPanel.add(propertyComboBox, new GridBagConstraints(1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.HORIZONTAL, new Insets(13, 3, 6, 8), 0, 0));
         propSelectionPanel.setBorder(new MatteBorder(0, 1, 0, 1, LuceneUiHelper.Utils.MATTE_BORDER_COLOR));
         return propSelectionPanel;
+    }
+
+    private List<OWLEntity> getProperties() {
+        return LuceneUiHelper.getInstance(editorKit).getPropertiesInSignature();
     }
 
     @Override
