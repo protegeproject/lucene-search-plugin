@@ -2,6 +2,8 @@ package org.protege.editor.search.ui;
 
 import org.protege.editor.core.Disposable;
 import org.protege.editor.owl.OWLEditorKit;
+import org.protege.editor.owl.model.event.EventType;
+import org.protege.editor.owl.model.event.OWLModelManagerListener;
 import org.protege.editor.search.lucene.LuceneSearcher;
 import org.protege.editor.search.lucene.SearchContext;
 import org.protege.editor.search.nci.*;
@@ -84,7 +86,14 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         } else {
             add(queriesPanelHolder, BorderLayout.CENTER);
         }
+        editorKit.getModelManager().addListener(activeOntologyChanged);
     }
+
+    private OWLModelManagerListener activeOntologyChanged = e -> {
+        if (e.isType(EventType.ACTIVE_ONTOLOGY_CHANGED)) {
+            clearQueryPanel();
+        }
+    };
 
     private ActionListener searchBtnListener = e -> {
         if (editorKit.getSearchManager() instanceof SearchTabManager) {
@@ -326,6 +335,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     public void dispose() {
         if(allowSearch) {
             searchBtn.removeActionListener(searchBtnListener);
+            editorKit.getModelManager().removeListener(activeOntologyChanged);
         }
     }
 }
