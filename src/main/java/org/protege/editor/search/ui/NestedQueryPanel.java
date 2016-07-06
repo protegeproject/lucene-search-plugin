@@ -41,7 +41,7 @@ public class NestedQueryPanel extends QueryPanel {
         topPanel.setBorder(new MatteBorder(1, 1, 1, 1, LuceneUiHelper.Utils.MATTE_BORDER_COLOR));
 
         JLabel title = new JLabel("<html><b><i>" + NAME + "</i></b></html>");
-        title.setForeground(Color.DARK_GRAY);
+        title.setForeground(new Color(8, 84, 170));
         topPanel.add(title, new GridBagConstraints(0, 0, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.HORIZONTAL, new Insets(3, 5, 0, 5), 0, 0));
         topPanel.add(getCloseButton(), new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_TRAILING, GridBagConstraints.NONE, new Insets(0, 5, 0, 5), 0, 0));
 
@@ -50,7 +50,6 @@ public class NestedQueryPanel extends QueryPanel {
         add(parent, BorderLayout.NORTH);
 
         editorPanel = new QueryEditorPanel(editorKit, false, true, false);
-        editorPanel.addBasicQuery();
         add(editorPanel, BorderLayout.CENTER);
     }
 
@@ -60,7 +59,7 @@ public class NestedQueryPanel extends QueryPanel {
         JLabel propSelectionLbl = new JLabel("Property");
         JPanel propSelectionPanel = new JPanel(new GridBagLayout());
         propSelectionPanel.add(propSelectionLbl, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_TRAILING, GridBagConstraints.NONE, new Insets(13, 11, 6, 3), 0, 0));
-        propSelectionPanel.add(propertyComboBox, new GridBagConstraints(1, 0, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.HORIZONTAL, new Insets(13, 3, 6, 8), 0, 0));
+        propSelectionPanel.add(propertyComboBox, new GridBagConstraints(1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.HORIZONTAL, new Insets(13, 3, 6, 8), 0, 0));
         propSelectionPanel.setBorder(new MatteBorder(0, 1, 0, 1, LuceneUiHelper.Utils.MATTE_BORDER_COLOR));
         return propSelectionPanel;
     }

@@ -6,6 +6,8 @@ import org.protege.editor.owl.ui.renderer.OWLCellRenderer;
 import org.semanticweb.owlapi.model.OWLEntity;
 
 import javax.swing.*;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.ComboPopup;
 import java.awt.*;
 import java.awt.event.ItemListener;
@@ -35,10 +37,9 @@ public class OwlEntityComboBox extends JComboBox<OWLEntity> {
      * Constructor
      *
      * @param editorKit    OWL Editor Kit
-     * @param items List of items to include in the combo box
      */
     public OwlEntityComboBox(OWLEditorKit editorKit) {
-        super(new SortedComboBoxModel<OWLEntity>());
+        super(new SortedComboBoxModel<>());
         this.editorKit = checkNotNull(editorKit);
         entityFinder = editorKit.getOWLModelManager().getOWLEntityFinder();
         model = (SortedComboBoxModel<OWLEntity>) getModel();
@@ -54,7 +55,7 @@ public class OwlEntityComboBox extends JComboBox<OWLEntity> {
         insertItemAt(null, 0);
         setSelectedIndex(0);
         editorTextField = (JTextField) getEditor().getEditorComponent();
-        editorTextField.setBorder(LuceneUiHelper.Utils.MATTE_BORDER);
+        editorTextField.setBorder(new CompoundBorder(LuceneUiHelper.Utils.MATTE_BORDER, new EmptyBorder(0, 3, 0, 1)));
         editorTextField.addKeyListener(keyAdapter);
     }
 

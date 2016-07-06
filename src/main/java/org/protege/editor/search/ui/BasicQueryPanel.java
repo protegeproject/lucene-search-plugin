@@ -38,6 +38,7 @@ public class BasicQueryPanel extends QueryPanel {
      */
     public BasicQueryPanel(OWLEditorKit editorKit) {
         super(editorKit);
+        this.editorKit.getOWLModelManager().addOntologyChangeListener(ontologyEditingListener);
         initUi();
     }
 
@@ -74,8 +75,6 @@ public class BasicQueryPanel extends QueryPanel {
         add(propertyComboBox, new GridBagConstraints(0, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, insets, 0, 0));
         add(queryTypeComboBox, new GridBagConstraints(1, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, insets, 0, 0));
         add(value, new GridBagConstraints(2, rowIndex, 2, 1, 1.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.HORIZONTAL, insets, 0, 0));
-        
-        editorKit.getOWLModelManager().addOntologyChangeListener(ontologyEditingListener);
     }
 
     private OWLOntologyChangeListener ontologyEditingListener = changes -> {
@@ -165,5 +164,9 @@ public class BasicQueryPanel extends QueryPanel {
     @Override
     boolean isNestedQuery() {
         return false;
+    }
+
+    public void dispose() {
+        editorKit.getOWLModelManager().removeOntologyChangeListener(ontologyEditingListener);
     }
 }

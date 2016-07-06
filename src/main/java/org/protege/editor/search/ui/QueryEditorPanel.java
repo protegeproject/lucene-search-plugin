@@ -8,6 +8,7 @@ import org.protege.editor.search.lucene.LuceneSearcher;
 import org.protege.editor.search.lucene.SearchContext;
 import org.protege.editor.search.nci.*;
 import org.semanticweb.owlapi.model.OWLEntity;
+import org.semanticweb.owlapi.model.OWLOntologyChangeListener;
 import org.semanticweb.owlapi.model.OWLProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +47,8 @@ public class QueryEditorPanel extends JPanel implements Disposable {
      */
     public QueryEditorPanel(OWLEditorKit editorKit) {
         this.editorKit = checkNotNull(editorKit);
+        this.editorKit.getModelManager().addListener(activeOntologyChanged);
+        this.editorKit.getModelManager().addOntologyChangeListener(ontologyChangeListener);
         initUi();
     }
 
@@ -86,13 +89,17 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         } else {
             add(queriesPanelHolder, BorderLayout.CENTER);
         }
-        editorKit.getModelManager().addListener(activeOntologyChanged);
+        addBasicQuery();
     }
 
     private OWLModelManagerListener activeOntologyChanged = e -> {
-        if (e.isType(EventType.ACTIVE_ONTOLOGY_CHANGED)) {
+        if (e.isType(EventType.ACTIVE_ONTOLOGY_CHANGED) || e.isType(EventType.ONTOLOGY_LOADED))) {
             clearQueryPanel();
         }
+    };
+
+    private OWLOntologyChangeListener ontologyChangeListener = changes -> {
+        clearQueryPanel();
     };
 
     private ActionListener searchBtnListener = e -> {
@@ -150,7 +157,11 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         OWLProperty property = queryPanel.getSelectedProperty();
         QueryType queryType = queryPanel.getSelectedQueryType();
         String value = queryPanel.getInputStringValue();
-        return queryFactory.createQuery(property, queryType, value);
+        if(property != null && queryType != null && value != null && !value.isEmpty()) {
+            return queryFactory.createQuery(property, queryType, value);
+        } else {
+            return null;
+        }
     }
 
     private NegatedQuery getNegatedQuery(NegatedQueryPanel queryPanel, BasicQuery.Factory queryFactory, LuceneSearcher searcher) {
@@ -265,16 +276,16 @@ public class QueryEditorPanel extends JPanel implements Disposable {
             header.setBorder(new MatteBorder(0, 0, 1, 0, LuceneUiHelper.Utils.MATTE_BORDER_COLOR));
         }
         JPanel queryBtnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        addQueryBtn = new JButton("Add Query");
+        addQueryBtn = new JButton("Basic Query");
         addQueryBtn.addActionListener(e -> addBasicQuery());
         queryBtnPanel.add(addQueryBtn);
         if (allowNegatedQueries) {
-            addNegatedQueryBtn = new JButton("Add Negated Query");
+            addNegatedQueryBtn = new JButton("Negated Query");
             addNegatedQueryBtn.addActionListener(e -> addNegatedQuery());
             queryBtnPanel.add(addNegatedQueryBtn);
         }
         if (allowNestedQueries) {
-            addNestedQueryBtn = new JButton("Add Nested Query");
+            addNestedQueryBtn = new JButton("Nested Query");
             addNestedQueryBtn.addActionListener(e -> addNestedQuery());
             queryBtnPanel.add(addNestedQueryBtn);
         }
@@ -333,9 +344,9 @@ public class QueryEditorPanel extends JPanel implements Disposable {
 
     @Override
     public void dispose() {
+        editorKit.getModelManager().removeListener(activeOntologyChanged);
         if(allowSearch) {
             searchBtn.removeActionListener(searchBtnListener);
-            editorKit.getModelManager().removeListener(activeOntologyChanged);
         }
     }
 }

@@ -34,14 +34,13 @@ public class NegatedQueryPanel extends QueryPanel {
         topPanel.setBorder(new MatteBorder(1, 1, 1, 1, LuceneUiHelper.Utils.MATTE_BORDER_COLOR));
         topPanel.setPreferredSize(new Dimension(0, 36));
 
-        JLabel title = new JLabel("<html><b><i>" + NAME + "</i></b></html>");
-        title.setForeground(Color.DARK_GRAY);
+        JLabel title = new JLabel("<html><b><i>" + NAME + " (NOT)</i></b></html>");
+        title.setForeground(new Color(173, 12, 12));
         topPanel.add(title, new GridBagConstraints(0, 0, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.HORIZONTAL, new Insets(3, 5, 0, 5), 0, 0));
         topPanel.add(getCloseButton(), new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_TRAILING, GridBagConstraints.NONE, new Insets(0, 5, 0, 5), 0, 0));
         add(topPanel, BorderLayout.NORTH);
 
         editorPanel = new QueryEditorPanel(editorKit, true, false, false);
-        editorPanel.addBasicQuery();
         add(editorPanel, BorderLayout.CENTER);
     }
 
