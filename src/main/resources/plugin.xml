@@ -32,6 +32,6 @@
         <label value="Lucene Query"/>
         <class value="org.protege.editor.search.ui.LuceneQueryView"/>
         <headerColor value="@org.protege.ontologycolor"/>
-        <category value="Lucene"/>
+        <category value="Query"/>
     </extension>
 </plugin>
