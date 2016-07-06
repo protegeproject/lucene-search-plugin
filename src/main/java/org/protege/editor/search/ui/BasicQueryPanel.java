@@ -1,5 +1,6 @@
 package org.protege.editor.search.ui;
 
+import org.protege.editor.core.Disposable;
 import org.protege.editor.owl.OWLEditorKit;
 import org.protege.editor.search.nci.QueryType;
 import org.semanticweb.owlapi.model.OWLEntity;
@@ -21,7 +22,7 @@ import java.util.List;
  * Center for Biomedical Informatics Research <br>
  * Stanford University
  */
-public class BasicQueryPanel extends QueryPanel {
+public class BasicQueryPanel extends QueryPanel implements Disposable {
     private static final long serialVersionUID = -4710626661733986365L;
     private OwlEntityComboBox propertyComboBox;
     private JComboBox<QueryType> queryTypeComboBox;
@@ -38,7 +39,7 @@ public class BasicQueryPanel extends QueryPanel {
      */
     public BasicQueryPanel(OWLEditorKit editorKit) {
         super(editorKit);
-        this.editorKit.getOWLModelManager().addOntologyChangeListener(ontologyEditingListener);
+        this.editorKit.getModelManager().addOntologyChangeListener(ontologyEditingListener);
         initUi();
     }
 
@@ -166,7 +167,8 @@ public class BasicQueryPanel extends QueryPanel {
         return false;
     }
 
+    @Override
     public void dispose() {
-        editorKit.getOWLModelManager().removeOntologyChangeListener(ontologyEditingListener);
+        editorKit.getModelManager().removeOntologyChangeListener(ontologyEditingListener);
     }
 }

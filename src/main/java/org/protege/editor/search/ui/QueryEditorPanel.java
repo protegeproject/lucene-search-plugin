@@ -93,7 +93,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     }
 
     private OWLModelManagerListener activeOntologyChanged = e -> {
-        if (e.isType(EventType.ACTIVE_ONTOLOGY_CHANGED) || e.isType(EventType.ONTOLOGY_LOADED))) {
+        if (e.isType(EventType.ACTIVE_ONTOLOGY_CHANGED) || e.isType(EventType.ONTOLOGY_LOADED)) {
             clearQueryPanel();
         }
     };
@@ -247,11 +247,13 @@ public class QueryEditorPanel extends JPanel implements Disposable {
 
     public void removeQueryPanel(QueryPanel queryPanel) {
         queries.remove(queryPanel);
+        if(queryPanel instanceof BasicQueryPanel) {
+            ((BasicQueryPanel) queryPanel).dispose();
+        }
     }
 
     private void clearQueryPanel() {
-        queries.clear();
-        queriesPanel.removeAll();
+        queries.forEach(this::removeQueryPanel);
         refresh();
     }
 
@@ -345,6 +347,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     @Override
     public void dispose() {
         editorKit.getModelManager().removeListener(activeOntologyChanged);
+        editorKit.getModelManager().removeOntologyChangeListener(ontologyChangeListener);
         if(allowSearch) {
             searchBtn.removeActionListener(searchBtnListener);
         }
