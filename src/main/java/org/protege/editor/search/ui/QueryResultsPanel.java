@@ -3,6 +3,8 @@ package org.protege.editor.search.ui;
 import org.protege.editor.core.Disposable;
 import org.protege.editor.core.ui.error.ErrorLogPanel;
 import org.protege.editor.owl.OWLEditorKit;
+import org.protege.editor.owl.model.event.EventType;
+import org.protege.editor.owl.model.event.OWLModelManagerListener;
 import org.protege.editor.owl.model.find.OWLEntityFinder;
 import org.protege.editor.owl.ui.renderer.OWLCellRenderer;
 import org.semanticweb.owlapi.model.OWLEntity;
@@ -27,7 +29,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class QueryResultsPanel extends JPanel implements Disposable {
-    private static final long serialVersionUID = -5693579697780941285L;
+    private static final long serialVersionUID = 991996177300585480L;
     private OWLEditorKit editorKit;
     private JList<OWLEntity> results;
     private List<OWLEntity> resultsList, txtFieldFilteredResults;
@@ -43,6 +45,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
      */
     public QueryResultsPanel(OWLEditorKit editorKit) {
         this.editorKit = checkNotNull(editorKit);
+        this.editorKit.getModelManager().addListener(activeOntologyChanged);
         initUi();
     }
 
@@ -68,6 +71,13 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         add(resultsPanel, BorderLayout.CENTER);
         add(getFooterPanel(), BorderLayout.SOUTH);
     }
+
+    private OWLModelManagerListener activeOntologyChanged = e -> {
+        if (e.isType(EventType.ACTIVE_ONTOLOGY_CHANGED) || e.isType(EventType.ONTOLOGY_LOADED)) {
+            results.setListData(new OWLEntity[0]);
+            resultsList.clear();
+        }
+    };
 
     private ActionListener exportBtnListener = e -> exportResults();
 
@@ -295,5 +305,6 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         individuals.removeActionListener(entityTypesListener);
         datatypes.removeActionListener(entityTypesListener);
         filterTextField.getDocument().removeDocumentListener(filterTextListener);
+        editorKit.getModelManager().removeListener(activeOntologyChanged);
     }
 }
