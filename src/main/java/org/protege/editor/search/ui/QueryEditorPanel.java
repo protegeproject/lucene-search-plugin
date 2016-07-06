@@ -8,7 +8,6 @@ import org.protege.editor.search.lucene.LuceneSearcher;
 import org.protege.editor.search.lucene.SearchContext;
 import org.protege.editor.search.nci.*;
 import org.semanticweb.owlapi.model.OWLEntity;
-import org.semanticweb.owlapi.model.OWLOntologyChangeListener;
 import org.semanticweb.owlapi.model.OWLProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +30,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class QueryEditorPanel extends JPanel implements Disposable {
-    private static final long serialVersionUID = -605434716375681991L;
+    private static final long serialVersionUID = -4909802182267244437L;
     private static Logger logger = LoggerFactory.getLogger(QueryEditorPanel.class.getName());
     private JButton addQueryBtn, addNegatedQueryBtn, addNestedQueryBtn, clearBtn, searchBtn;
     private JRadioButton matchAll, matchAny;
@@ -48,7 +47,6 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     public QueryEditorPanel(OWLEditorKit editorKit) {
         this.editorKit = checkNotNull(editorKit);
         this.editorKit.getModelManager().addListener(activeOntologyChanged);
-        this.editorKit.getModelManager().addOntologyChangeListener(ontologyChangeListener);
         initUi();
     }
 
@@ -97,11 +95,6 @@ public class QueryEditorPanel extends JPanel implements Disposable {
             clearQueryPanel();
             addBasicQuery();
         }
-    };
-
-    private OWLOntologyChangeListener ontologyChangeListener = changes -> {
-        clearQueryPanel();
-        addBasicQuery();
     };
 
     private ActionListener searchBtnListener = e -> {
@@ -359,7 +352,6 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     @Override
     public void dispose() {
         editorKit.getModelManager().removeListener(activeOntologyChanged);
-        editorKit.getModelManager().removeOntologyChangeListener(ontologyChangeListener);
         if(allowSearch) {
             searchBtn.removeActionListener(searchBtnListener);
         }
