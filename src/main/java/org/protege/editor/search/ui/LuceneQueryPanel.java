@@ -17,7 +17,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class LuceneQueryPanel extends JPanel implements Disposable {
-    private static final long serialVersionUID = -5335464226244411871L;
+    private static final long serialVersionUID = -3915182084262665731L;
     private OWLEditorKit editorKit;
     private QueryResultsPanel resultsPanel;
     private QueryEditorPanel editorPanel;
@@ -39,12 +39,12 @@ public class LuceneQueryPanel extends JPanel implements Disposable {
 
         editorPanel = new QueryEditorPanel(editorKit);
         resultsPanel = new QueryResultsPanel(editorKit);
-        editorPanel.setBorder(LuceneUiHelper.Utils.MATTE_BORDER);
-        resultsPanel.setBorder(LuceneUiHelper.Utils.MATTE_BORDER);
+        editorPanel.setBorder(LuceneUiUtils.MATTE_BORDER);
+        resultsPanel.setBorder(LuceneUiUtils.MATTE_BORDER);
 
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, editorPanel, resultsPanel);
         splitPane.setPreferredSize(new Dimension(1300, 600));
-        splitPane.setBorder(LuceneUiHelper.Utils.EMPTY_BORDER);
+        splitPane.setBorder(LuceneUiUtils.EMPTY_BORDER);
         add(splitPane, BorderLayout.CENTER);
         splitPane.setResizeWeight(0.5);
     }

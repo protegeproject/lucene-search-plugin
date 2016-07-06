@@ -59,9 +59,9 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         JPanel resultsPanel = new JPanel(new BorderLayout());
         JScrollPane scrollPane = new JScrollPane(results);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.setBorder(LuceneUiHelper.Utils.EMPTY_BORDER);
+        scrollPane.setBorder(LuceneUiUtils.EMPTY_BORDER);
 
-        resultsPanel.setBorder(LuceneUiHelper.Utils.EMPTY_BORDER);
+        resultsPanel.setBorder(LuceneUiUtils.EMPTY_BORDER);
         resultsPanel.add(scrollPane, BorderLayout.CENTER);
 
         add(getHeaderPanel(), BorderLayout.NORTH);
@@ -123,7 +123,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
 
     private JPanel getHeaderPanel() {
         JPanel header = new JPanel(new BorderLayout());
-        header.setBorder(new MatteBorder(0, 0, 1, 0, LuceneUiHelper.Utils.MATTE_BORDER_COLOR));
+        header.setBorder(new MatteBorder(0, 0, 1, 0, LuceneUiUtils.MATTE_BORDER_COLOR));
         header.setPreferredSize(new Dimension(0, 40));
 
         statusLbl = new JLabel("Results");
@@ -140,7 +140,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
 
     private JPanel getFooterPanel() {
         JPanel footer = new JPanel(new GridBagLayout());
-        footer.setBorder(new MatteBorder(1, 0, 0, 0, LuceneUiHelper.Utils.MATTE_BORDER_COLOR));
+        footer.setBorder(new MatteBorder(1, 0, 0, 0, LuceneUiUtils.MATTE_BORDER_COLOR));
         footer.setPreferredSize(new Dimension(0, 40));
 
         JLabel filterLbl = new JLabel("Filter:");

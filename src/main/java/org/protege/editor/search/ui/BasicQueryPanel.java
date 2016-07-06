@@ -23,7 +23,7 @@ import java.util.List;
  * Stanford University
  */
 public class BasicQueryPanel extends QueryPanel implements Disposable {
-    private static final long serialVersionUID = -4710626661733986365L;
+    private static final long serialVersionUID = -5501743702398682065L;
     private OwlEntityComboBox propertyComboBox;
     private JComboBox<QueryType> queryTypeComboBox;
     private JComboBox<Boolean> valueComboBox;
@@ -45,7 +45,7 @@ public class BasicQueryPanel extends QueryPanel implements Disposable {
 
     private void initUi() {
         setLayout(new GridBagLayout());
-        setBorder(new MatteBorder(1, 1, 1, 1, LuceneUiHelper.Utils.MATTE_BORDER_COLOR));
+        setBorder(new MatteBorder(1, 1, 1, 1, LuceneUiUtils.MATTE_BORDER_COLOR));
 
         JLabel propertyLbl = new JLabel("Property");
         JLabel queryTypeLbl = new JLabel("Query Type");
@@ -146,10 +146,6 @@ public class BasicQueryPanel extends QueryPanel implements Disposable {
             return ((JComboBox) value).getSelectedItem().toString();
         }
         return "";
-    }
-
-    private List<OWLEntity> getProperties() {
-        return LuceneUiHelper.getInstance(editorKit).getPropertiesInSignature();
     }
 
     @Override

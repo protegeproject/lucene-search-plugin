@@ -1,10 +1,13 @@
 package org.protege.editor.search.ui;
 
 import org.protege.editor.owl.OWLEditorKit;
+import org.semanticweb.owlapi.model.OWLEntity;
+import org.semanticweb.owlapi.model.OWLOntology;
 
 import javax.swing.*;
-
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -32,7 +35,7 @@ public abstract class QueryPanel extends JPanel {
     abstract boolean isNestedQuery();
 
     JButton getCloseButton() {
-        JButton closeBtn = new JButton(LuceneUiHelper.Utils.getIcon(LuceneUiHelper.Utils.CLOSE_ICON_FILENAME, 11, 11));
+        JButton closeBtn = new JButton(LuceneUiUtils.getIcon(LuceneUiUtils.CLOSE_ICON_FILENAME, 11, 11));
         closeBtn.addActionListener(e -> {
             boolean removedPanel = false;
             JPanel queriesPanel = (JPanel) this.getParent();
@@ -49,5 +52,14 @@ public abstract class QueryPanel extends JPanel {
             }
         });
         return closeBtn;
+    }
+
+    List<OWLEntity> getProperties() {
+        List<OWLEntity> entities = new ArrayList<>();
+        OWLOntology ont = editorKit.getModelManager().getActiveOntology();
+        entities.addAll(ont.getAnnotationPropertiesInSignature());
+        entities.addAll(ont.getObjectPropertiesInSignature());
+        entities.addAll(ont.getDataPropertiesInSignature());
+        return entities;
     }
 }

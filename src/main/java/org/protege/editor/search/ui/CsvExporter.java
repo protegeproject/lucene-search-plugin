@@ -6,7 +6,10 @@ import org.protege.editor.owl.ui.renderer.OWLModelManagerEntityRenderer;
 import org.protege.editor.owl.ui.renderer.OWLObjectRenderer;
 import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.model.parameters.Imports;
+import org.semanticweb.owlapi.reasoner.BufferingMode;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
+import org.semanticweb.owlapi.reasoner.SimpleConfiguration;
+import org.semanticweb.owlapi.reasoner.structural.StructuralReasoner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,7 +80,7 @@ public class CsvExporter {
         String header = getHeader();
         OWLReasoner reasoner = null;
         if(isIncludingSuperclasses()) {
-            reasoner = LuceneUiHelper.getInstance(editorKit).getReasoner();
+            reasoner = new StructuralReasoner(editorKit.getOWLModelManager().getActiveOntology(), new SimpleConfiguration(), BufferingMode.BUFFERING);
         }
         List<String> rows = new ArrayList<>();
         for(OWLEntity e : results) {

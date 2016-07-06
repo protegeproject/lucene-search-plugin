@@ -16,7 +16,7 @@ public class LuceneQueryView extends AbstractOWLViewComponent {
     @Override
     protected void initialiseOWLView() throws Exception {
         setLayout(new BorderLayout());
-        setBorder(LuceneUiHelper.Utils.EMPTY_BORDER);
+        setBorder(LuceneUiUtils.EMPTY_BORDER);
         panel = new LuceneQueryPanel(getOWLEditorKit());
         add(panel, BorderLayout.CENTER);
     }

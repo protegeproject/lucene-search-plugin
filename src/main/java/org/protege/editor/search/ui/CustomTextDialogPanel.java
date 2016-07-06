@@ -42,11 +42,11 @@ public class CustomTextDialogPanel extends JPanel implements VerifiedInputEditor
         textArea = new JTextArea(initialString, 10, 1);
         textArea.setWrapStyleWord(true);
         textArea.setLineWrap(true);
-        textArea.setBorder(LuceneUiHelper.Utils.EMPTY_BORDER);
+        textArea.setBorder(LuceneUiUtils.EMPTY_BORDER);
         textArea.getDocument().addDocumentListener(textAreaListener);
 
         JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.setBorder(LuceneUiHelper.Utils.MATTE_BORDER);
+        scrollPane.setBorder(LuceneUiUtils.MATTE_BORDER);
         add(scrollPane, BorderLayout.CENTER);
     }
 

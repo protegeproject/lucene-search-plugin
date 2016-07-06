@@ -28,13 +28,13 @@ public class NegatedQueryPanel extends QueryPanel {
 
     private void initUi() {
         setLayout(new BorderLayout());
-        setBorder(LuceneUiHelper.Utils.EMPTY_BORDER);
+        setBorder(LuceneUiUtils.EMPTY_BORDER);
 
         JPanel topPanel = new JPanel(new GridBagLayout());
-        topPanel.setBorder(new MatteBorder(1, 1, 1, 1, LuceneUiHelper.Utils.MATTE_BORDER_COLOR));
+        topPanel.setBorder(new MatteBorder(1, 1, 1, 1, LuceneUiUtils.MATTE_BORDER_COLOR));
         topPanel.setPreferredSize(new Dimension(0, 36));
 
-        JLabel title = new JLabel("<html><b><i>" + NAME + " (NOT)</i></b></html>");
+        JLabel title = new JLabel("<html><b>" + NAME + " (NOT)</b></html>");
         title.setForeground(new Color(173, 12, 12));
         topPanel.add(title, new GridBagConstraints(0, 0, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.HORIZONTAL, new Insets(3, 5, 0, 5), 0, 0));
         topPanel.add(getCloseButton(), new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_TRAILING, GridBagConstraints.NONE, new Insets(0, 5, 0, 5), 0, 0));

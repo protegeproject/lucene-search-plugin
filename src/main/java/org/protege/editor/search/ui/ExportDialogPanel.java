@@ -30,7 +30,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
-    private static final long serialVersionUID = -2505738757643211938L;
+    private static final long serialVersionUID = -945482786547678605L;
     private OWLEditorKit editorKit;
     private final List<OWLEntity> results;
     private JLabel fileLocationLbl, propertiesLbl, fileDelimLbl, propertyValuesDelimLbl;
@@ -89,7 +89,7 @@ public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
         customText = "custom text";
 
         JScrollPane propertiesScrollpane = new JScrollPane(propertiesList);
-        propertiesScrollpane.setBorder(LuceneUiHelper.Utils.MATTE_BORDER);
+        propertiesScrollpane.setBorder(LuceneUiUtils.MATTE_BORDER);
 
         Insets insets = new Insets(2, 2, 2, 2);
         int rowIndex = 0;

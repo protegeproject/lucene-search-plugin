@@ -69,18 +69,18 @@ public class QueryEditorPanel extends JPanel implements Disposable {
 
     private void initUi() {
         setLayout(new BorderLayout());
-        setBorder(LuceneUiHelper.Utils.EMPTY_BORDER);
+        setBorder(LuceneUiUtils.EMPTY_BORDER);
         JPanel queriesPanelHolder = new JPanel(new BorderLayout());
         queriesPanelHolder.setBackground(Color.WHITE);
         queriesPanel = new JPanel(new GridBagLayout());
-        queriesPanel.setBorder(LuceneUiHelper.Utils.EMPTY_BORDER);
+        queriesPanel.setBorder(LuceneUiUtils.EMPTY_BORDER);
         queriesPanel.setBackground(Color.WHITE);
         queriesPanelHolder.add(queriesPanel, BorderLayout.NORTH);
         add(getHeaderPanel(), BorderLayout.NORTH);
         if(!isNested) {
             // add scrollpane to the top-level panel
             JScrollPane topScrollPane = new JScrollPane(queriesPanelHolder);
-            topScrollPane.setBorder(LuceneUiHelper.Utils.EMPTY_BORDER);
+            topScrollPane.setBorder(LuceneUiUtils.EMPTY_BORDER);
             topScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
             add(topScrollPane, BorderLayout.CENTER);
             add(getFooterPanel(), BorderLayout.SOUTH);
@@ -278,9 +278,9 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     private JPanel getHeaderPanel() {
         JPanel header = new JPanel(new BorderLayout());
         if(isNested) {
-            header.setBorder(new MatteBorder(0, 1, 1, 1, LuceneUiHelper.Utils.MATTE_BORDER_COLOR));
+            header.setBorder(new MatteBorder(0, 1, 1, 1, LuceneUiUtils.MATTE_BORDER_COLOR));
         } else {
-            header.setBorder(new MatteBorder(0, 0, 1, 0, LuceneUiHelper.Utils.MATTE_BORDER_COLOR));
+            header.setBorder(new MatteBorder(0, 0, 1, 0, LuceneUiUtils.MATTE_BORDER_COLOR));
         }
         JPanel queryBtnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         addQueryBtn = new JButton("Basic Query");
@@ -305,7 +305,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
 
     private JPanel getFooterPanel() {
         JPanel footer = new JPanel(new BorderLayout());
-        Border topBorder = new MatteBorder(1, 0, 0, 0, LuceneUiHelper.Utils.MATTE_BORDER_COLOR);
+        Border topBorder = new MatteBorder(1, 0, 0, 0, LuceneUiUtils.MATTE_BORDER_COLOR);
         footer.setBorder(topBorder);
         footer.add(getControlsPanel(true), BorderLayout.WEST);
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
