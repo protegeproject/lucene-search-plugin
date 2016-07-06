@@ -247,13 +247,19 @@ public class QueryEditorPanel extends JPanel implements Disposable {
 
     public void removeQueryPanel(QueryPanel queryPanel) {
         queries.remove(queryPanel);
+        disposeQueryPanel(queryPanel);
+    }
+
+    public void disposeQueryPanel(QueryPanel queryPanel) {
         if(queryPanel instanceof BasicQueryPanel) {
             ((BasicQueryPanel) queryPanel).dispose();
         }
     }
 
     private void clearQueryPanel() {
-        queries.forEach(this::removeQueryPanel);
+        queriesPanel.removeAll();
+        queries.forEach(this::disposeQueryPanel);
+        queries.clear();
         refresh();
     }
 
@@ -348,6 +354,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     public void dispose() {
         editorKit.getModelManager().removeListener(activeOntologyChanged);
         editorKit.getModelManager().removeOntologyChangeListener(ontologyChangeListener);
+        clearQueryPanel();
         if(allowSearch) {
             searchBtn.removeActionListener(searchBtnListener);
         }

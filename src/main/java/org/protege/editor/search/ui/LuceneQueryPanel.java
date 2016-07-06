@@ -1,5 +1,6 @@
 package org.protege.editor.search.ui;
 
+import org.protege.editor.core.Disposable;
 import org.protege.editor.core.ui.util.JOptionPaneEx;
 import org.protege.editor.owl.OWLEditorKit;
 import org.semanticweb.owlapi.model.OWLEntity;
@@ -15,7 +16,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Center for Biomedical Informatics Research <br>
  * Stanford University
  */
-public class LuceneQueryPanel extends JPanel {
+public class LuceneQueryPanel extends JPanel implements Disposable {
     private static final long serialVersionUID = -5335464226244411871L;
     private OWLEditorKit editorKit;
     private QueryResultsPanel resultsPanel;
@@ -76,6 +77,7 @@ public class LuceneQueryPanel extends JPanel {
         }
     }
 
+    @Override
     public void dispose() {
         resultsPanel.dispose();
         editorPanel.dispose();
