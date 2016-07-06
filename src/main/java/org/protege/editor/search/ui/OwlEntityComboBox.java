@@ -24,7 +24,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class OwlEntityComboBox extends JComboBox<OWLEntity> {
-    private static final long serialVersionUID = -4520939367481847482L;
+    private static final long serialVersionUID = 8007966643793840599L;
     private static final int MAX_VISIBLE_ROWS = 15;
     private OWLEditorKit editorKit;
     private OWLEntityFinder entityFinder;
@@ -55,22 +55,22 @@ public class OwlEntityComboBox extends JComboBox<OWLEntity> {
         insertItemAt(null, 0);
         setSelectedIndex(0);
         editorTextField = (JTextField) getEditor().getEditorComponent();
-        editorTextField.setBorder(new CompoundBorder(LuceneUiHelper.Utils.MATTE_BORDER, new EmptyBorder(0, 3, 0, 1)));
+        editorTextField.setBorder(new CompoundBorder(LuceneUiUtils.MATTE_BORDER, new EmptyBorder(0, 3, 0, 1)));
         editorTextField.addKeyListener(keyAdapter);
     }
 
     public void addItems(List<OWLEntity> items) {
-        for (OWLEntity item : items) {
-            addItem(item);
-        }
+        items.forEach(this::addItem);
     }
 
+    @Override
     public void addItem(OWLEntity item) {
         model.addElement(item);
     }
 
-    public void removeItem(OWLEntity item) {
-        model.removeElement(item);
+    @Override
+    public void removeItem(Object anObject) {
+        model.removeElement(anObject);
     }
 
     private KeyAdapter keyAdapter = new KeyAdapter() {
