@@ -101,21 +101,32 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         if (editorKit.getSearchManager() instanceof SearchTabManager) {
             SearchTabManager searchManager = (SearchTabManager) editorKit.getSearchManager();
             BasicQuery.Factory queryFactory = new BasicQuery.Factory(new SearchContext(editorKit), searchManager);
+            boolean emptyQueries = false;
 
             // build a lucene query object from all the query clauses
             FilteredQuery.Builder builder = new FilteredQuery.Builder();
             for(QueryPanel queryPanel : queries) {
                 if(queryPanel.isBasicQuery()) {
                     BasicQuery basicQuery = getBasicQuery((BasicQueryPanel) queryPanel, queryFactory);
-                    builder.add(basicQuery);
-                    
+                    if(basicQuery != null) {
+                        builder.add(basicQuery);
+                    } else {
+                        emptyQueries = true;
+                    }
                 } else if(queryPanel.isNegatedQuery()) {
                     NegatedQuery negatedQuery = getNegatedQuery((NegatedQueryPanel) queryPanel, queryFactory, searchManager);
-                    builder.add(negatedQuery);
-
+                    if(negatedQuery != null && !negatedQuery.getFilters().isEmpty()) {
+                        builder.add(negatedQuery);
+                    } else {
+                        emptyQueries = true;
+                    }
                 } else if(queryPanel.isNestedQuery()) {
                     NestedQuery nestedQuery = getNestedQuery((NestedQueryPanel) queryPanel, queryFactory, searchManager);
-                    builder.add(nestedQuery);
+                    if(nestedQuery != null && !nestedQuery.getFillerFilters().isEmpty()) {
+                        builder.add(nestedQuery);
+                    } else {
+                        emptyQueries = true;
+                    }
                 }
             }
             MatchCriteria match = getMatchCriteria();
@@ -123,6 +134,12 @@ public class QueryEditorPanel extends JPanel implements Disposable {
             FilteredQuery userQuery = builder.build(isMatchAll);
             if(userQuery != null) {
                 searchManager.performSearch(userQuery, this::handleResults);
+            }
+            if(emptyQueries) {
+                JOptionPane.showMessageDialog(editorKit.getOWLWorkspace(),
+                        new JLabel("One or more queries were not completely formulated, and were ignored. To prevent this message, " +
+                                "ensure that all query fields are filled or remove empty query panels."),
+                        "Detected one or more empty queries", JOptionPane.INFORMATION_MESSAGE);
             }
         }
         else {
@@ -198,7 +215,11 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         }
         MatchCriteria match = editorPanel.getMatchCriteria();
         boolean isMatchAll = (match == MatchCriteria.MATCH_ALL) ? true : false;
-        return builder.build(queryPanel.getSelectedProperty().getIRI(), isMatchAll);
+        if(queryPanel.getSelectedProperty() != null) {
+            return builder.build(queryPanel.getSelectedProperty().getIRI(), isMatchAll);
+        } else {
+            return null;
+        }
     }
 
     public List<QueryPanel> getQueryPanels() {
