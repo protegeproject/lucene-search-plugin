@@ -26,8 +26,7 @@ public class OwlEntityComboBox extends JComboBox<OWLEntity> {
     private static final int MAX_VISIBLE_ROWS = 15;
     private OWLEditorKit editorKit;
     private OWLEntityFinder entityFinder;
-    private List<OWLEntity> items;
-    private DefaultComboBoxModel model;
+    private SortedComboBoxModel<OWLEntity> model;
     private JTextField editorTextField;
     private ItemListener listener;
     private OWLEntity lastSelectedEntity;
@@ -38,12 +37,11 @@ public class OwlEntityComboBox extends JComboBox<OWLEntity> {
      * @param editorKit    OWL Editor Kit
      * @param items List of items to include in the combo box
      */
-    public OwlEntityComboBox(OWLEditorKit editorKit, List<OWLEntity> items) {
-        super(items.toArray(new OWLEntity[items.size()]));
-        this.items = checkNotNull(items);
+    public OwlEntityComboBox(OWLEditorKit editorKit) {
+        super(new SortedComboBoxModel<OWLEntity>());
         this.editorKit = checkNotNull(editorKit);
         entityFinder = editorKit.getOWLModelManager().getOWLEntityFinder();
-        model = (DefaultComboBoxModel) getModel();
+        model = (SortedComboBoxModel<OWLEntity>) getModel();
         initUi();
     }
 
@@ -58,6 +56,20 @@ public class OwlEntityComboBox extends JComboBox<OWLEntity> {
         editorTextField = (JTextField) getEditor().getEditorComponent();
         editorTextField.setBorder(LuceneUiHelper.Utils.MATTE_BORDER);
         editorTextField.addKeyListener(keyAdapter);
+    }
+
+    public void addItems(List<OWLEntity> items) {
+        for (OWLEntity item : items) {
+            addItem(item);
+        }
+    }
+
+    public void addItem(OWLEntity item) {
+        model.addElement(item);
+    }
+
+    public void removeItem(OWLEntity item) {
+        model.removeElement(item);
     }
 
     private KeyAdapter keyAdapter = new KeyAdapter() {
@@ -94,19 +106,7 @@ public class OwlEntityComboBox extends JComboBox<OWLEntity> {
             } else if (keycode == KeyEvent.VK_ENTER) {
                 setSelectedItem(lastSelectedEntity);
             } else {
-                if (!editorTextField.getText().isEmpty()) {
-                    SwingUtilities.invokeLater(() -> filter(editorTextField.getText()));
-                } else {
-                    removeItemListener(listener);
-                    model.removeAllElements();
-                    model.addElement(null);
-                    items.forEach(model::addElement);
-                    editorTextField.setText("");
-                    addItemListener(listener);
-                    if(getVisibleRows() < MAX_VISIBLE_ROWS) {
-                        resetPopup();
-                    }
-                }
+                SwingUtilities.invokeLater(() -> filter(editorTextField.getText()));
             }
         }
     };
@@ -115,7 +115,9 @@ public class OwlEntityComboBox extends JComboBox<OWLEntity> {
         if (!isPopupVisible()) {
             showPopup();
         }
-        List<OWLEntity> filteredItems = findMatchingEntities(inputText);
+        List<OWLEntity> filteredItems = inputText.isEmpty()
+                ? findMatchingEntities("*") // use find-any wildcard for empty input text
+                : findMatchingEntities(inputText);
         removeItemListener(listener);
         model.removeAllElements();
         if (filteredItems.size() > 0) {
