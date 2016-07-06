@@ -3,6 +3,8 @@ package org.protege.editor.search.ui;
 import org.protege.editor.owl.OWLEditorKit;
 import org.protege.editor.search.nci.QueryType;
 import org.semanticweb.owlapi.model.OWLEntity;
+import org.semanticweb.owlapi.model.OWLOntologyChange;
+import org.semanticweb.owlapi.model.OWLOntologyChangeListener;
 import org.semanticweb.owlapi.model.OWLProperty;
 
 import javax.swing.*;
@@ -27,6 +29,7 @@ public class BasicQueryPanel extends QueryPanel {
     private JTextField valueTextField;
     private JComponent value;
     private JLabel valueLbl;
+    private OwlEntityComboBoxChangeHandler comboBoxChangeHandler;
 
     /**
      * Constructor
@@ -46,10 +49,11 @@ public class BasicQueryPanel extends QueryPanel {
         JLabel queryTypeLbl = new JLabel("Query Type");
         valueLbl = new JLabel("Value");
 
-        List<OWLEntity> properties = getProperties();
-        propertyComboBox = new OwlEntityComboBox(editorKit, properties);
+        propertyComboBox = new OwlEntityComboBox(editorKit);
         propertyComboBox.setPreferredSize(new Dimension(250, 20));
         propertyComboBox.addItemListener(itemListener);
+        propertyComboBox.addItems(getProperties());
+        comboBoxChangeHandler = new OwlEntityComboBoxChangeHandler(propertyComboBox);
 
         queryTypeComboBox = new JComboBox<>();
         queryTypeComboBox.setPrototypeDisplayValue(QueryType.PROPERTY_RESTRICTION_PRESENT);
@@ -70,7 +74,15 @@ public class BasicQueryPanel extends QueryPanel {
         add(propertyComboBox, new GridBagConstraints(0, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, insets, 0, 0));
         add(queryTypeComboBox, new GridBagConstraints(1, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, insets, 0, 0));
         add(value, new GridBagConstraints(2, rowIndex, 2, 1, 1.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.HORIZONTAL, insets, 0, 0));
+        
+        editorKit.getOWLModelManager().addOntologyChangeListener(ontologyEditingListener);
     }
+
+    private OWLOntologyChangeListener ontologyEditingListener = changes -> {
+        for (OWLOntologyChange change : changes) {
+            change.accept(comboBoxChangeHandler);
+        }
+    };
 
     private ItemListener itemListener = new ItemListener() {
         @Override
