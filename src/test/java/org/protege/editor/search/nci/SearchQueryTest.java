@@ -134,8 +134,11 @@ public class SearchQueryTest {
 
     @Test
     public void testPropertyValuePresentQuery() throws IOException, QueryEvaluationException {
-        PropertyValuePresent containsQuery = getQueryFactory().createProperyValuePresentFilter(KoalaOntology.rdfsLabel);
-        Set<OWLEntity> results = containsQuery.evaluate(null);
+        /*
+         * AP: rdfs:label
+         */
+        PropertyValuePresent query = getQueryFactory().createProperyValuePresentFilter(KoalaOntology.rdfsLabel);
+        Set<OWLEntity> results = query.evaluate(null);
         assertThat(results, hasSize(8));
         assertThat(results, containsInAnyOrder(
                 KoalaOntology.female,
@@ -146,10 +149,48 @@ public class SearchQueryTest {
                 KoalaOntology.quokka,
                 KoalaOntology.tasmanianDevil,
                 KoalaOntology.male));
+        
+        /*
+         * OP: hasHabitat
+         */
+        query = getQueryFactory().createProperyValuePresentFilter(KoalaOntology.hasHabitat);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(0));
+        
+        /*
+         * OP: hasChildren
+         */
+        query = getQueryFactory().createProperyValuePresentFilter(KoalaOntology.hasChildren);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(0));
+        
+        /*
+         * OP: hasDegree
+         */
+        query = getQueryFactory().createProperyValuePresentFilter(KoalaOntology.hasDegree);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(0));
+        
+        /*
+         * OP: hasGender
+         */
+        query = getQueryFactory().createProperyValuePresentFilter(KoalaOntology.hasGender);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(0));
+        
+        /*
+         * DP: isHardWorking
+         */
+        query = getQueryFactory().createProperyValuePresentFilter(KoalaOntology.isHardWorking);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(0));
     }
 
     @Test
     public void testPropertyValueAbsentQuery() throws IOException, QueryEvaluationException {
+        /*
+         * AP: rdfs:label
+         */
         PropertyValueAbsent query = getQueryFactory().createPropertyValueAbsentFilter(KoalaOntology.rdfsLabel);
         Set<OWLEntity> results = query.evaluate(null);
         assertThat(results, hasSize(29));
@@ -165,39 +206,128 @@ public class SearchQueryTest {
                 KoalaOntology.parent,
                 KoalaOntology.maleStudentWith3Daughters,
                 KoalaOntology.degree,
-                KoalaOntology.person,
+                KoalaOntology.person, // 12 classes
                 KoalaOntology.hasHabitat,
                 KoalaOntology.hasDegree,
                 KoalaOntology.hasChildren,
                 KoalaOntology.hasGender,
-                KoalaOntology.isHardWorking,
+                KoalaOntology.isHardWorking, // 5 properties
                 KoalaOntology._male,
                 KoalaOntology._female,
                 KoalaOntology._ba,
                 KoalaOntology._bs,
                 KoalaOntology._ma,
-                KoalaOntology._phd,
+                KoalaOntology._phd, // 6 individuals
                 KoalaOntology.owlThing,
                 KoalaOntology.owlVersionInfo,
                 KoalaOntology.rdfsSeeAlso,
                 KoalaOntology.rdfsLabel,
                 KoalaOntology.rdfPlainLiteral,
                 KoalaOntology.xsdBoolean));
+        
+        /*
+         * OP: hasHabitat
+         */
+        query = getQueryFactory().createPropertyValueAbsentFilter(KoalaOntology.hasHabitat);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(37));
+        assertThat(results, containsInAnyOrder(KoalaOntology.allEntities.toArray()));
+        
+        /*
+         * OP: hasChildren
+         */
+        query = getQueryFactory().createPropertyValueAbsentFilter(KoalaOntology.hasChildren);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(37));
+        assertThat(results, containsInAnyOrder(KoalaOntology.allEntities.toArray()));
+        
+        /*
+         * OP: hasDegree
+         */
+        query = getQueryFactory().createPropertyValueAbsentFilter(KoalaOntology.hasDegree);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(37));
+        assertThat(results, containsInAnyOrder(KoalaOntology.allEntities.toArray()));
+        
+        /*
+         * OP: hasGender
+         */
+        query = getQueryFactory().createPropertyValueAbsentFilter(KoalaOntology.hasGender);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(37));
+        assertThat(results, containsInAnyOrder(KoalaOntology.allEntities.toArray()));
+        
+        /*
+         * DP: isHardWorking
+         */
+        query = getQueryFactory().createPropertyValueAbsentFilter(KoalaOntology.isHardWorking);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(37));
+        assertThat(results, containsInAnyOrder(KoalaOntology.allEntities.toArray()));
     }
 
     @Test
     public void testPropertyRestrictionPresentQuery() throws IOException, QueryEvaluationException {
-        PropertyRestrictionPresent containsQuery = getQueryFactory().createPropertyRestrictionPresentFilter(KoalaOntology.hasHabitat);
-        Set<OWLEntity> results = containsQuery.evaluate(null);
+        /*
+         * OP: hasHabitat
+         */
+        PropertyRestrictionPresent query = getQueryFactory().createPropertyRestrictionPresentFilter(KoalaOntology.hasHabitat);
+        Set<OWLEntity> results = query.evaluate(null);
         assertThat(results, hasSize(3));
         assertThat(results, containsInAnyOrder(
                 KoalaOntology.animal,
                 KoalaOntology.koala,
                 KoalaOntology.student));
+        
+        /*
+         * OP: hasChildren
+         */
+        query = getQueryFactory().createPropertyRestrictionPresentFilter(KoalaOntology.hasChildren);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(2));
+        assertThat(results, containsInAnyOrder(
+                KoalaOntology.maleStudentWith3Daughters,
+                KoalaOntology.parent));
+        
+        /*
+         * OP: hasDegree
+         */
+        query = getQueryFactory().createPropertyRestrictionPresentFilter(KoalaOntology.hasDegree);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(2));
+        assertThat(results, containsInAnyOrder(
+                KoalaOntology.graduateStudent,
+                KoalaOntology.koalaWithPhd));
+        
+        /*
+         * OP: hasGender
+         */
+        query = getQueryFactory().createPropertyRestrictionPresentFilter(KoalaOntology.hasGender);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(4));
+        assertThat(results, containsInAnyOrder(
+                KoalaOntology.animal,
+                KoalaOntology.female,
+                KoalaOntology.male,
+                KoalaOntology.maleStudentWith3Daughters));
+        
+        /*
+         * DP: isHardWorking
+         */
+        query = getQueryFactory().createPropertyRestrictionPresentFilter(KoalaOntology.isHardWorking);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(3));
+        assertThat(results, containsInAnyOrder(
+                KoalaOntology.koala,
+                KoalaOntology.quokka,
+                KoalaOntology.student));
     }
 
     @Test
     public void testPropertyRestrictionAbsentQuery() throws IOException, QueryEvaluationException {
+        /*
+         * OP: hasHabitat
+         */
         PropertyRestrictionAbsent containsQuery = getQueryFactory().createPropertyRestrictionAbsentFilter(KoalaOntology.hasHabitat);
         Set<OWLEntity> results = containsQuery.evaluate(null);
         assertThat(results, hasSize(18));
@@ -219,6 +349,111 @@ public class SearchQueryTest {
                 KoalaOntology.degree,
                 KoalaOntology.male,
                 KoalaOntology.person,
+                KoalaOntology.owlThing));
+        
+        /*
+         * OP: hasChildren
+         */
+        containsQuery = getQueryFactory().createPropertyRestrictionAbsentFilter(KoalaOntology.hasChildren);
+        results = containsQuery.evaluate(null);
+        assertThat(results, hasSize(19));
+        assertThat(results, containsInAnyOrder(
+                KoalaOntology.animal,
+                KoalaOntology.gender,
+                KoalaOntology.female,
+                KoalaOntology.marsupials,
+                KoalaOntology.koala,
+                KoalaOntology.koalaWithPhd,
+                KoalaOntology.university,
+                KoalaOntology.habitat,
+                KoalaOntology.forest,
+                KoalaOntology.rainForest,
+                KoalaOntology.graduateStudent,
+                KoalaOntology.dryEucalyptForest,
+                KoalaOntology.quokka,
+                KoalaOntology.student,
+                KoalaOntology.tasmanianDevil,
+                KoalaOntology.degree,
+                KoalaOntology.male,
+                KoalaOntology.person,
+                KoalaOntology.owlThing));
+        
+        /*
+         * OP: hasDegree
+         */
+        containsQuery = getQueryFactory().createPropertyRestrictionAbsentFilter(KoalaOntology.hasDegree);
+        results = containsQuery.evaluate(null);
+        assertThat(results, hasSize(19));
+        assertThat(results, containsInAnyOrder(
+                KoalaOntology.animal,
+                KoalaOntology.degree,
+                KoalaOntology.dryEucalyptForest,
+                KoalaOntology.female,
+                KoalaOntology.forest,
+                KoalaOntology.gender,
+                KoalaOntology.habitat,
+                KoalaOntology.koala,
+                KoalaOntology.male,
+                KoalaOntology.maleStudentWith3Daughters,
+                KoalaOntology.marsupials,
+                KoalaOntology.parent,
+                KoalaOntology.person,
+                KoalaOntology.quokka,
+                KoalaOntology.rainForest,
+                KoalaOntology.student,
+                KoalaOntology.tasmanianDevil,
+                KoalaOntology.university,
+                KoalaOntology.owlThing));
+        
+        /*
+         * OP: hasGender
+         */
+        containsQuery = getQueryFactory().createPropertyRestrictionAbsentFilter(KoalaOntology.hasGender);
+        results = containsQuery.evaluate(null);
+        assertThat(results, hasSize(17));
+        assertThat(results, containsInAnyOrder(
+                KoalaOntology.degree,
+                KoalaOntology.dryEucalyptForest,
+                KoalaOntology.forest,
+                KoalaOntology.gender,
+                KoalaOntology.graduateStudent,
+                KoalaOntology.habitat,
+                KoalaOntology.koala,
+                KoalaOntology.koalaWithPhd,
+                KoalaOntology.marsupials,
+                KoalaOntology.parent,
+                KoalaOntology.person,
+                KoalaOntology.quokka,
+                KoalaOntology.rainForest,
+                KoalaOntology.student,
+                KoalaOntology.tasmanianDevil,
+                KoalaOntology.university,
+                KoalaOntology.owlThing));
+        
+        /*
+         * DP: isHardWorking
+         */
+        containsQuery = getQueryFactory().createPropertyRestrictionAbsentFilter(KoalaOntology.isHardWorking);
+        results = containsQuery.evaluate(null);
+        assertThat(results, hasSize(18));
+        assertThat(results, containsInAnyOrder(
+                KoalaOntology.animal,
+                KoalaOntology.degree,
+                KoalaOntology.dryEucalyptForest,
+                KoalaOntology.female,
+                KoalaOntology.forest,
+                KoalaOntology.gender,
+                KoalaOntology.graduateStudent,
+                KoalaOntology.habitat,
+                KoalaOntology.koalaWithPhd,
+                KoalaOntology.male,
+                KoalaOntology.maleStudentWith3Daughters,
+                KoalaOntology.marsupials,
+                KoalaOntology.parent,
+                KoalaOntology.person,
+                KoalaOntology.rainForest,
+                KoalaOntology.tasmanianDevil,
+                KoalaOntology.university,
                 KoalaOntology.owlThing));
     }
 
