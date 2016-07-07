@@ -11,6 +11,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
+import org.semanticweb.owlapi.model.HasFiller;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
 import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom;
@@ -54,8 +55,8 @@ import org.semanticweb.owlapi.model.OWLObjectPropertyDomainAxiom;
 import org.semanticweb.owlapi.model.OWLObjectPropertyRangeAxiom;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 import org.semanticweb.owlapi.model.OWLOntology;
-import org.semanticweb.owlapi.model.OWLQuantifiedObjectRestriction;
 import org.semanticweb.owlapi.model.OWLReflexiveObjectPropertyAxiom;
+import org.semanticweb.owlapi.model.OWLRestriction;
 import org.semanticweb.owlapi.model.OWLSameIndividualAxiom;
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 import org.semanticweb.owlapi.model.OWLSubDataPropertyOfAxiom;
@@ -173,30 +174,30 @@ public class SearchTabIndexer extends AbstractLuceneIndexer {
                     return;
                 }
                 OWLClass cls = axiom.getSubClass().asOWLClass();
-                if (axiom.getSuperClass() instanceof OWLQuantifiedObjectRestriction) {
-                    OWLQuantifiedObjectRestriction restriction = (OWLQuantifiedObjectRestriction) axiom.getSuperClass();
-                    visitQuantifiedObjectRestriction(cls, restriction);
+                if (axiom.getSuperClass() instanceof OWLRestriction) {
+                    OWLRestriction restriction = (OWLRestriction) axiom.getSuperClass();
+                    visitObjectRestriction(cls, restriction);
                 }
                 else if (axiom.getSuperClass() instanceof OWLBooleanClassExpression) {
                     OWLBooleanClassExpression expr = (OWLBooleanClassExpression) axiom.getSuperClass();
                     if (expr instanceof OWLObjectIntersectionOf) {
                         for (OWLClassExpression ce : expr.asConjunctSet()) {
-                            if (ce instanceof OWLQuantifiedObjectRestriction) {
-                                visitQuantifiedObjectRestriction(cls, (OWLQuantifiedObjectRestriction) ce);
+                            if (ce instanceof OWLRestriction) {
+                                visitObjectRestriction(cls, (OWLRestriction) ce);
                             }
                         }
                     }
                     else if (expr instanceof OWLObjectUnionOf) {
                         for (OWLClassExpression ce : expr.asDisjunctSet()) {
-                            if (ce instanceof OWLQuantifiedObjectRestriction) {
-                                visitQuantifiedObjectRestriction(cls, (OWLQuantifiedObjectRestriction) ce);
+                            if (ce instanceof OWLRestriction) {
+                                visitObjectRestriction(cls, (OWLRestriction) ce);
                             }
                         }
                     }
                     else if (expr instanceof OWLObjectComplementOf) {
                         OWLClassExpression ce = ((OWLObjectComplementOf) expr).getObjectComplementOf();
-                        if (ce instanceof OWLQuantifiedObjectRestriction) {
-                            visitQuantifiedObjectRestriction(cls, (OWLQuantifiedObjectRestriction) ce);
+                        if (ce instanceof OWLRestriction) {
+                            visitObjectRestriction(cls, (OWLRestriction) ce);
                         }
                     }
                 }
@@ -211,17 +212,31 @@ public class SearchTabIndexer extends AbstractLuceneIndexer {
                 }
             }
 
-            private void visitQuantifiedObjectRestriction(OWLClass subclass, OWLQuantifiedObjectRestriction restriction) {
-                if (restriction.getProperty() instanceof OWLObjectProperty && restriction.getFiller() instanceof OWLClass) {
-                    OWLObjectProperty property = restriction.getProperty().asOWLObjectProperty();
-                    OWLClass filler = restriction.getFiller().asOWLClass();
+            private void visitObjectRestriction(OWLClass subclass, OWLRestriction restriction) {
+                if (restriction.isDataRestriction()) {
+                    return;
+                }
+                OWLObjectProperty property = (OWLObjectProperty) restriction.getProperty();
+                if (restriction instanceof HasFiller<?>) {
+                    HasFiller<?> restrictionWithFiller = (HasFiller<?>) restriction;
                     Document doc = new Document();
-                    doc.add(new TextField(IndexField.ENTITY_IRI, getEntityId(subclass), Store.YES));
-                    doc.add(new TextField(IndexField.DISPLAY_NAME, getDisplayName(subclass), Store.YES));
-                    doc.add(new StringField(IndexField.OBJECT_PROPERTY_IRI, getEntityId(property), Store.YES));
-                    doc.add(new TextField(IndexField.OBJECT_PROPERTY_DISPLAY_NAME, getDisplayName(property), Store.YES));
-                    doc.add(new StringField(IndexField.FILLER_IRI, getEntityId(filler), Store.YES));
-                    doc.add(new TextField(IndexField.FILLER_DISPLAY_NAME, getDisplayName(filler), Store.YES));
+                    if (restrictionWithFiller.getFiller() instanceof OWLClass) {
+                        OWLClass filler = (OWLClass) restrictionWithFiller.getFiller();
+                        doc.add(new TextField(IndexField.ENTITY_IRI, getEntityId(subclass), Store.YES));
+                        doc.add(new TextField(IndexField.DISPLAY_NAME, getDisplayName(subclass), Store.YES));
+                        doc.add(new StringField(IndexField.OBJECT_PROPERTY_IRI, getEntityId(property), Store.YES));
+                        doc.add(new TextField(IndexField.OBJECT_PROPERTY_DISPLAY_NAME, getDisplayName(property), Store.YES));
+                        doc.add(new StringField(IndexField.FILLER_IRI, getEntityId(filler), Store.YES));
+                        doc.add(new TextField(IndexField.FILLER_DISPLAY_NAME, getDisplayName(filler), Store.YES));
+                    }
+                    else {
+                        doc.add(new TextField(IndexField.ENTITY_IRI, getEntityId(subclass), Store.YES));
+                        doc.add(new TextField(IndexField.DISPLAY_NAME, getDisplayName(subclass), Store.YES));
+                        doc.add(new StringField(IndexField.OBJECT_PROPERTY_IRI, getEntityId(property), Store.YES));
+                        doc.add(new TextField(IndexField.OBJECT_PROPERTY_DISPLAY_NAME, getDisplayName(property), Store.YES));
+                        doc.add(new StringField(IndexField.FILLER_IRI, "", Store.NO));
+                        doc.add(new TextField(IndexField.FILLER_DISPLAY_NAME, "", Store.NO));
+                    }
                     documents.add(doc);
                 }
             }
