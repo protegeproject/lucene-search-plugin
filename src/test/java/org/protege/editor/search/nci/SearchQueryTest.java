@@ -98,8 +98,8 @@ public class SearchQueryTest {
 
     @Test
     public void testContainsQuery() throws IOException, QueryEvaluationException {
-        KeywordQuery containsQuery = getQueryFactory().createContainsFilter(KoalaOntology.rdfsLabel, "male");
-        Set<OWLEntity> results = containsQuery.evaluate(null);
+        KeywordQuery query = getQueryFactory().createContainsFilter(KoalaOntology.rdfsLabel, "male");
+        Set<OWLEntity> results = query.evaluate(null);
         assertThat(results, hasSize(2));
         assertThat(results, containsInAnyOrder(
                 KoalaOntology.female,
@@ -108,16 +108,16 @@ public class SearchQueryTest {
 
     @Test
     public void testExactMatchQuery() throws IOException, QueryEvaluationException {
-        KeywordQuery containsQuery = getQueryFactory().createExactMatchFilter(KoalaOntology.rdfsLabel, "male");
-        Set<OWLEntity> results = containsQuery.evaluate(null);
+        KeywordQuery query = getQueryFactory().createExactMatchFilter(KoalaOntology.rdfsLabel, "male");
+        Set<OWLEntity> results = query.evaluate(null);
         assertThat(results, hasSize(1));
         assertThat(results, containsInAnyOrder(KoalaOntology.male));
     }
 
     @Test
     public void testStartsWithQuery() throws IOException, QueryEvaluationException {
-        KeywordQuery containsQuery = getQueryFactory().createStartsWithFilter(KoalaOntology.rdfsLabel, "fem");
-        Set<OWLEntity> results = containsQuery.evaluate(null);
+        KeywordQuery query = getQueryFactory().createStartsWithFilter(KoalaOntology.rdfsLabel, "fem");
+        Set<OWLEntity> results = query.evaluate(null);
         assertThat(results, hasSize(1));
         assertThat(results, containsInAnyOrder(KoalaOntology.female));
     }
@@ -328,8 +328,8 @@ public class SearchQueryTest {
         /*
          * OP: hasHabitat
          */
-        PropertyRestrictionAbsent containsQuery = getQueryFactory().createPropertyRestrictionAbsentFilter(KoalaOntology.hasHabitat);
-        Set<OWLEntity> results = containsQuery.evaluate(null);
+        PropertyRestrictionAbsent query = getQueryFactory().createPropertyRestrictionAbsentFilter(KoalaOntology.hasHabitat);
+        Set<OWLEntity> results = query.evaluate(null);
         assertThat(results, hasSize(18));
         assertThat(results, containsInAnyOrder(
                 KoalaOntology.gender,
@@ -354,8 +354,8 @@ public class SearchQueryTest {
         /*
          * OP: hasChildren
          */
-        containsQuery = getQueryFactory().createPropertyRestrictionAbsentFilter(KoalaOntology.hasChildren);
-        results = containsQuery.evaluate(null);
+        query = getQueryFactory().createPropertyRestrictionAbsentFilter(KoalaOntology.hasChildren);
+        results = query.evaluate(null);
         assertThat(results, hasSize(19));
         assertThat(results, containsInAnyOrder(
                 KoalaOntology.animal,
@@ -381,8 +381,8 @@ public class SearchQueryTest {
         /*
          * OP: hasDegree
          */
-        containsQuery = getQueryFactory().createPropertyRestrictionAbsentFilter(KoalaOntology.hasDegree);
-        results = containsQuery.evaluate(null);
+        query = getQueryFactory().createPropertyRestrictionAbsentFilter(KoalaOntology.hasDegree);
+        results = query.evaluate(null);
         assertThat(results, hasSize(19));
         assertThat(results, containsInAnyOrder(
                 KoalaOntology.animal,
@@ -408,8 +408,8 @@ public class SearchQueryTest {
         /*
          * OP: hasGender
          */
-        containsQuery = getQueryFactory().createPropertyRestrictionAbsentFilter(KoalaOntology.hasGender);
-        results = containsQuery.evaluate(null);
+        query = getQueryFactory().createPropertyRestrictionAbsentFilter(KoalaOntology.hasGender);
+        results = query.evaluate(null);
         assertThat(results, hasSize(17));
         assertThat(results, containsInAnyOrder(
                 KoalaOntology.degree,
@@ -433,8 +433,8 @@ public class SearchQueryTest {
         /*
          * DP: isHardWorking
          */
-        containsQuery = getQueryFactory().createPropertyRestrictionAbsentFilter(KoalaOntology.isHardWorking);
-        results = containsQuery.evaluate(null);
+        query = getQueryFactory().createPropertyRestrictionAbsentFilter(KoalaOntology.isHardWorking);
+        results = query.evaluate(null);
         assertThat(results, hasSize(18));
         assertThat(results, containsInAnyOrder(
                 KoalaOntology.animal,
