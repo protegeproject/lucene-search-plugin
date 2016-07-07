@@ -298,7 +298,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         }
         String toMatch = filterTextField.getText();
         if(toMatch.isEmpty()) {
-            setListData(resultsList, true);
+            setListData(entityTypesFilteredResults, true);
             return;
         }
         OWLEntityFinder finder = editorKit.getOWLModelManager().getOWLEntityFinder();
