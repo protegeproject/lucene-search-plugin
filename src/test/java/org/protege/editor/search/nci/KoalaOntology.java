@@ -18,11 +18,15 @@ import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLDataProperty;
 import org.semanticweb.owlapi.model.OWLDatatype;
 import org.semanticweb.owlapi.model.OWLIndividual;
+import org.semanticweb.owlapi.model.OWLObject;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.util.CollectionFactory;
 import org.semanticweb.owlapi.vocab.Namespaces;
+
+import java.util.List;
 
 public final class KoalaOntology {
 
@@ -141,6 +145,13 @@ public final class KoalaOntology {
     public static final OWLAnnotationAssertionAxiom quokkaLabel = AnnotationAssertion(rdfsLabel, quokkaIri, PlainLiteral("Quokka"));
     public static final OWLAnnotationAssertionAxiom tasmanianDevilLabel = AnnotationAssertion(rdfsLabel, tasmanianDevilIri, PlainLiteral("Tasmanian Devil"));
     public static final OWLAnnotationAssertionAxiom maleLabel = AnnotationAssertion(rdfsLabel, maleIri, PlainLiteral("Male"));
+
+    public static final List<OWLObject> allEntities = CollectionFactory.list(
+        gender, female, marsupials, student, koalaWithPhd, university, koala, animal, habitat, forest, rainForest,
+        dryEucalyptForest, parent, graduateStudent, quokka, tasmanianDevil, maleStudentWith3Daughters, degree, male,
+        person, hasHabitat, hasDegree, hasChildren, hasGender, isHardWorking, owlThing, owlVersionInfo, rdfsSeeAlso,
+        rdfsLabel, rdfPlainLiteral, xsdBoolean, _male, _female, _ba, _bs, _ma, _phd
+    );
 
     /**
      * Produce the OWL ontology given the input {@code OWLOntologyManager}.
