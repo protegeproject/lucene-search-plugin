@@ -55,6 +55,7 @@ import org.semanticweb.owlapi.model.OWLObjectPropertyDomainAxiom;
 import org.semanticweb.owlapi.model.OWLObjectPropertyRangeAxiom;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 import org.semanticweb.owlapi.model.OWLOntology;
+import org.semanticweb.owlapi.model.OWLProperty;
 import org.semanticweb.owlapi.model.OWLReflexiveObjectPropertyAxiom;
 import org.semanticweb.owlapi.model.OWLRestriction;
 import org.semanticweb.owlapi.model.OWLSameIndividualAxiom;
@@ -213,31 +214,30 @@ public class SearchTabIndexer extends AbstractLuceneIndexer {
             }
 
             private void visitObjectRestriction(OWLClass subclass, OWLRestriction restriction) {
-                if (restriction.isDataRestriction()) {
-                    return;
-                }
-                OWLObjectProperty property = (OWLObjectProperty) restriction.getProperty();
-                if (restriction instanceof HasFiller<?>) {
-                    HasFiller<?> restrictionWithFiller = (HasFiller<?>) restriction;
-                    Document doc = new Document();
-                    if (restrictionWithFiller.getFiller() instanceof OWLClass) {
-                        OWLClass filler = (OWLClass) restrictionWithFiller.getFiller();
-                        doc.add(new TextField(IndexField.ENTITY_IRI, getEntityId(subclass), Store.YES));
-                        doc.add(new TextField(IndexField.DISPLAY_NAME, getDisplayName(subclass), Store.YES));
-                        doc.add(new StringField(IndexField.OBJECT_PROPERTY_IRI, getEntityId(property), Store.YES));
-                        doc.add(new TextField(IndexField.OBJECT_PROPERTY_DISPLAY_NAME, getDisplayName(property), Store.YES));
-                        doc.add(new StringField(IndexField.FILLER_IRI, getEntityId(filler), Store.YES));
-                        doc.add(new TextField(IndexField.FILLER_DISPLAY_NAME, getDisplayName(filler), Store.YES));
+                if (restriction.getProperty() instanceof OWLProperty) {
+                    OWLProperty property = (OWLProperty) restriction.getProperty();
+                    if (restriction instanceof HasFiller<?>) {
+                        HasFiller<?> restrictionWithFiller = (HasFiller<?>) restriction;
+                        Document doc = new Document();
+                        if (restrictionWithFiller.getFiller() instanceof OWLClass) {
+                            OWLClass filler = (OWLClass) restrictionWithFiller.getFiller();
+                            doc.add(new TextField(IndexField.ENTITY_IRI, getEntityId(subclass), Store.YES));
+                            doc.add(new TextField(IndexField.DISPLAY_NAME, getDisplayName(subclass), Store.YES));
+                            doc.add(new StringField(IndexField.OBJECT_PROPERTY_IRI, getEntityId(property), Store.YES));
+                            doc.add(new TextField(IndexField.OBJECT_PROPERTY_DISPLAY_NAME, getDisplayName(property), Store.YES));
+                            doc.add(new StringField(IndexField.FILLER_IRI, getEntityId(filler), Store.YES));
+                            doc.add(new TextField(IndexField.FILLER_DISPLAY_NAME, getDisplayName(filler), Store.YES));
+                        }
+                        else {
+                            doc.add(new TextField(IndexField.ENTITY_IRI, getEntityId(subclass), Store.YES));
+                            doc.add(new TextField(IndexField.DISPLAY_NAME, getDisplayName(subclass), Store.YES));
+                            doc.add(new StringField(IndexField.OBJECT_PROPERTY_IRI, getEntityId(property), Store.YES));
+                            doc.add(new TextField(IndexField.OBJECT_PROPERTY_DISPLAY_NAME, getDisplayName(property), Store.YES));
+                            doc.add(new StringField(IndexField.FILLER_IRI, "", Store.NO));
+                            doc.add(new TextField(IndexField.FILLER_DISPLAY_NAME, "", Store.NO));
+                        }
+                        documents.add(doc);
                     }
-                    else {
-                        doc.add(new TextField(IndexField.ENTITY_IRI, getEntityId(subclass), Store.YES));
-                        doc.add(new TextField(IndexField.DISPLAY_NAME, getDisplayName(subclass), Store.YES));
-                        doc.add(new StringField(IndexField.OBJECT_PROPERTY_IRI, getEntityId(property), Store.YES));
-                        doc.add(new TextField(IndexField.OBJECT_PROPERTY_DISPLAY_NAME, getDisplayName(property), Store.YES));
-                        doc.add(new StringField(IndexField.FILLER_IRI, "", Store.NO));
-                        doc.add(new TextField(IndexField.FILLER_DISPLAY_NAME, "", Store.NO));
-                    }
-                    documents.add(doc);
                 }
             }
 
