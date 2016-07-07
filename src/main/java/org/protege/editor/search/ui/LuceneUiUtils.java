@@ -27,7 +27,10 @@ public class LuceneUiUtils {
             MATTE_BORDER = new MatteBorder(1, 1, 1, 1, MATTE_BORDER_COLOR),
             EMPTY_BORDER = new EmptyBorder(0, 0, 0, 0);
 
-    public static final String CLOSE_ICON_FILENAME = "close.png";
+    public static final String
+            CLOSE_ICON_FILENAME = "close.png",
+            BACK_ICON_FILENAME = "back.png",
+            FORWARD_ICON_FILENAME = "forward.png";
 
     public static Icon getIcon(String filename, int width, int height) {
         BufferedImage icon = null;

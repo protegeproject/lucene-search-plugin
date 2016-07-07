@@ -7,7 +7,7 @@ import org.protege.editor.owl.model.event.EventType;
 import org.protege.editor.owl.model.event.OWLModelManagerListener;
 import org.protege.editor.owl.model.find.OWLEntityFinder;
 import org.protege.editor.owl.ui.renderer.OWLCellRenderer;
-import org.semanticweb.owlapi.model.OWLEntity;
+import org.semanticweb.owlapi.model.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -29,14 +29,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class QueryResultsPanel extends JPanel implements Disposable {
-    private static final long serialVersionUID = 991996177300585480L;
+    private static final long serialVersionUID = -2171651633749096590L;
+    private static final int MAX_LIST_SIZE = 500;
     private OWLEditorKit editorKit;
     private JList<OWLEntity> results;
-    private List<OWLEntity> resultsList, txtFieldFilteredResults;
+    private List<List<OWLEntity>> pagedResultsList;
+    private List<OWLEntity> resultsList, txtFieldFilteredResults, entityTypesFilteredResults;
     private JCheckBox classes, properties, individuals, datatypes;
     private JTextField filterTextField;
-    private JLabel statusLbl;
-    private JButton exportBtn;
+    private JLabel statusLbl, pageLbl;
+    private JButton exportBtn, backBtn, forwardBtn;
+    private int currentPage = 0, totalPages;
 
     /**
      * Constructor
@@ -81,7 +84,13 @@ public class QueryResultsPanel extends JPanel implements Disposable {
 
     private ActionListener exportBtnListener = e -> exportResults();
 
-    private ActionListener entityTypesListener = e -> filterEntityTypes();
+    private ActionListener classesListener = e -> filter(classes, OWLClass.class);
+
+    private ActionListener propertiesListener = e -> filter(properties, OWLProperty.class);
+
+    private ActionListener individualsListener = e -> filter(individuals, OWLNamedIndividual.class);
+
+    private ActionListener datatypesListener = e -> filter(datatypes, OWLDatatype.class);
 
     private DocumentListener filterTextListener = new DocumentListener() {
         @Override
@@ -119,6 +128,34 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         }
     };
 
+    private ActionListener backBtnListener = e -> {
+        currentPage--;
+        if(!forwardBtn.isEnabled()) {
+            forwardBtn.setEnabled(true);
+        }
+        if(currentPage == 0) {
+            backBtn.setEnabled(false);
+        }
+        updatePageLabel();
+        setListData(pagedResultsList.get(currentPage), false);
+    };
+
+    private ActionListener forwardBtnListener = e -> {
+        currentPage++;
+        if(!backBtn.isEnabled()) {
+            backBtn.setEnabled(true);
+        }
+        if(currentPage == pagedResultsList.size()-1) {
+            forwardBtn.setEnabled(false);
+        }
+        updatePageLabel();
+        setListData(pagedResultsList.get(currentPage), false);
+    };
+
+    private void updatePageLabel() {
+        pageLbl.setText("· Page " + (currentPage+1) + " of " + totalPages + "  (" + MAX_LIST_SIZE  + " results per page)");
+    }
+
     private void selectEntity() {
         OWLEntity selectedEntity = getSelectedEntity();
         if (selectedEntity != null) {
@@ -131,14 +168,49 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         return results.getSelectedValue();
     }
 
+    public void setPagedResultsList(boolean pagedResultsList) {
+        backBtn.setEnabled(false);
+        if(pagedResultsList) {
+            backBtn.setVisible(true);
+            forwardBtn.setVisible(true);
+            forwardBtn.setEnabled(true);
+        } else {
+            backBtn.setVisible(false);
+            forwardBtn.setVisible(false);
+            pageLbl.setText("");
+        }
+    }
+
     private JPanel getHeaderPanel() {
         JPanel header = new JPanel(new BorderLayout());
         header.setBorder(new MatteBorder(0, 0, 1, 0, LuceneUiUtils.MATTE_BORDER_COLOR));
         header.setPreferredSize(new Dimension(0, 40));
 
+        JPanel pagesPanel = new JPanel(new GridBagLayout());
+        backBtn = new JButton(LuceneUiUtils.getIcon(LuceneUiUtils.BACK_ICON_FILENAME, 12, 12));
+        forwardBtn = new JButton(LuceneUiUtils.getIcon(LuceneUiUtils.FORWARD_ICON_FILENAME, 12, 12));
+        backBtn.setVisible(false);
+        backBtn.setBackground(Color.WHITE);
+        backBtn.setPreferredSize(new Dimension(36, 27));
+        backBtn.addActionListener(backBtnListener);
+        forwardBtn.setVisible(false);
+        forwardBtn.setBackground(Color.WHITE);
+        forwardBtn.setPreferredSize(new Dimension(36, 27));
+        forwardBtn.addActionListener(forwardBtnListener);
+        pagesPanel.add(backBtn,
+                new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_TRAILING, GridBagConstraints.NONE, new Insets(0, 5, 0, 0), 0, 0));
+        pagesPanel.add(forwardBtn,
+                new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, new Insets(0, 0, 0, 5), 0, 0));
+
         statusLbl = new JLabel("Results");
         statusLbl.setBorder(new EmptyBorder(0, 4, 0, 0));
-        header.add(statusLbl, BorderLayout.WEST);
+        pagesPanel.add(statusLbl,
+                new GridBagConstraints(2, 0, 1, 1, 1.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 1, 0, 0), 0, 0));
+
+        pageLbl = new JLabel("");
+        pagesPanel.add(pageLbl,
+                new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 4, 0, 0), 0, 0));
+        header.add(pagesPanel, BorderLayout.WEST);
 
         JPanel exportPanel = new JPanel(new FlowLayout());
         exportBtn = new JButton("Export Results");
@@ -162,10 +234,10 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         properties.setSelected(true);
         individuals.setSelected(true);
         datatypes.setSelected(true);
-        classes.addActionListener(entityTypesListener);
-        properties.addActionListener(entityTypesListener);
-        individuals.addActionListener(entityTypesListener);
-        datatypes.addActionListener(entityTypesListener);
+        classes.addActionListener(classesListener);
+        properties.addActionListener(propertiesListener);
+        individuals.addActionListener(individualsListener);
+        datatypes.addActionListener(datatypesListener);
 
         filterTextField = new JTextField();
         filterTextField.setMinimumSize(new Dimension(60, 22));
@@ -182,48 +254,42 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         return footer;
     }
 
-    private void filterEntityTypes() {
+    private void filter(JCheckBox checkBox, Class cls) {
         List<OWLEntity> entities = new ArrayList<>(getResults()), toRemove = new ArrayList<>();
-        if(!classes.isSelected()) {
-            toRemove.addAll(entities.stream().filter(OWLEntity::isOWLClass).collect(Collectors.toList()));
+        if(!checkBox.isSelected()) {
+            toRemove.addAll(entities.stream().filter(cls::isInstance).collect(Collectors.toList()));
+            entities.removeAll(toRemove);
         } else {
             if(!filterTextField.getText().isEmpty()) {
-                txtFieldFilteredResults.stream().filter(e -> e.isOWLClass() && !entities.contains(e)).forEach(entities::add);
+                txtFieldFilteredResults.stream().filter(e -> cls.isInstance(e) && !entities.contains(e)).forEach(entities::add);
             } else {
-                resultsList.stream().filter(e -> e.isOWLClass() && !entities.contains(e)).forEach(entities::add);
+                resultsList.stream().filter(e -> cls.isInstance(e) && !entities.contains(e)).forEach(entities::add);
             }
         }
-        if(!properties.isSelected()) {
-            toRemove.addAll(entities.stream().filter(e -> (e.isOWLAnnotationProperty() || e.isOWLDataProperty() || e.isOWLObjectProperty())).collect(Collectors.toList()));
-        } else {
-            if(!filterTextField.getText().isEmpty()) {
-                txtFieldFilteredResults.stream().filter(e -> (e.isOWLAnnotationProperty() || e.isOWLDataProperty() || e.isOWLObjectProperty()) && !entities.contains(e)).forEach(entities::add);
-            } else {
-                resultsList.stream().filter(e -> !entities.contains(e) && (e.isOWLAnnotationProperty() || e.isOWLDataProperty() || e.isOWLObjectProperty())).forEach(entities::add);
-            }
-        }
-        if(!individuals.isSelected()) {
-            toRemove.addAll(entities.stream().filter(OWLEntity::isOWLNamedIndividual).collect(Collectors.toList()));
-        } else {
-            if(!filterTextField.getText().isEmpty()) {
-                txtFieldFilteredResults.stream().filter(e -> e.isOWLNamedIndividual() && !entities.contains(e)).forEach(entities::add);
-            } else {
-                resultsList.stream().filter(e -> e.isOWLNamedIndividual() && !entities.contains(e)).forEach(entities::add);
-            }
-        }
-        if(!datatypes.isSelected()) {
-            toRemove.addAll(entities.stream().filter(OWLEntity::isOWLDatatype).collect(Collectors.toList()));
-        } else {
-            if(!filterTextField.getText().isEmpty()) {
-                txtFieldFilteredResults.stream().filter(e -> e.isOWLDatatype() && !entities.contains(e)).forEach(entities::add);
-            } else {
-                resultsList.stream().filter(e -> !entities.contains(e) && e.isOWLDatatype()).forEach(entities::add);
-            }
-        }
-        entities.removeAll(toRemove);
         Collections.sort(entities);
-        results.setListData(entities.toArray(new OWLEntity[entities.size()]));
-        updateResultsLabel(entities);
+        entityTypesFilteredResults = entities;
+        setListData(entities, true);
+    }
+
+    private void setListData(List<OWLEntity> list, boolean filteredList) {
+        if(list.size() > MAX_LIST_SIZE) {
+            pagedResultsList = divideList(list);
+            totalPages = pagedResultsList.size();
+            currentPage = 0;
+            List<OWLEntity> sublist = pagedResultsList.get(0);
+            updatePageLabel();
+            results.setListData(sublist.toArray(new OWLEntity[sublist.size()]));
+            if(filteredList) {
+                setPagedResultsList(true);
+                updateResultsLabel(list);
+            }
+        } else {
+            results.setListData(list.toArray(new OWLEntity[list.size()]));
+            if(filteredList) {
+                updateResultsLabel(list);
+                setPagedResultsList(false);
+            }
+        }
     }
 
     private void filterTextField() {
@@ -232,8 +298,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         }
         String toMatch = filterTextField.getText();
         if(toMatch.isEmpty()) {
-            results.setListData(resultsList.toArray(new OWLEntity[resultsList.size()]));
-            updateResultsLabel(resultsList);
+            setListData(resultsList, true);
             return;
         }
         OWLEntityFinder finder = editorKit.getOWLModelManager().getOWLEntityFinder();
@@ -254,8 +319,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         }
         txtFieldFilteredResults = new ArrayList<>(output);
         Collections.sort(txtFieldFilteredResults);
-        results.setListData(txtFieldFilteredResults.toArray(new OWLEntity[txtFieldFilteredResults.size()]));
-        updateResultsLabel(output);
+        setListData(txtFieldFilteredResults, true);
     }
 
     private void exportResults() {
@@ -280,16 +344,28 @@ public class QueryResultsPanel extends JPanel implements Disposable {
     public void setResults(Collection<OWLEntity> entities) {
         resultsList = new ArrayList<>(checkNotNull(entities));
         Collections.sort(resultsList);
-        updateResultsLabel(entities);
-        results.setListData(resultsList.toArray(new OWLEntity[entities.size()]));
+        entityTypesFilteredResults = resultsList;
+        setListData(resultsList, true);
+    }
+
+    private List<List<OWLEntity>> divideList(List<OWLEntity> list) {
+        List<List<OWLEntity>> output = new ArrayList<>();
+        int lastIndex = 0;
+        while(lastIndex < list.size()) {
+            int range = lastIndex + MAX_LIST_SIZE;
+            if(range > list.size()) {
+                range = list.size();
+            }
+            List<OWLEntity> sublist = list.subList(lastIndex, range);
+            output.add(sublist);
+            lastIndex += MAX_LIST_SIZE;
+        }
+        return output;
     }
 
     private List<OWLEntity> getResults() {
-        List<OWLEntity> output = new ArrayList<>();
-        ListModel<OWLEntity> model = results.getModel();
-        for(int i = 0; i < model.getSize(); i++) {
-            output.add(model.getElementAt(i));
-        }
+        List<OWLEntity> output = new ArrayList<>(txtFieldFilteredResults);
+        output.retainAll(entityTypesFilteredResults);
         return output;
     }
 
@@ -300,10 +376,10 @@ public class QueryResultsPanel extends JPanel implements Disposable {
     @Override
     public void dispose() {
         exportBtn.removeActionListener(exportBtnListener);
-        classes.removeActionListener(entityTypesListener);
-        properties.removeActionListener(entityTypesListener);
-        individuals.removeActionListener(entityTypesListener);
-        datatypes.removeActionListener(entityTypesListener);
+        classes.removeActionListener(classesListener);
+        properties.removeActionListener(propertiesListener);
+        individuals.removeActionListener(individualsListener);
+        datatypes.removeActionListener(datatypesListener);
         filterTextField.getDocument().removeDocumentListener(filterTextListener);
         editorKit.getModelManager().removeListener(activeOntologyChanged);
     }
