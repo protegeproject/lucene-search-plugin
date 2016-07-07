@@ -345,6 +345,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         resultsList = new ArrayList<>(checkNotNull(entities));
         Collections.sort(resultsList);
         entityTypesFilteredResults = resultsList;
+        txtFieldFilteredResults = resultsList;
         setListData(resultsList, true);
     }
 
