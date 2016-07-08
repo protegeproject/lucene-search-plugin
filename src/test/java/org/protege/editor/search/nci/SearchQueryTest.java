@@ -457,8 +457,111 @@ public class SearchQueryTest {
                 KoalaOntology.owlThing));
     }
 
+    @Test
+    public void testNestedQuery() throws IOException, QueryEvaluationException {
+        /*
+         * Example 1:
+         * hasHabitat (
+         *    PropertyRestrictionAbsent(rdfs:seeAlso)
+         * )
+         */
+        NestedQuery.Builder builder = getNestedQueryBuilder();
+        builder.add(getQueryFactory().createPropertyValueAbsentFilter(KoalaOntology.rdfsSeeAlso));
+        NestedQuery query = builder.build(KoalaOntology.hasHabitatIri, true);
+        Set<OWLEntity> results = query.evaluate(null);
+        assertThat(results, hasSize(3));
+        assertThat(results, containsInAnyOrder(
+                KoalaOntology.animal,
+                KoalaOntology.koala,
+                KoalaOntology.student));
+        
+        /*
+         * Example 2:
+         * hasHabitat (
+         *    PropertyRestrictionAbsent(rdfs:seeAlso) AND
+         *    rdfs:label contains "eucalypt"
+         * )
+         */
+        builder = getNestedQueryBuilder();
+        builder.add(getQueryFactory().createPropertyValueAbsentFilter(KoalaOntology.rdfsSeeAlso));
+        builder.add(getQueryFactory().createContainsFilter(KoalaOntology.rdfsLabel, "eucalypt"));
+        query = builder.build(KoalaOntology.hasHabitatIri, true);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(1));
+        assertThat(results, containsInAnyOrder(
+                KoalaOntology.koala));
+        
+        /*
+         * Example 3:
+         * hasHabitat (
+         *    PropertyRestrictionAbsent(rdfs:seeAlso) AND
+         *    NOT(rdfs:label contains "eucalypt")
+         * )
+         */
+        builder = getNestedQueryBuilder();
+        builder.add(getQueryFactory().createPropertyValueAbsentFilter(KoalaOntology.rdfsSeeAlso));
+        NegatedQuery.Builder negatedBuilder = getNegatedQueryBuilder();
+        negatedBuilder.add(getQueryFactory().createContainsFilter(KoalaOntology.rdfsLabel, "eucalypt"));
+        builder.add(negatedBuilder.build(true));
+        query = builder.build(KoalaOntology.hasHabitatIri, true);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(2));
+        assertThat(results, containsInAnyOrder(
+                KoalaOntology.animal,
+                KoalaOntology.student));
+        
+        /*
+         * Example 4:
+         * hasHabitat (
+         *    PropertyRestrictionAbsent(rdfs:seeAlso) AND
+         *    rdfs:label contains "eucalypt" AND
+         *    NOT(rdfs:label contains "eucalypt")
+         * )
+         */
+        builder = getNestedQueryBuilder();
+        builder.add(getQueryFactory().createPropertyValueAbsentFilter(KoalaOntology.rdfsSeeAlso));
+        builder.add(getQueryFactory().createContainsFilter(KoalaOntology.rdfsLabel, "eucalypt"));
+        negatedBuilder = getNegatedQueryBuilder();
+        negatedBuilder.add(getQueryFactory().createContainsFilter(KoalaOntology.rdfsLabel, "eucalypt"));
+        builder.add(negatedBuilder.build(true));
+        query = builder.build(KoalaOntology.hasHabitatIri, true);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(0));
+        
+        /*
+         * Example 5:
+         * hasHabitat (
+         *    PropertyRestrictionAbsent(rdfs:seeAlso) OR
+         *    rdfs:label contains "eucalypt" OR
+         *    NOT(rdfs:label contains "eucalypt")
+         * )
+         */
+        builder = getNestedQueryBuilder();
+        builder.add(getQueryFactory().createPropertyValueAbsentFilter(KoalaOntology.rdfsSeeAlso));
+        builder.add(getQueryFactory().createContainsFilter(KoalaOntology.rdfsLabel, "eucalypt"));
+        negatedBuilder = getNegatedQueryBuilder();
+        negatedBuilder.add(getQueryFactory().createContainsFilter(KoalaOntology.rdfsLabel, "eucalypt"));
+        builder.add(negatedBuilder.build(true));
+        query = builder.build(KoalaOntology.hasHabitatIri, false);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(3));
+        assertThat(results, containsInAnyOrder(
+                KoalaOntology.animal,
+                KoalaOntology.koala,
+                KoalaOntology.student));
+    }
+
     private BasicQuery.Factory getQueryFactory() throws IOException {
         LuceneSearcher searcher = new ThinLuceneSearcher(delegator.getSearcher(), editorKit);
         return new BasicQuery.Factory(searchContext, searcher);
+    }
+
+    private NegatedQuery.Builder getNegatedQueryBuilder() throws IOException {
+        return new NegatedQuery.Builder(searchContext);
+    }
+
+    private NestedQuery.Builder getNestedQueryBuilder() throws IOException {
+        LuceneSearcher searcher = new ThinLuceneSearcher(delegator.getSearcher(), editorKit);
+        return new NestedQuery.Builder(searcher);
     }
 }
