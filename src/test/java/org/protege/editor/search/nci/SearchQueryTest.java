@@ -137,7 +137,7 @@ public class SearchQueryTest {
         /*
          * AP: rdfs:label
          */
-        PropertyValuePresent query = getQueryFactory().createProperyValuePresentFilter(KoalaOntology.rdfsLabel);
+        PropertyValuePresent query = getQueryFactory().createPropertyValuePresentFilter(KoalaOntology.rdfsLabel);
         Set<OWLEntity> results = query.evaluate(null);
         assertThat(results, hasSize(8));
         assertThat(results, containsInAnyOrder(
@@ -153,35 +153,35 @@ public class SearchQueryTest {
         /*
          * OP: hasHabitat
          */
-        query = getQueryFactory().createProperyValuePresentFilter(KoalaOntology.hasHabitat);
+        query = getQueryFactory().createPropertyValuePresentFilter(KoalaOntology.hasHabitat);
         results = query.evaluate(null);
         assertThat(results, hasSize(0));
         
         /*
          * OP: hasChildren
          */
-        query = getQueryFactory().createProperyValuePresentFilter(KoalaOntology.hasChildren);
+        query = getQueryFactory().createPropertyValuePresentFilter(KoalaOntology.hasChildren);
         results = query.evaluate(null);
         assertThat(results, hasSize(0));
         
         /*
          * OP: hasDegree
          */
-        query = getQueryFactory().createProperyValuePresentFilter(KoalaOntology.hasDegree);
+        query = getQueryFactory().createPropertyValuePresentFilter(KoalaOntology.hasDegree);
         results = query.evaluate(null);
         assertThat(results, hasSize(0));
         
         /*
          * OP: hasGender
          */
-        query = getQueryFactory().createProperyValuePresentFilter(KoalaOntology.hasGender);
+        query = getQueryFactory().createPropertyValuePresentFilter(KoalaOntology.hasGender);
         results = query.evaluate(null);
         assertThat(results, hasSize(0));
         
         /*
          * DP: isHardWorking
          */
-        query = getQueryFactory().createProperyValuePresentFilter(KoalaOntology.isHardWorking);
+        query = getQueryFactory().createPropertyValuePresentFilter(KoalaOntology.isHardWorking);
         results = query.evaluate(null);
         assertThat(results, hasSize(0));
     }

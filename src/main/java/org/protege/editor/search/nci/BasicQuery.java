@@ -81,7 +81,7 @@ public abstract class BasicQuery implements SearchTabQuery {
             }
             else if (QueryType.NonValueQueryTypes.contains(type)) {
                 if (type.equals(QueryType.PROPERTY_VALUE_PRESENT)) {
-                    return createProperyValuePresentFilter(property);
+                    return createPropertyValuePresentFilter(property);
                 }
                 else if (type.equals(QueryType.PROPERTY_VALUE_ABSENT)) {
                     return createPropertyValueAbsentFilter(property);
@@ -116,7 +116,7 @@ public abstract class BasicQuery implements SearchTabQuery {
                     String.format("%s exact match %s", getDisplayName(property), searchString));
         }
 
-        public PropertyValuePresent createProperyValuePresentFilter(OWLProperty property) {
+        public PropertyValuePresent createPropertyValuePresentFilter(OWLProperty property) {
             return new PropertyValuePresent(createPropertyValueQuery(property), searcher,
                     String.format("PropertyPresent(%s)", getDisplayName(property)));
         }
