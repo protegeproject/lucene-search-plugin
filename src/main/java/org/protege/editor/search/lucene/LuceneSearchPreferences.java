@@ -32,14 +32,14 @@ public class LuceneSearchPreferences {
 
     public static final String BASE_DIR = "BASE_DIR";
     public static final String INDEXED_ONTOLOGY = "INDEXED_ONTOLOGY";
-    public static final String MAX_SIZE_FOR_DISK_STORING = "MAX_SIZE_FOR_DISK_STORING";
+    public static final String MAX_SIZE_FOR_IN_MEMORY_STORING = "MAX_SIZE_FOR_IN_MEMORY_STORING";
 
     public static final String PREFIX_INDEX_DIR = "ProtegeIndex";
 
     public static final String USE_TMP_DIR = "UseTmpDirectory";
     public static final String USE_HOME_DIR = "UseHomeDirectory";
     public static final String USE_CUSTOM_DIR = "UseCustomDirectory";
-    public static final String USE_CUSTOM_SIZE_FOR_DISK_STORING = "UseCustomSizeForDiskStoring";
+    public static final String USE_IN_MEMORY_STORING = "UseInMemoryStoring";
 
     public static final String PROTEGE_DIR = ".Protege";
 
@@ -215,20 +215,20 @@ public class LuceneSearchPreferences {
         getPreferences().putString(hashKey, null);
     }
 
-    public static boolean useCustomSizeForDiskStoring() {
-        return getPreferences().getBoolean(USE_CUSTOM_SIZE_FOR_DISK_STORING, false);
+    public static boolean useInMemoryIndexStoring() {
+        return getPreferences().getBoolean(USE_IN_MEMORY_STORING, false);
     }
 
-    public static void setEnableCustomSizeForDiskStoring(boolean useDisk) {
-        getPreferences().putBoolean(USE_CUSTOM_SIZE_FOR_DISK_STORING, useDisk);
+    public static void setInMemoryIndexStoring(boolean useInMemory) {
+        getPreferences().putBoolean(USE_IN_MEMORY_STORING, useInMemory);
     }
 
-    public static void setMaxSizeForDiskStoring(int fileSize) {
-        getPreferences().putLong(MAX_SIZE_FOR_DISK_STORING, fileSize);
+    public static void setMaxSizeForInMemoryIndexStoring(int fileSize) {
+        getPreferences().putLong(MAX_SIZE_FOR_IN_MEMORY_STORING, fileSize);
     }
 
-    public static int getMaxSizeForDiskStoring() {
-        return getPreferences().getInt(MAX_SIZE_FOR_DISK_STORING, 20); // in megabyte
+    public static int getMaxSizeForInMemoryIndexStoring() {
+        return getPreferences().getInt(MAX_SIZE_FOR_IN_MEMORY_STORING, 20); // in megabyte
     }
 
     /**

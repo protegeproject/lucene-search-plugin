@@ -245,14 +245,14 @@ public class LuceneSearchManager extends LuceneSearcher {
     }
 
     private boolean shouldStoreInDisk() {
-        if (LuceneSearchPreferences.useCustomSizeForDiskStoring()) {
+        if (LuceneSearchPreferences.useInMemoryIndexStoring()) {
             IRI documentIri = editorKit.getOWLModelManager().getOWLOntologyManager().getOntologyDocumentIRI(currentActiveOntology);
             try {
                 URL resourceUrl = documentIri.toURI().toURL();
                 URLConnection connection = resourceUrl.openConnection();
                 connection.connect();
                 int resourceSize = connection.getContentLength();
-                return resourceSize > LuceneSearchPreferences.getMaxSizeForDiskStoring()*1024*1024; // in bytes
+                return resourceSize > LuceneSearchPreferences.getMaxSizeForInMemoryIndexStoring()*1024*1024; // in bytes
             }
             catch (IOException e) {
                 logger.error("Unable to open the ontology " + documentIri);
