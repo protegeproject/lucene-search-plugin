@@ -41,7 +41,7 @@ public class OwlEntityComboBox extends JComboBox<OWLEntity> {
     public OwlEntityComboBox(OWLEditorKit editorKit) {
         super(new SortedComboBoxModel<>());
         this.editorKit = checkNotNull(editorKit);
-        entityFinder = editorKit.getOWLModelManager().getOWLEntityFinder();
+        entityFinder = editorKit.getModelManager().getOWLEntityFinder();
         model = (SortedComboBoxModel<OWLEntity>) getModel();
         initUi();
     }

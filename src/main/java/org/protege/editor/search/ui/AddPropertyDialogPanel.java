@@ -137,7 +137,7 @@ public class AddPropertyDialogPanel extends JPanel implements VerifiedInputEdito
             propertiesList.setListData(allPropertiesList.toArray(new OWLEntity[allPropertiesList.size()]));
             return;
         }
-        OWLEntityFinder finder = editorKit.getOWLModelManager().getOWLEntityFinder();
+        OWLEntityFinder finder = editorKit.getModelManager().getOWLEntityFinder();
         List<OWLEntity> output = new ArrayList<>();
         Set<OWLEntity> entities = finder.getMatchingOWLEntities(toMatch);
         for(OWLEntity e : entities) {

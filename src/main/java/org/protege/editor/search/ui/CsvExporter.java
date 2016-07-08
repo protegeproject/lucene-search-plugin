@@ -68,7 +68,7 @@ public class CsvExporter {
         this.includeCustomText = checkNotNull(includeCustomText);
         this.customText = checkNotNull(customText);
 
-        OWLModelManager manager = editorKit.getOWLModelManager();
+        OWLModelManager manager = editorKit.getModelManager();
         entityRenderer = manager.getOWLEntityRenderer();
         objectRenderer = manager.getOWLObjectRenderer();
         ont = manager.getActiveOntology();
@@ -80,7 +80,7 @@ public class CsvExporter {
         String header = getHeader();
         OWLReasoner reasoner = null;
         if(isIncludingSuperclasses()) {
-            reasoner = new StructuralReasoner(editorKit.getOWLModelManager().getActiveOntology(), new SimpleConfiguration(), BufferingMode.BUFFERING);
+            reasoner = new StructuralReasoner(editorKit.getModelManager().getActiveOntology(), new SimpleConfiguration(), BufferingMode.BUFFERING);
         }
         List<String> rows = new ArrayList<>();
         for(OWLEntity e : results) {

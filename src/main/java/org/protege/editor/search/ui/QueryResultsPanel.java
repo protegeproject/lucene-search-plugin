@@ -298,10 +298,10 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         }
         String toMatch = filterTextField.getText();
         if(toMatch.isEmpty()) {
-            setListData(resultsList, true);
+            setListData(entityTypesFilteredResults, true);
             return;
         }
-        OWLEntityFinder finder = editorKit.getOWLModelManager().getOWLEntityFinder();
+        OWLEntityFinder finder = editorKit.getModelManager().getOWLEntityFinder();
         List<OWLEntity> output = new ArrayList<>();
         Set<OWLEntity> entities = finder.getMatchingOWLEntities(toMatch);
         for(OWLEntity e : entities) {
@@ -345,6 +345,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         resultsList = new ArrayList<>(checkNotNull(entities));
         Collections.sort(resultsList);
         entityTypesFilteredResults = resultsList;
+        txtFieldFilteredResults = resultsList;
         setListData(resultsList, true);
     }
 
