@@ -458,6 +458,124 @@ public class SearchQueryTest {
     }
 
     @Test
+    public void testNegatedQuery() throws IOException, QueryEvaluationException {
+        /*
+         * Example 1:
+         * NOT(rdfs:label contains "male")
+         */
+        NegatedQuery.Builder builder = getNegatedQueryBuilder();
+        builder.add(getQueryFactory().createContainsFilter(KoalaOntology.rdfsLabel, "male"));
+        NegatedQuery query = builder.build(true);
+        Set<OWLEntity> results = query.evaluate(null);
+        assertThat(results, hasSize(35));
+        assertThat(results, containsInAnyOrder(
+                KoalaOntology.gender,
+                KoalaOntology.marsupials,
+                KoalaOntology.student,
+                KoalaOntology.koalaWithPhd,
+                KoalaOntology.university,
+                KoalaOntology.koala,
+                KoalaOntology.animal,
+                KoalaOntology.habitat,
+                KoalaOntology.forest,
+                KoalaOntology.rainForest,
+                KoalaOntology.dryEucalyptForest,
+                KoalaOntology.parent,
+                KoalaOntology.graduateStudent,
+                KoalaOntology.quokka,
+                KoalaOntology.tasmanianDevil,
+                KoalaOntology.maleStudentWith3Daughters,
+                KoalaOntology.degree,
+                KoalaOntology.person,
+                KoalaOntology.hasHabitat,
+                KoalaOntology.hasDegree,
+                KoalaOntology.hasChildren,
+                KoalaOntology.hasGender,
+                KoalaOntology.isHardWorking,
+                KoalaOntology.owlThing,
+                KoalaOntology.owlVersionInfo,
+                KoalaOntology.rdfsSeeAlso,
+                KoalaOntology.rdfsLabel,
+                KoalaOntology.rdfPlainLiteral,
+                KoalaOntology.xsdBoolean,
+                KoalaOntology._male,
+                KoalaOntology._female,
+                KoalaOntology._ba,
+                KoalaOntology._bs,
+                KoalaOntology._ma,
+                KoalaOntology._phd));
+        
+        /*
+         * Example 2:
+         * NOT(PropertyValueAbsent(rdfs:label))
+         */
+        builder = getNegatedQueryBuilder();
+        builder.add(getQueryFactory().createPropertyValueAbsentFilter(KoalaOntology.rdfsLabel));
+        query = builder.build(true);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(8));
+        assertThat(results, containsInAnyOrder(
+                KoalaOntology.female,
+                KoalaOntology.university,
+                KoalaOntology.koala,
+                KoalaOntology.rainForest,
+                KoalaOntology.dryEucalyptForest,
+                KoalaOntology.quokka,
+                KoalaOntology.tasmanianDevil,
+                KoalaOntology.male));
+        
+        /*
+         * Example 3:
+         * NOT(PropertyValueAbsent(hasHabitat))
+         */
+        builder = getNegatedQueryBuilder();
+        builder.add(getQueryFactory().createPropertyValueAbsentFilter(KoalaOntology.hasHabitat));
+        query = builder.build(true);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(0));
+        
+        /*
+         * Example 4:
+         * NOT(PropertyValueAbsent(hasChildren))
+         */
+        builder = getNegatedQueryBuilder();
+        builder.add(getQueryFactory().createPropertyValueAbsentFilter(KoalaOntology.hasChildren));
+        query = builder.build(true);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(0));
+        
+        /*
+         * Example 5:
+         * NOT(PropertyValueAbsent(hasDegree))
+         */
+        builder = getNegatedQueryBuilder();
+        builder.add(getQueryFactory().createPropertyValueAbsentFilter(KoalaOntology.hasDegree));
+        query = builder.build(true);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(0));
+        
+        /*
+         * Example 6:
+         * NOT(PropertyValueAbsent(hasGender))
+         */
+        builder = getNegatedQueryBuilder();
+        builder.add(getQueryFactory().createPropertyValueAbsentFilter(KoalaOntology.hasGender));
+        query = builder.build(true);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(0));
+        
+        /*
+         * Example 7:
+         * NOT(PropertyValueAbsent(isHardWorking))
+         */
+        builder = getNegatedQueryBuilder();
+        builder.add(getQueryFactory().createPropertyValueAbsentFilter(KoalaOntology.isHardWorking));
+        query = builder.build(true);
+        results = query.evaluate(null);
+        assertThat(results, hasSize(0));
+    }
+
+    @Test
     public void testNestedQuery() throws IOException, QueryEvaluationException {
         /*
          * Example 1:
