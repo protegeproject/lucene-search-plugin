@@ -118,21 +118,21 @@ public class SearchPreferencesPanel extends OWLPreferencesPanel {
 
         panel.addGroup("Advanced option");
         JPanel pnlAdvancedOption = new JPanel();
-        JCheckBox useCustomInDiskIndexing = new JCheckBox("Set Lucene to store the index into the disk when the ontology file size exceeds");
-        useCustomInDiskIndexing.setSelected(LuceneSearchPreferences.useCustomSizeForDiskStoring());
+        JCheckBox useCustomInDiskIndexing = new JCheckBox("Set Lucene to store the index in memory when the ontology file size is less than");
+        useCustomInDiskIndexing.setSelected(LuceneSearchPreferences.useInMemoryIndexStoring());
         useCustomInDiskIndexing.addActionListener(evt -> {
-            LuceneSearchPreferences.setEnableCustomSizeForDiskStoring(useCustomInDiskIndexing.isSelected());
+            LuceneSearchPreferences.setInMemoryIndexStoring(useCustomInDiskIndexing.isSelected());
             spnOntologySize.setEnabled(useCustomInDiskIndexing.isSelected());
         });
         pnlAdvancedOption.add(useCustomInDiskIndexing);
         spnOntologySize.setEnabled(useCustomInDiskIndexing.isSelected());
         JFormattedTextField txtOntologySize = ((JSpinner.NumberEditor) spnOntologySize.getEditor()).getTextField();
-        txtOntologySize.setText(LuceneSearchPreferences.getMaxSizeForDiskStoring()+"");
+        txtOntologySize.setText(LuceneSearchPreferences.getMaxSizeForInMemoryIndexStoring()+"");
         ((NumberFormatter) txtOntologySize.getFormatter()).setAllowsInvalid(false);
         spnOntologySize.addChangeListener(e -> {
             SpinnerNumberModel model = (SpinnerNumberModel) spnOntologySize.getModel();
             int value = model.getNumber().intValue();
-            LuceneSearchPreferences.setMaxSizeForDiskStoring(value);
+            LuceneSearchPreferences.setMaxSizeForInMemoryIndexStoring(value);
         });
         pnlAdvancedOption.add(spnOntologySize);
         pnlAdvancedOption.add(new JLabel(" MB"));
