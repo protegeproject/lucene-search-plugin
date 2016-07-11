@@ -52,7 +52,6 @@ public class BasicQueryPanel extends QueryPanel implements Disposable {
         valueLbl = new JLabel("Value");
 
         propertyComboBox = new OwlEntityComboBox(editorKit);
-        propertyComboBox.setPreferredSize(new Dimension(250, 20));
         propertyComboBox.addItemListener(itemListener);
         propertyComboBox.addItems(getProperties());
         comboBoxChangeHandler = new OwlEntityComboBoxChangeHandler(propertyComboBox);

@@ -7,7 +7,6 @@ import org.protege.editor.owl.OWLEditorKit;
 import org.protege.editor.owl.model.find.OWLEntityFinder;
 import org.protege.editor.owl.ui.renderer.OWLCellRenderer;
 import org.semanticweb.owlapi.model.OWLEntity;
-import org.semanticweb.owlapi.model.OWLOntology;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -26,7 +25,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class AddPropertyDialogPanel extends JPanel implements VerifiedInputEditor {
-    private static final long serialVersionUID = 530426474326285798L;
+    private static final long serialVersionUID = 6438433027597161350L;
     private List<InputVerificationStatusChangedListener> listeners = new ArrayList<>();
     private OWLEditorKit editorKit;
     private JLabel filterLbl, propertiesLbl, propertySelectionLbl;
@@ -82,7 +81,7 @@ public class AddPropertyDialogPanel extends JPanel implements VerifiedInputEdito
         propertiesList.setVisibleRowCount(15);
         propertiesList.setBorder(new EmptyBorder(2, 2, 0, 2));
 
-        allPropertiesList = getProperties();
+        allPropertiesList = LuceneUiUtils.getProperties(editorKit);
         if(!propertiesToExclude.isEmpty()) {
             allPropertiesList.removeAll(propertiesToExclude);
         }
@@ -150,15 +149,6 @@ public class AddPropertyDialogPanel extends JPanel implements VerifiedInputEdito
         propertiesList.setListData(filteredPropertiesList.toArray(new OWLEntity[filteredPropertiesList.size()]));
         propertiesList.revalidate();
         propertiesList.repaint();
-    }
-
-    private List<OWLEntity> getProperties() {
-        List<OWLEntity> entities = new ArrayList<>();
-        OWLOntology ont = editorKit.getModelManager().getActiveOntology();
-        entities.addAll(ont.getAnnotationPropertiesInSignature());
-        entities.addAll(ont.getObjectPropertiesInSignature());
-        entities.addAll(ont.getDataPropertiesInSignature());
-        return entities;
     }
 
     public static Optional<List<OWLEntity>> showDialog(OWLEditorKit editorKit, List<OWLEntity> propertiesToExlude) {

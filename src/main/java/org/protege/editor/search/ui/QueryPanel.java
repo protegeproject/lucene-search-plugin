@@ -2,11 +2,9 @@ package org.protege.editor.search.ui;
 
 import org.protege.editor.owl.OWLEditorKit;
 import org.semanticweb.owlapi.model.OWLEntity;
-import org.semanticweb.owlapi.model.OWLOntology;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -55,11 +53,6 @@ public abstract class QueryPanel extends JPanel {
     }
 
     List<OWLEntity> getProperties() {
-        List<OWLEntity> entities = new ArrayList<>();
-        OWLOntology ont = editorKit.getModelManager().getActiveOntology();
-        entities.addAll(ont.getAnnotationPropertiesInSignature());
-        entities.addAll(ont.getObjectPropertiesInSignature());
-        entities.addAll(ont.getDataPropertiesInSignature());
-        return entities;
+        return LuceneUiUtils.getProperties(editorKit);
     }
 }

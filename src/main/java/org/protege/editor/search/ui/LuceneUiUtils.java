@@ -1,6 +1,9 @@
 package org.protege.editor.search.ui;
 
 import org.protege.editor.core.ui.error.ErrorLogPanel;
+import org.protege.editor.owl.OWLEditorKit;
+import org.semanticweb.owlapi.model.OWLEntity;
+import org.semanticweb.owlapi.model.OWLOntology;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -10,6 +13,8 @@ import javax.swing.border.MatteBorder;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -42,5 +47,14 @@ public class LuceneUiUtils {
         }
         Image img = icon.getScaledInstance(width, height, Image.SCALE_SMOOTH);
         return new ImageIcon(img);
+    }
+
+    public static List<OWLEntity> getProperties(OWLEditorKit editorKit) {
+        List<OWLEntity> entities = new ArrayList<>();
+        OWLOntology ont = editorKit.getModelManager().getActiveOntology();
+        entities.addAll(ont.getAnnotationPropertiesInSignature());
+        entities.addAll(ont.getObjectPropertiesInSignature());
+        entities.addAll(ont.getDataPropertiesInSignature());
+        return entities;
     }
 }
