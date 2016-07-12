@@ -446,7 +446,7 @@ public class SearchTabManager extends LuceneSearcher {
         SwingUtilities.invokeLater(() -> {
             for (ProgressMonitor pm : progressMonitors) {
                 pm.setSize(100);
-                pm.setMessage("Initializing index");
+                pm.setMessage("initializing index");
                 pm.setStarted();
             }
         });

@@ -8,8 +8,10 @@ import org.protege.editor.owl.model.event.OWLModelManagerListener;
 import org.protege.editor.owl.model.find.OWLEntityFinder;
 import org.protege.editor.owl.ui.renderer.OWLCellRenderer;
 import org.semanticweb.owlapi.model.*;
+import org.semanticweb.owlapi.util.ProgressMonitor;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
 import javax.swing.event.DocumentEvent;
@@ -29,7 +31,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class QueryResultsPanel extends JPanel implements Disposable {
-    private static final long serialVersionUID = -2171651633749096590L;
+    private static final long serialVersionUID = -6086083567981879841L;
     private static final int MAX_LIST_SIZE = 500;
     private OWLEditorKit editorKit;
     private JList<OWLEntity> results;
@@ -40,6 +42,8 @@ public class QueryResultsPanel extends JPanel implements Disposable {
     private JLabel statusLbl, pageLbl;
     private JButton exportBtn, backBtn, forwardBtn;
     private int currentPage = 0, totalPages;
+    private JProgressBar searchProgressBar;
+    private Timer visibilityTimer;
 
     /**
      * Constructor
@@ -47,6 +51,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
      * @param editorKit OWL Editor Kit
      */
     public QueryResultsPanel(OWLEditorKit editorKit) {
+        visibilityTimer = new Timer(200, e -> searchProgressBar.setVisible(true));
         this.editorKit = checkNotNull(editorKit);
         this.editorKit.getModelManager().addListener(activeOntologyChanged);
         initUi();
@@ -54,6 +59,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
 
     private void initUi() {
         setLayout(new BorderLayout());
+        setupProgressBar();
 
         results = new JList<>();
         results.setCellRenderer(new OWLCellRenderer(editorKit));
@@ -73,6 +79,52 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         add(getHeaderPanel(), BorderLayout.NORTH);
         add(resultsPanel, BorderLayout.CENTER);
         add(getFooterPanel(), BorderLayout.SOUTH);
+    }
+
+    private void setupProgressBar() {
+        searchProgressBar = new JProgressBar();
+        searchProgressBar.putClientProperty("JComponent.sizeVariant", "small");
+        searchProgressBar.setVisible(false);
+        editorKit.getSearchManager().addProgressMonitor(new ProgressMonitor() {
+            @Override
+            public void setStarted() {
+                searchProgressBar.setValue(0);
+                visibilityTimer.restart();
+            }
+
+            @Override
+            public void setSize(long l) {
+                searchProgressBar.setMinimum(0);
+                searchProgressBar.setMaximum((int) l);
+            }
+
+            @Override
+            public void setProgress(long l) {
+                searchProgressBar.setValue((int) l);
+            }
+
+            @Override
+            public void setMessage(String s) {
+                searchProgressBar.setToolTipText(s);
+                statusLbl.setText(s);
+            }
+
+            @Override
+            public void setIndeterminate(boolean b) {
+                searchProgressBar.setIndeterminate(b);
+            }
+
+            @Override
+            public void setFinished() {
+                visibilityTimer.stop();
+                searchProgressBar.setVisible(false);
+            }
+
+            @Override
+            public boolean isCancelled() {
+                return false;
+            }
+        });
     }
 
     private OWLModelManagerListener activeOntologyChanged = e -> {
@@ -197,12 +249,14 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         forwardBtn.setBackground(Color.WHITE);
         forwardBtn.setPreferredSize(new Dimension(36, 27));
         forwardBtn.addActionListener(forwardBtnListener);
+        pagesPanel.add(searchProgressBar,
+                new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_TRAILING, GridBagConstraints.NONE, new Insets(0, 5, 0, 0), 0, 0));
         pagesPanel.add(backBtn,
                 new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_TRAILING, GridBagConstraints.NONE, new Insets(0, 5, 0, 0), 0, 0));
         pagesPanel.add(forwardBtn,
                 new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, new Insets(0, 0, 0, 5), 0, 0));
 
-        statusLbl = new JLabel("Results");
+        statusLbl = new JLabel();
         statusLbl.setBorder(new EmptyBorder(0, 4, 0, 0));
         pagesPanel.add(statusLbl,
                 new GridBagConstraints(2, 0, 1, 1, 1.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 1, 0, 0), 0, 0));
