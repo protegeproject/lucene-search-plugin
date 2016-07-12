@@ -92,7 +92,7 @@ public class SearchPreferencesPanel extends OWLPreferencesPanel {
         panel.addGroup("Stored indexes");
         IndexInfoTable tblIndexLocation = new IndexInfoTable();
         JScrollPane scpIndexLocation = new JScrollPane(tblIndexLocation);
-        scpIndexLocation.setPreferredSize(new Dimension(650, 300));
+        scpIndexLocation.setPreferredSize(new Dimension(600, 250));
         panel.addGroupComponent(scpIndexLocation);
         
         JButton btnRemoveSelected = new JButton("Remove selected index");
@@ -116,7 +116,7 @@ public class SearchPreferencesPanel extends OWLPreferencesPanel {
         panel.addGroupComponent(btnRemoveSelected);
         panel.addVerticalPadding();
 
-        panel.addGroup("Advanced option");
+        panel.addGroup("Advanced");
         JPanel pnlAdvancedOption = new JPanel();
         JCheckBox useCustomInDiskIndexing = new JCheckBox("Set Lucene to store the index in memory when the ontology file size is less than");
         useCustomInDiskIndexing.setSelected(LuceneSearchPreferences.useInMemoryIndexStoring());
