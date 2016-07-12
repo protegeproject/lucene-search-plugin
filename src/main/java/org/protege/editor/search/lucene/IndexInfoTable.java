@@ -35,18 +35,19 @@ public class IndexInfoTable extends JTable {
         setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
     }
 
-    private void resizeColumnWidth()
-    {
-       final TableColumnModel columnModel = getColumnModel();
-       for (int column = 0; column < getColumnCount(); column++) {
-          int width = 50; // Min width
-          for (int row = 0; row < getRowCount(); row++) {
-             TableCellRenderer renderer = getCellRenderer(row, column);
-             Component comp = prepareRenderer(renderer, row, column);
-             width = Math.max(comp.getPreferredSize().width + 8, width);
-          }
-          columnModel.getColumn(column).setPreferredWidth(width);
-       }
+    private void resizeColumnWidth() {
+        final TableColumnModel columnModel = getColumnModel();
+        for (int column = 0; column < getColumnCount(); column++) {
+            int width = 50; // Min width
+            String col = columnModel.getColumn(column).getHeaderValue().toString();
+            int headerWidth = getFontMetrics(getFont()).stringWidth(col);
+            for (int row = 0; row < getRowCount(); row++) {
+                TableCellRenderer renderer = getCellRenderer(row, column);
+                Component comp = prepareRenderer(renderer, row, column);
+                width = Math.max(Math.max(comp.getPreferredSize().width+5, headerWidth+5), width);
+            }
+            columnModel.getColumn(column).setPreferredWidth(width);
+        }
     }
 
     public void removeIndex(int selectedRow) {
