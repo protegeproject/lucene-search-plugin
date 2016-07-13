@@ -163,6 +163,8 @@ public class BasicQueryPanel extends QueryPanel {
 
     @Override
     public void dispose() {
+        propertyComboBox.removeItemListener(itemListener);
+        queryTypeComboBox.removeActionListener(queryTypeComboBoxListener);
         editorKit.getModelManager().removeOntologyChangeListener(ontologyEditingListener);
     }
 }
