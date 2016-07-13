@@ -1,62 +1,33 @@
 package org.protege.editor.search.nci;
 
-import org.protege.editor.owl.OWLEditorKit;
-import org.protege.editor.owl.model.event.EventType;
-import org.protege.editor.owl.model.event.OWLModelManagerChangeEvent;
-import org.protege.editor.owl.model.event.OWLModelManagerListener;
-import org.protege.editor.owl.model.search.SearchCategory;
-import org.protege.editor.owl.model.search.SearchInput;
-import org.protege.editor.owl.model.search.SearchResult;
-import org.protege.editor.owl.model.search.SearchResultHandler;
-import org.protege.editor.owl.model.search.SearchStringParser;
-import org.protege.editor.search.lucene.AddChangeSet;
-import org.protege.editor.search.lucene.AddChangeSetHandler;
-import org.protege.editor.search.lucene.IndexDelegator;
-import org.protege.editor.search.lucene.LuceneSearchPreferences;
-import org.protege.editor.search.lucene.LuceneSearchQueryBuilder;
-import org.protege.editor.search.lucene.LuceneSearcher;
-import org.protege.editor.search.lucene.LuceneStringParser;
-import org.protege.editor.search.lucene.QueryEvaluationException;
-import org.protege.editor.search.lucene.RemoveChangeSet;
-import org.protege.editor.search.lucene.RemoveChangeSetHandler;
-import org.protege.editor.search.lucene.ResultDocumentHandler;
-import org.protege.editor.search.lucene.SearchContext;
-import org.protege.editor.search.lucene.SearchQuery;
-import org.protege.editor.search.lucene.SearchUtils;
-import org.protege.editor.search.ui.LuceneListener;
-
+import com.google.common.base.Stopwatch;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.RAMDirectory;
-import org.semanticweb.owlapi.model.IRI;
-import org.semanticweb.owlapi.model.OWLEntity;
-import org.semanticweb.owlapi.model.OWLException;
-import org.semanticweb.owlapi.model.OWLOntology;
-import org.semanticweb.owlapi.model.OWLOntologyChange;
-import org.semanticweb.owlapi.model.OWLOntologyChangeListener;
+import org.protege.editor.owl.OWLEditorKit;
+import org.protege.editor.owl.model.event.EventType;
+import org.protege.editor.owl.model.event.OWLModelManagerChangeEvent;
+import org.protege.editor.owl.model.event.OWLModelManagerListener;
+import org.protege.editor.owl.model.search.*;
+import org.protege.editor.search.lucene.*;
+import org.protege.editor.search.ui.LuceneListener;
+import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.util.ProgressMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-
-import javax.swing.SwingUtilities;
-
-import com.google.common.base.Stopwatch;
 
 /**
  * Author: Josef Hardi <josef.hardi@stanford.edu><br>
@@ -434,7 +405,12 @@ public class SearchTabManager extends LuceneSearcher {
         }
 
         private void showResults(final Set<OWLEntity> results) {
-            searchTabResultHandler.searchFinished(results);
+            if (SwingUtilities.isEventDispatchThread()) {
+                searchTabResultHandler.searchFinished(results);
+            }
+            else {
+                SwingUtilities.invokeLater(() -> searchTabResultHandler.searchFinished(results));
+            }
         }
     }
  

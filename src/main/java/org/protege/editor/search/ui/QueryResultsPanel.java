@@ -88,6 +88,10 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         editorKit.getSearchManager().addProgressMonitor(new ProgressMonitor() {
             @Override
             public void setStarted() {
+                backBtn.setVisible(false);
+                forwardBtn.setVisible(false);
+                statusLbl.setText("");
+                pageLbl.setText("");
                 searchProgressBar.setValue(0);
                 visibilityTimer.restart();
             }
@@ -118,6 +122,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
             public void setFinished() {
                 visibilityTimer.stop();
                 searchProgressBar.setVisible(false);
+                statusLbl.setText("");
             }
 
             @Override
@@ -335,12 +340,12 @@ public class QueryResultsPanel extends JPanel implements Disposable {
             results.setListData(sublist.toArray(new OWLEntity[sublist.size()]));
             if(filteredList) {
                 setPagedResultsList(true);
-                updateResultsLabel(list);
+                updateStatus(list);
             }
         } else {
             results.setListData(list.toArray(new OWLEntity[list.size()]));
             if(filteredList) {
-                updateResultsLabel(list);
+                updateStatus(list);
                 setPagedResultsList(false);
             }
         }
@@ -424,7 +429,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         return output;
     }
 
-    private void updateResultsLabel(Collection<OWLEntity> entities) {
+    private void updateStatus(Collection<OWLEntity> entities) {
         statusLbl.setText(entities.size() + (entities.size() == 1 ? " match" : " matches"));
     }
 
@@ -436,6 +441,8 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         individuals.removeActionListener(individualsListener);
         datatypes.removeActionListener(datatypesListener);
         filterTextField.getDocument().removeDocumentListener(filterTextListener);
+        results.removeMouseListener(listMouseListener);
+        results.removeKeyListener(listKeyListener);
         editorKit.getModelManager().removeListener(activeOntologyChanged);
     }
 }
