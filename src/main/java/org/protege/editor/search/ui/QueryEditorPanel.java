@@ -92,7 +92,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
 
     private OWLModelManagerListener activeOntologyChanged = e -> {
         if (e.isType(EventType.ACTIVE_ONTOLOGY_CHANGED) || e.isType(EventType.ONTOLOGY_LOADED)) {
-            clearQueryPanel();
+            clearEditorPanel();
             addBasicQuery();
         }
     };
@@ -151,7 +151,9 @@ public class QueryEditorPanel extends JPanel implements Disposable {
 
     private void handleResults(Collection<OWLEntity> results) {
         LuceneQueryPanel queryPanel = getLuceneQueryPanel();
-        queryPanel.getResultsPanel().setResults(results);
+        if(queryPanel != null) {
+            queryPanel.getResultsPanel().setResults(results);
+        }
     }
 
     private LuceneQueryPanel getLuceneQueryPanel() {
@@ -263,23 +265,12 @@ public class QueryEditorPanel extends JPanel implements Disposable {
 
     public void removeQueryPanel(QueryPanel queryPanel) {
         queries.remove(queryPanel);
-        disposeQueryPanel(queryPanel);
     }
 
-    public void disposeQueryPanel(QueryPanel queryPanel) {
-        if(queryPanel instanceof BasicQueryPanel) {
-            ((BasicQueryPanel) queryPanel).dispose();
-        } else if(queryPanel instanceof NestedQueryPanel) {
-            ((NestedQueryPanel)queryPanel).getQueryEditorPanel().clearQueryPanel();
-        } else if(queryPanel instanceof NegatedQueryPanel) {
-            ((NegatedQueryPanel)queryPanel).getQueryEditorPanel().clearQueryPanel();
-        }
-    }
-
-    private void clearQueryPanel() {
-        queriesPanel.removeAll();
-        queries.forEach(this::disposeQueryPanel);
+    private void clearEditorPanel() {
+        queries.forEach(QueryPanel::dispose);
         queries.clear();
+        queriesPanel.removeAll();
         refresh();
     }
 
@@ -358,7 +349,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
             controlsPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
         }
         clearBtn = new JButton("Clear");
-        clearBtn.addActionListener(e -> clearQueryPanel());
+        clearBtn.addActionListener(e -> clearEditorPanel());
         matchAll = new JRadioButton("Match All", true);
         matchAny = new JRadioButton("Match Any");
         ButtonGroup group = new ButtonGroup();
@@ -376,6 +367,6 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         if(allowSearch) {
             searchBtn.removeActionListener(searchBtnListener);
         }
-        clearQueryPanel();
+        clearEditorPanel();
     }
 }

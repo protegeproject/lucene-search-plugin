@@ -1,5 +1,6 @@
 package org.protege.editor.search.ui;
 
+import org.protege.editor.core.Disposable;
 import org.protege.editor.owl.OWLEditorKit;
 import org.semanticweb.owlapi.model.OWLEntity;
 
@@ -14,7 +15,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Center for Biomedical Informatics Research <br>
  * Stanford University
  */
-public abstract class QueryPanel extends JPanel {
+public abstract class QueryPanel extends JPanel implements Disposable {
     protected OWLEditorKit editorKit;
 
     /**
@@ -35,6 +36,7 @@ public abstract class QueryPanel extends JPanel {
     JButton getCloseButton() {
         JButton closeBtn = new JButton(LuceneUiUtils.getIcon(LuceneUiUtils.CLOSE_ICON_FILENAME, 11, 11));
         closeBtn.addActionListener(e -> {
+            dispose();
             boolean removedPanel = false;
             JPanel queriesPanel = (JPanel) this.getParent();
             queriesPanel.remove(this);
@@ -55,4 +57,7 @@ public abstract class QueryPanel extends JPanel {
     List<OWLEntity> getProperties() {
         return LuceneUiUtils.getProperties(editorKit);
     }
+
+    public abstract void dispose();
+
 }

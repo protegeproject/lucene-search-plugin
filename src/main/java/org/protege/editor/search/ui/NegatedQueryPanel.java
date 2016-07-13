@@ -12,7 +12,7 @@ import java.awt.*;
  * Stanford University
  */
 public class NegatedQueryPanel extends QueryPanel {
-    private static final long serialVersionUID = 7073335920060606954L;
+    private static final long serialVersionUID = 711705964169282004L;
     private static final String NAME = "Negated Query";
     private QueryEditorPanel editorPanel;
 
@@ -61,5 +61,10 @@ public class NegatedQueryPanel extends QueryPanel {
 
     public QueryEditorPanel getQueryEditorPanel() {
         return editorPanel;
+    }
+
+    @Override
+    public void dispose() {
+        editorPanel.dispose();
     }
 }

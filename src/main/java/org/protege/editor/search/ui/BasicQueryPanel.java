@@ -1,6 +1,5 @@
 package org.protege.editor.search.ui;
 
-import org.protege.editor.core.Disposable;
 import org.protege.editor.owl.OWLEditorKit;
 import org.protege.editor.search.nci.QueryType;
 import org.semanticweb.owlapi.model.OWLEntity;
@@ -22,8 +21,8 @@ import java.util.List;
  * Center for Biomedical Informatics Research <br>
  * Stanford University
  */
-public class BasicQueryPanel extends QueryPanel implements Disposable {
-    private static final long serialVersionUID = -5501743702398682065L;
+public class BasicQueryPanel extends QueryPanel {
+    private static final long serialVersionUID = 8105568013881942021L;
     private OwlEntityComboBox propertyComboBox;
     private JComboBox<QueryType> queryTypeComboBox;
     private JComboBox<Boolean> valueComboBox;

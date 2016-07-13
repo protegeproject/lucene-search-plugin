@@ -13,7 +13,7 @@ import java.awt.*;
  * Stanford University
  */
 public class NestedQueryPanel extends QueryPanel {
-    private static final long serialVersionUID = -2307034097209935650L;
+    private static final long serialVersionUID = 7560360869250442419L;
     private static final String NAME = "Nested Query";
     private OwlEntityComboBox propertyComboBox;
     private QueryEditorPanel editorPanel;
@@ -83,5 +83,10 @@ public class NestedQueryPanel extends QueryPanel {
 
     public QueryEditorPanel getQueryEditorPanel() {
         return editorPanel;
+    }
+
+    @Override
+    public void dispose() {
+        editorPanel.dispose();
     }
 }
