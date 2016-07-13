@@ -422,8 +422,9 @@ public class SearchTabManager extends LuceneSearcher {
         SwingUtilities.invokeLater(() -> {
             for (ProgressMonitor pm : progressMonitors) {
                 pm.setSize(100);
-                pm.setMessage("initializing index");
+                pm.setIndeterminate(true);
                 pm.setStarted();
+                pm.setMessage("initializing index");
             }
         });
     }
@@ -431,6 +432,7 @@ public class SearchTabManager extends LuceneSearcher {
     private void fireIndexingProgressed(final long progress) {
         SwingUtilities.invokeLater(() -> {
             for (ProgressMonitor pm : progressMonitors) {
+                pm.setIndeterminate(false);
                 pm.setProgress(progress);
                 switch ((int)progress % 4) {
                     case 0: pm.setMessage("indexing"); break;
