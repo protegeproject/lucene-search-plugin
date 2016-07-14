@@ -7,6 +7,7 @@ import org.protege.editor.owl.model.event.EventType;
 import org.protege.editor.owl.model.event.OWLModelManagerListener;
 import org.protege.editor.owl.model.find.OWLEntityFinder;
 import org.protege.editor.owl.ui.renderer.OWLCellRenderer;
+import org.protege.editor.search.nci.FilteredQuery;
 import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.util.ProgressMonitor;
 
@@ -31,7 +32,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class QueryResultsPanel extends JPanel implements Disposable {
-    private static final long serialVersionUID = -6086083567981879841L;
+    private static final long serialVersionUID = -9158074562877526184L;
     private static final int MAX_LIST_SIZE = 500;
     private OWLEditorKit editorKit;
     private JList<OWLEntity> results;
@@ -44,6 +45,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
     private int currentPage = 0, totalPages;
     private JProgressBar searchProgressBar;
     private Timer visibilityTimer;
+    private FilteredQuery answeredQuery;
 
     /**
      * Constructor
@@ -390,7 +392,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         List<OWLEntity> results = getResults();
         if (!results.isEmpty()) {
             try {
-                success = ExportDialogPanel.showDialog(editorKit, results);
+                success = ExportDialogPanel.showDialog(editorKit, answeredQuery.getAlgebraString(), results);
             } catch (IOException e) {
                 ErrorLogPanel.showErrorDialog(e);
             }
@@ -404,7 +406,8 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         }
     }
 
-    public void setResults(Collection<OWLEntity> entities) {
+    public void setResults(FilteredQuery query, Collection<OWLEntity> entities) {
+        answeredQuery = checkNotNull(query);
         resultsList = new ArrayList<>(checkNotNull(entities));
         Collections.sort(resultsList);
         entityTypesFilteredResults = resultsList;

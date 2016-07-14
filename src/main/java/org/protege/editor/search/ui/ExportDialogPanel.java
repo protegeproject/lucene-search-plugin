@@ -30,7 +30,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
-    private static final long serialVersionUID = -945482786547678605L;
+    private static final long serialVersionUID = 2895257460444140568L;
     private OWLEditorKit editorKit;
     private final List<OWLEntity> results;
     private JLabel fileLocationLbl, propertiesLbl, fileDelimLbl, propertyValuesDelimLbl;
@@ -50,9 +50,10 @@ public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
      * @param editorKit OWL Editor Kit
      * @param results  List of OWL entities in the query results
      */
-    public ExportDialogPanel(OWLEditorKit editorKit, List<OWLEntity> results) {
+    public ExportDialogPanel(OWLEditorKit editorKit, String queryAlgebra, List<OWLEntity> results) {
         this.editorKit = checkNotNull(editorKit);
         this.results = checkNotNull(results);
+        this.customText = checkNotNull(queryAlgebra);
         initUi();
     }
 
@@ -84,9 +85,6 @@ public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
         useCurrentRendering = new JCheckBox("Use current rendering instead of IRIs");
         includeSuperclasses = new JCheckBox("Include superclasses");
         includeCustomText = new JCheckBox("Include custom text in last line");
-
-        // TODO: initialize customText with the string representation of the query
-        customText = "custom text";
 
         JScrollPane propertiesScrollpane = new JScrollPane(propertiesList);
         propertiesScrollpane.setBorder(LuceneUiUtils.MATTE_BORDER);
@@ -279,8 +277,8 @@ public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
         return properties;
     }
 
-    public static boolean showDialog(OWLEditorKit editorKit, List<OWLEntity> results) throws IOException {
-        ExportDialogPanel panel = new ExportDialogPanel(editorKit, results);
+    public static boolean showDialog(OWLEditorKit editorKit, String queryAlgebra, List<OWLEntity> results) throws IOException {
+        ExportDialogPanel panel = new ExportDialogPanel(editorKit, queryAlgebra, results);
         int response = JOptionPaneEx.showValidatingConfirmDialog(
                 editorKit.getOWLWorkspace(), "Export results to CSV file", panel, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION, null);
         if (response == JOptionPane.OK_OPTION) {

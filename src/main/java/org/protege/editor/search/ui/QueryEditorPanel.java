@@ -30,7 +30,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class QueryEditorPanel extends JPanel implements Disposable {
-    private static final long serialVersionUID = -4909802182267244437L;
+    private static final long serialVersionUID = 3627451909514603615L;
     private static Logger logger = LoggerFactory.getLogger(QueryEditorPanel.class.getName());
     private JButton addQueryBtn, addNegatedQueryBtn, addNestedQueryBtn, clearBtn, searchBtn;
     private JRadioButton matchAll, matchAny;
@@ -133,7 +133,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
             boolean isMatchAll = (match == MatchCriteria.MATCH_ALL);
             FilteredQuery userQuery = builder.build(isMatchAll);
             if(userQuery != null) {
-                searchManager.performSearch(userQuery, this::handleResults);
+                searchManager.performSearch(userQuery, searchResults -> handleResults(userQuery, searchResults));
             }
             if(emptyQueries) {
                 JOptionPane.showMessageDialog(editorKit.getOWLWorkspace(),
@@ -149,10 +149,10 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         }
     };
 
-    private void handleResults(Collection<OWLEntity> results) {
+    private void handleResults(FilteredQuery query, Collection<OWLEntity> results) {
         LuceneQueryPanel queryPanel = getLuceneQueryPanel();
         if(queryPanel != null) {
-            queryPanel.getResultsPanel().setResults(results);
+            queryPanel.getResultsPanel().setResults(query, results);
         }
     }
 
