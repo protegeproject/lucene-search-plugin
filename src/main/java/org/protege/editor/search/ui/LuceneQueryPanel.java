@@ -70,11 +70,14 @@ public class LuceneQueryPanel extends JPanel implements Disposable {
         LuceneQueryPanel panel = new LuceneQueryPanel(editorKit);
         int response = JOptionPaneEx.showConfirmDialog(
                 editorKit.getOWLWorkspace(), "Lucene Query Dialog", panel, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION, null);
+        Optional<OWLEntity> output;
         if (response == JOptionPane.OK_OPTION) {
-            return Optional.ofNullable(panel.getSelectedEntity());
+            output = Optional.ofNullable(panel.getSelectedEntity());
         } else {
-            return Optional.empty();
+            output = Optional.empty();
         }
+        panel.dispose();
+        return output;
     }
 
     @Override

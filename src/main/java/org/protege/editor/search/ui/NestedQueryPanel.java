@@ -87,6 +87,7 @@ public class NestedQueryPanel extends QueryPanel {
 
     @Override
     public void dispose() {
+        closeBtn.removeActionListener(closeBtnListener);
         editorPanel.dispose();
     }
 }

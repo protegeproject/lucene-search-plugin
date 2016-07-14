@@ -12,7 +12,7 @@ import java.awt.*;
  * Stanford University
  */
 public class NegatedQueryPanel extends QueryPanel {
-    private static final long serialVersionUID = 711705964169282004L;
+    private static final long serialVersionUID = 8236262202815041235L;
     private static final String NAME = "Negated Query";
     private QueryEditorPanel editorPanel;
 
@@ -45,17 +45,17 @@ public class NegatedQueryPanel extends QueryPanel {
     }
 
     @Override
-    boolean isBasicQuery() {
+    public boolean isBasicQuery() {
         return false;
     }
 
     @Override
-    boolean isNegatedQuery() {
+    public boolean isNegatedQuery() {
         return true;
     }
 
     @Override
-    boolean isNestedQuery() {
+    public boolean isNestedQuery() {
         return false;
     }
 
@@ -65,6 +65,7 @@ public class NegatedQueryPanel extends QueryPanel {
 
     @Override
     public void dispose() {
+        closeBtn.removeActionListener(closeBtnListener);
         editorPanel.dispose();
     }
 }

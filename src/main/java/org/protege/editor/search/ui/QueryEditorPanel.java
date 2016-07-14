@@ -264,6 +264,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     }
 
     public void removeQueryPanel(QueryPanel queryPanel) {
+        // The query panel gets disposed and removed from the UI by the panel's own close button. Here just remove from the list.
         queries.remove(queryPanel);
     }
 

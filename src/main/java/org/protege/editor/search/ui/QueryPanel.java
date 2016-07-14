@@ -6,6 +6,7 @@ import org.semanticweb.owlapi.model.OWLEntity;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -17,6 +18,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public abstract class QueryPanel extends JPanel implements Disposable {
     protected OWLEditorKit editorKit;
+    protected JButton closeBtn;
 
     /**
      * Constructor
@@ -27,34 +29,36 @@ public abstract class QueryPanel extends JPanel implements Disposable {
         this.editorKit = checkNotNull(editorKit);
     }
 
-    abstract boolean isBasicQuery();
+    protected abstract boolean isBasicQuery();
 
-    abstract boolean isNegatedQuery();
+    protected abstract boolean isNegatedQuery();
 
-    abstract boolean isNestedQuery();
+    protected abstract boolean isNestedQuery();
 
-    JButton getCloseButton() {
-        JButton closeBtn = new JButton(LuceneUiUtils.getIcon(LuceneUiUtils.CLOSE_ICON_FILENAME, 11, 11));
-        closeBtn.addActionListener(e -> {
-            dispose();
-            boolean removedPanel = false;
-            JPanel queriesPanel = (JPanel) this.getParent();
-            queriesPanel.remove(this);
-            Container lastPanel = queriesPanel.getParent();
-            while(lastPanel != null) {
-                if(lastPanel instanceof QueryEditorPanel && !removedPanel) {
-                    ((QueryEditorPanel) lastPanel).removeQueryPanel(this);
-                    removedPanel = true;
-                }
-                lastPanel.revalidate();
-                lastPanel.repaint();
-                lastPanel = lastPanel.getParent();
-            }
-        });
+    protected JButton getCloseButton() {
+        closeBtn = new JButton(LuceneUiUtils.getIcon(LuceneUiUtils.CLOSE_ICON_FILENAME, 11, 11));
+        closeBtn.addActionListener(closeBtnListener);
         return closeBtn;
     }
 
-    List<OWLEntity> getProperties() {
+    protected ActionListener closeBtnListener = e -> {
+        dispose();
+        boolean removedPanel = false;
+        JPanel queriesPanel = (JPanel) this.getParent();
+        queriesPanel.remove(this);
+        Container lastPanel = queriesPanel.getParent();
+        while(lastPanel != null) {
+            if(lastPanel instanceof QueryEditorPanel && !removedPanel) {
+                ((QueryEditorPanel) lastPanel).removeQueryPanel(this);
+                removedPanel = true;
+            }
+            lastPanel.revalidate();
+            lastPanel.repaint();
+            lastPanel = lastPanel.getParent();
+        }
+    };
+
+    protected List<OWLEntity> getProperties() {
         return LuceneUiUtils.getProperties(editorKit);
     }
 

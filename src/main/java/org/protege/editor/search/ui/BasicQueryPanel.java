@@ -22,7 +22,7 @@ import java.util.List;
  * Stanford University
  */
 public class BasicQueryPanel extends QueryPanel {
-    private static final long serialVersionUID = 8105568013881942021L;
+    private static final long serialVersionUID = 3201978298089022559L;
     private OwlEntityComboBox propertyComboBox;
     private JComboBox<QueryType> queryTypeComboBox;
     private JComboBox<Boolean> valueComboBox;
@@ -147,17 +147,17 @@ public class BasicQueryPanel extends QueryPanel {
     }
 
     @Override
-    boolean isBasicQuery() {
+    public boolean isBasicQuery() {
         return true;
     }
 
     @Override
-    boolean isNegatedQuery() {
+    public boolean isNegatedQuery() {
         return false;
     }
 
     @Override
-    boolean isNestedQuery() {
+    public boolean isNestedQuery() {
         return false;
     }
 
@@ -166,5 +166,6 @@ public class BasicQueryPanel extends QueryPanel {
         propertyComboBox.removeItemListener(itemListener);
         queryTypeComboBox.removeActionListener(queryTypeComboBoxListener);
         editorKit.getModelManager().removeOntologyChangeListener(ontologyEditingListener);
+        closeBtn.removeActionListener(closeBtnListener);
     }
 }
