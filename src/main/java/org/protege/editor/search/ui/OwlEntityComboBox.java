@@ -119,7 +119,7 @@ public class OwlEntityComboBox extends JComboBox<OWLEntity> {
             showPopup();
         }
         List<OWLEntity> filteredItems = inputText.isEmpty()
-                ? findMatchingEntities("*") // use find-any wildcard for empty input text
+                ? LuceneUiUtils.getProperties(editorKit)
                 : findMatchingEntities(inputText);
         removeItemListener(listener);
         model.removeAllElements();
