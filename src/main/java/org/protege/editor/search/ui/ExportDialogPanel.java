@@ -6,6 +6,7 @@ import org.protege.editor.core.ui.list.MListItem;
 import org.protege.editor.core.ui.list.MListSectionHeader;
 import org.protege.editor.core.ui.util.InputVerificationStatusChangedListener;
 import org.protege.editor.core.ui.util.JOptionPaneEx;
+import org.protege.editor.core.ui.util.UIUtil;
 import org.protege.editor.core.ui.util.VerifiedInputEditor;
 import org.protege.editor.owl.OWLEditorKit;
 import org.semanticweb.owlapi.model.OWLEntity;
@@ -17,10 +18,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.*;
 import java.util.List;
-import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -187,16 +186,12 @@ public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
     };
 
     private ActionListener browseBtnListener = e -> {
-        final JFileChooser fc = new JFileChooser();
-        fc.setDialogTitle("Choose CSV file location");
-        int returnVal = fc.showSaveDialog(this);
-        if(returnVal == JOptionPane.OK_OPTION) {
+        selectedFile = UIUtil.saveFile(this, "Choose CSV file location", "CSV file", null, "lucene-export.csv");
+        if(selectedFile != null) {
             String filename;
-            if(!fc.getSelectedFile().getName().endsWith(".csv")) {
-                filename = fc.getSelectedFile().getAbsolutePath() + ".csv";
+            if(!selectedFile.getName().endsWith(".csv")) {
+                filename = selectedFile.getAbsolutePath() + ".csv";
                 selectedFile = new File(filename);
-            } else {
-                selectedFile = fc.getSelectedFile();
             }
             fileLocationTxtField.setText(selectedFile.getAbsolutePath());
             checkInputs();
