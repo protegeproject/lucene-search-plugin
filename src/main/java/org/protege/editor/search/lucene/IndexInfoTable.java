@@ -1,19 +1,14 @@
 package org.protege.editor.search.lucene;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import javax.swing.JTable;
+import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumnModel;
+import java.awt.*;
+import java.io.File;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Josef Hardi <johardi@stanford.edu><br>
@@ -31,6 +26,7 @@ public class IndexInfoTable extends JTable {
         setGridColor(Color.LIGHT_GRAY);
         setShowHorizontalLines(true);
         setShowVerticalLines(false);
+        setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         resizeColumnWidth();
         setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
     }
