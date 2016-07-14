@@ -136,6 +136,10 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         if (e.isType(EventType.ACTIVE_ONTOLOGY_CHANGED) || e.isType(EventType.ONTOLOGY_LOADED)) {
             results.setListData(new OWLEntity[0]);
             resultsList.clear();
+            backBtn.setVisible(false);
+            forwardBtn.setVisible(false);
+            statusLbl.setText("");
+            pageLbl.setText("");
         }
     };
 
