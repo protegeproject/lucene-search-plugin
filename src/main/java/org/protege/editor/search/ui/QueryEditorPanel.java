@@ -29,7 +29,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class QueryEditorPanel extends JPanel implements Disposable {
     private static final long serialVersionUID = -6361886183937479454L;
-    private JButton addQueryBtn, addNegatedQueryBtn, addNestedQueryBtn, clearBtn, searchBtn;
+    private JButton addQueryBtn, addNegatedQueryBtn, addNestedQueryBtn, clearBtn, searchBtn, stopBtn;
     private JRadioButton matchAll, matchAny;
     private boolean allowNestedQueries = true, allowNegatedQueries = true, allowSearch = true, isNested = false;
     private List<QueryPanel> queries = new ArrayList<>();
@@ -131,6 +131,8 @@ public class QueryEditorPanel extends JPanel implements Disposable {
             boolean isMatchAll = (match == MatchCriteria.MATCH_ALL);
             FilteredQuery userQuery = builder.build(isMatchAll);
             if(userQuery != null) {
+                searchBtn.setVisible(false);
+                stopBtn.setVisible(true);
                 searchManager.performSearch(userQuery, searchResults -> handleResults(userQuery, searchResults));
             }
             if(emptyQueries) {
@@ -147,10 +149,18 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         }
     };
 
+    private ActionListener stopBtnListener = e -> {
+        // TODO stop search
+        stopBtn.setVisible(false);
+        searchBtn.setVisible(true);
+    };
+
     private void handleResults(FilteredQuery query, Collection<OWLEntity> results) {
         LuceneQueryPanel queryPanel = getLuceneQueryPanel();
         if(queryPanel != null) {
             queryPanel.getResultsPanel().setResults(query, results);
+            stopBtn.setVisible(false);
+            searchBtn.setVisible(true);
         }
     }
 
@@ -264,18 +274,27 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         constraints.add(c.gridy);
         queries.add(queryPanel);
         queriesPanel.add(queryPanel, c);
+        if(!isNested) {
+            searchBtn.setEnabled(true);
+        }
         refresh();
     }
 
     public void removeQueryPanel(QueryPanel queryPanel) {
         // The query panel gets disposed and removed from the UI by the panel's own close button. Here just remove from the list.
         queries.remove(queryPanel);
+        if(queries.isEmpty() && !isNested) {
+            searchBtn.setEnabled(false);
+        }
     }
 
     private void clearEditorPanel() {
         queries.forEach(QueryPanel::dispose);
         queries.clear();
         queriesPanel.removeAll();
+        if(!isNested) {
+            searchBtn.setEnabled(false);
+        }
         refresh();
     }
 
@@ -325,10 +344,18 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         Border topBorder = new MatteBorder(1, 0, 0, 0, LuceneUiUtils.MATTE_BORDER_COLOR);
         footer.setBorder(topBorder);
         footer.add(getControlsPanel(true), BorderLayout.WEST);
+
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         searchBtn = new JButton("Search");
         searchBtn.addActionListener(searchBtnListener);
+        searchBtn.setEnabled(false);
         searchPanel.add(searchBtn);
+
+        stopBtn = new JButton("Stop search");
+        stopBtn.addActionListener(stopBtnListener);
+        stopBtn.setVisible(false);
+        searchPanel.add(stopBtn);
+
         footer.add(searchPanel, BorderLayout.EAST);
         return footer;
     }
