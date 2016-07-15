@@ -97,8 +97,14 @@ public abstract class BasicQuery implements SearchTabQuery {
         }
 
         public KeywordQuery createContainsFilter(OWLProperty property, String searchString) {
-            return new KeywordQuery(createContainsQuery(property, searchString), searcher,
-                    String.format("%s contains %s", getDisplayName(property), searchString));
+            if (isPhrase(searchString)) {
+                return new KeywordQuery(createContainsPhraseQuery(property, searchString), searcher,
+                        String.format("%s contains %s", getDisplayName(property), searchString));
+            }
+            else {
+                return new KeywordQuery(createContainsWordQuery(property, searchString), searcher,
+                        String.format("%s contains %s", getDisplayName(property), searchString));
+            }
         }
 
         public KeywordQuery createStartsWithFilter(OWLProperty property, String searchString) {
@@ -142,14 +148,26 @@ public abstract class BasicQuery implements SearchTabQuery {
          * Private builder methods
          */
 
+        private boolean isPhrase(String searchString) {
+            int wordCount = searchString.split("\\s+").length;
+            return wordCount > 1 ? true : false;
+        }
+
         private String getDisplayName(OWLEntity entity) {
             return searcher.getEditorKit().getOWLModelManager().getRendering(entity);
         }
 
-        private static BooleanQuery createContainsQuery(OWLProperty property, String searchString) {
+        private static BooleanQuery createContainsWordQuery(OWLProperty property, String searchString) {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
             builder.add(LuceneUtils.createTermQuery(IndexField.ANNOTATION_IRI, property.getIRI().toString()), Occur.MUST);
             builder.add(LuceneUtils.createLikeQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST);
+            return builder.build();
+        }
+
+        private static BooleanQuery createContainsPhraseQuery(OWLProperty property, String searchString) {
+            BooleanQuery.Builder builder = new BooleanQuery.Builder();
+            builder.add(LuceneUtils.createTermQuery(IndexField.ANNOTATION_IRI, property.getIRI().toString()), Occur.MUST);
+            builder.add(LuceneUtils.createPhraseQuery(IndexField.ANNOTATION_TEXT, searchString), Occur.MUST);
             return builder.build();
         }
 
