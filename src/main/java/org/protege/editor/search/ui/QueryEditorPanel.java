@@ -218,7 +218,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         MatchCriteria match = editorPanel.getMatchCriteria();
         boolean isMatchAll = (match == MatchCriteria.MATCH_ALL) ? true : false;
         if(queryPanel.getSelectedProperty() != null) {
-            return builder.build(queryPanel.getSelectedProperty().getIRI(), isMatchAll);
+            return builder.build(queryPanel.getSelectedProperty(), isMatchAll);
         } else {
             return null;
         }

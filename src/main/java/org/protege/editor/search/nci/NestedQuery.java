@@ -9,8 +9,11 @@ import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLAnnotationProperty;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLEntity;
+import org.semanticweb.owlapi.model.OWLObjectProperty;
+import org.semanticweb.owlapi.model.OWLProperty;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,15 +30,15 @@ import java.util.Set;
 public class NestedQuery extends ComplexQuery {
 
     private final List<SearchTabQuery> fillerFilters;
-    private final String propertyIri;
+    private final OWLProperty property;
     private final boolean isMatchAll;
 
     private final LuceneSearcher searcher;
 
     // Not allowing external instantiation
-    private NestedQuery(List<SearchTabQuery> fillerFilters, IRI propertyIri, boolean isMatchAll, LuceneSearcher searcher) {
+    private NestedQuery(List<SearchTabQuery> fillerFilters, OWLProperty property, boolean isMatchAll, LuceneSearcher searcher) {
         this.fillerFilters = fillerFilters;
-        this.propertyIri = propertyIri.toString();
+        this.property = property;
         this.isMatchAll = isMatchAll;
         this.searcher = searcher;
     }
@@ -53,7 +56,7 @@ public class NestedQuery extends ComplexQuery {
     public String getAlgebraString() {
         String booleanOperator = isMatchAll ? "AND" : "OR";
         StringBuilder sb = new StringBuilder();
-        sb.append("(").append(localName(propertyIri));
+        sb.append("(").append(localName(property.getIRI()));
         sb.append("\n");
         boolean needOperator = false;
         for (SearchTabQuery filter : fillerFilters) {
@@ -69,10 +72,11 @@ public class NestedQuery extends ComplexQuery {
         return sb.toString();
     }
 
-    private static String localName(String propertyIri) {
-        return (propertyIri.lastIndexOf('#') != 0)
-                ? propertyIri.substring(propertyIri.lastIndexOf('#'))
-                : propertyIri.substring(propertyIri.lastIndexOf('/'));
+    private static String localName(IRI propertyIri) {
+        String s = propertyIri.toString();
+        return (s.lastIndexOf('#') != 0)
+                ? s.substring(s.lastIndexOf('#'))
+                : s.substring(s.lastIndexOf('/'));
     }
 
     @Override
@@ -81,9 +85,16 @@ public class NestedQuery extends ComplexQuery {
         Set<OWLEntity> fillers = evaluateFillerQuery(listener);
         for (OWLEntity filler : fillers) {
             if (filler instanceof OWLClass) {
-                Query luceneQuery = createObjectRestrictionQuery(propertyIri, filler.getIRI().toString());
-                KeywordQuery query = new KeywordQuery(luceneQuery, searcher);
-                toReturn.addAll(query.evaluate(listener));
+                if (property instanceof OWLObjectProperty) {
+                    Query luceneQuery = createObjectRestrictionQuery(property.getIRI().toString(), filler.getIRI().toString());
+                    KeywordQuery query = new KeywordQuery(luceneQuery, searcher);
+                    toReturn.addAll(query.evaluate(listener));
+                }
+                else if (property instanceof OWLAnnotationProperty) {
+                    Query luceneQuery = createAnnotationRestrictionQuery(property.getIRI().toString(), filler.getIRI().toString());
+                    KeywordQuery query = new KeywordQuery(luceneQuery, searcher);
+                    toReturn.addAll(query.evaluate(listener));
+                }
             }
         }
         return toReturn;
@@ -104,8 +115,8 @@ public class NestedQuery extends ComplexQuery {
             return this;
         }
 
-        public NestedQuery build(IRI propertyIri, boolean isMatchAll) {
-            return new NestedQuery(fillerFilters, propertyIri, isMatchAll, searcher);
+        public NestedQuery build(OWLProperty property, boolean isMatchAll) {
+            return new NestedQuery(fillerFilters, property, isMatchAll, searcher);
         }
     }
 
@@ -130,13 +141,20 @@ public class NestedQuery extends ComplexQuery {
         return builder.build();
     }
 
+    private BooleanQuery createAnnotationRestrictionQuery(String propertyIri, String annotationValueIri) {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        builder.add(LuceneUtils.createTermQuery(IndexField.ANNOTATION_IRI, propertyIri), Occur.MUST);
+        builder.add(LuceneUtils.createTermQuery(IndexField.ANNOTATION_VALUE_IRI, annotationValueIri), Occur.MUST);
+        return builder.build();
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + NestedQuery.class.getSimpleName().hashCode();
         result = prime * result + fillerFilters.hashCode();
-        result = prime * result + propertyIri.hashCode();
+        result = prime * result + property.hashCode();
         result = prime * result + (isMatchAll ? 1 : 0);
         return result;
     }
@@ -153,13 +171,13 @@ public class NestedQuery extends ComplexQuery {
             return false;
         }
         NestedQuery other = (NestedQuery) obj;
-        return this.propertyIri.equals(other.propertyIri) && this.fillerFilters.equals(other.fillerFilters) && this.isMatchAll == other.isMatchAll;
+        return this.property.equals(other.property) && this.fillerFilters.equals(other.fillerFilters) && this.isMatchAll == other.isMatchAll;
     }
 
     @Override
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append("propertyIri: ").append(propertyIri).append(",\n");
+        sb.append("propertyIri: ").append(property.getIRI()).append(",\n");
         sb.append("fillerFilters: ").append(fillerFilters);
         return sb.toString();
     }
