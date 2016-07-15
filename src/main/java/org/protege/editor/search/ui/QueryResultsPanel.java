@@ -1,5 +1,6 @@
 package org.protege.editor.search.ui;
 
+import com.google.common.collect.ImmutableList;
 import org.protege.editor.core.Disposable;
 import org.protege.editor.core.ui.error.ErrorLogPanel;
 import org.protege.editor.owl.OWLEditorKit;
@@ -8,7 +9,8 @@ import org.protege.editor.owl.model.event.OWLModelManagerListener;
 import org.protege.editor.owl.model.find.OWLEntityFinder;
 import org.protege.editor.owl.ui.renderer.OWLCellRenderer;
 import org.protege.editor.search.nci.FilteredQuery;
-import org.semanticweb.owlapi.model.*;
+import org.semanticweb.owlapi.model.OWLEntity;
+import org.semanticweb.owlapi.model.OWLProperty;
 import org.semanticweb.owlapi.util.ProgressMonitor;
 
 import javax.swing.*;
@@ -22,7 +24,6 @@ import java.awt.event.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -32,12 +33,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class QueryResultsPanel extends JPanel implements Disposable {
-    private static final long serialVersionUID = -9158074562877526184L;
+    private static final long serialVersionUID = -4778246819575114548L;
     private static final int MAX_LIST_SIZE = 500;
     private OWLEditorKit editorKit;
     private JList<OWLEntity> results;
     private List<List<OWLEntity>> pagedResultsList;
-    private List<OWLEntity> resultsList, txtFieldFilteredResults, entityTypesFilteredResults;
+    private ImmutableList<OWLEntity> resultsList;
+    private List<OWLEntity> txtFieldFilteredResults, entityTypesFilteredResults;
+    private List<OWLEntity> classesList = new ArrayList<>(), propertiesList = new ArrayList<>(),
+            individualsList = new ArrayList<>(), datatypesList = new ArrayList<>();
     private JCheckBox classes, properties, individuals, datatypes;
     private JTextField filterTextField;
     private JLabel statusLbl, pageLbl;
@@ -46,6 +50,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
     private JProgressBar searchProgressBar;
     private Timer visibilityTimer;
     private FilteredQuery answeredQuery;
+    private boolean categorisedEntityTypes = false, paged = false;
 
     /**
      * Constructor
@@ -137,38 +142,42 @@ public class QueryResultsPanel extends JPanel implements Disposable {
     private OWLModelManagerListener activeOntologyChanged = e -> {
         if (e.isType(EventType.ACTIVE_ONTOLOGY_CHANGED) || e.isType(EventType.ONTOLOGY_LOADED)) {
             results.setListData(new OWLEntity[0]);
-            resultsList.clear();
+            resultsList = null;
             backBtn.setVisible(false);
             forwardBtn.setVisible(false);
             statusLbl.setText("");
             pageLbl.setText("");
+            categorisedEntityTypes = false;
+            filterTextField.setText("");
+            setCheckBoxSelection(true);
+            clearBuckets();
         }
     };
 
     private ActionListener exportBtnListener = e -> exportResults();
 
-    private ActionListener classesListener = e -> filter(classes, OWLClass.class);
+    private ActionListener classesListener = e -> filterEntityType(classes, classesList);
 
-    private ActionListener propertiesListener = e -> filter(properties, OWLProperty.class);
+    private ActionListener propertiesListener = e -> filterEntityType(properties, propertiesList);
 
-    private ActionListener individualsListener = e -> filter(individuals, OWLNamedIndividual.class);
+    private ActionListener individualsListener = e -> filterEntityType(individuals, individualsList);
 
-    private ActionListener datatypesListener = e -> filter(datatypes, OWLDatatype.class);
+    private ActionListener datatypesListener = e -> filterEntityType(datatypes, datatypesList);
 
     private DocumentListener filterTextListener = new DocumentListener() {
         @Override
         public void insertUpdate(DocumentEvent e) {
-            filterTextField();
+            filterTextField(true);
         }
 
         @Override
         public void removeUpdate(DocumentEvent e) {
-            filterTextField();
+            filterTextField(true);
         }
 
         @Override
         public void changedUpdate(DocumentEvent e) {
-            filterTextField();
+            filterTextField(true);
         }
     };
 
@@ -319,25 +328,83 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         return footer;
     }
 
-    private void filter(JCheckBox checkBox, Class cls) {
-        List<OWLEntity> entities = new ArrayList<>(getResults()), toRemove = new ArrayList<>();
+    private void filterEntityType(JCheckBox checkBox, List<OWLEntity> bucket) {
+        if(!categorisedEntityTypes) {
+            categoriseEntityTypes();
+        }
+        entityTypesFilteredResults = new ArrayList<>(getResults());
         if(!checkBox.isSelected()) {
-            toRemove.addAll(entities.stream().filter(cls::isInstance).collect(Collectors.toList()));
-            entities.removeAll(toRemove);
+            entityTypesFilteredResults.removeAll(bucket);
         } else {
-            if(!filterTextField.getText().isEmpty()) {
-                txtFieldFilteredResults.stream().filter(e -> cls.isInstance(e) && !entities.contains(e)).forEach(entities::add);
-            } else {
-                resultsList.stream().filter(e -> cls.isInstance(e) && !entities.contains(e)).forEach(entities::add);
+            filterTextField(false);
+            List<OWLEntity> l = new ArrayList<>(bucket);
+            l.retainAll(txtFieldFilteredResults);
+            for(OWLEntity e : l) {
+                if(!entityTypesFilteredResults.contains(e)) {
+                    entityTypesFilteredResults.add(e);
+                }
             }
         }
-        Collections.sort(entities);
-        entityTypesFilteredResults = entities;
-        setListData(entities, true);
+        Collections.sort(entityTypesFilteredResults);
+        setListData(entityTypesFilteredResults, true);
+    }
+
+    /**
+     * Filter the results list according to the text field filter
+     *
+     * @param filterEntityTypes true if this filter should take into account the status of entity type filter checkboxes, false otherwise
+     */
+    private void filterTextField(boolean filterEntityTypes) {
+        if(resultsList.isEmpty()) {
+            return;
+        }
+        String toMatch = filterTextField.getText();
+        List<OWLEntity> output;
+        if(toMatch.isEmpty()) {
+            output = new ArrayList<>(resultsList);
+        } else {
+            OWLEntityFinder finder = editorKit.getModelManager().getOWLEntityFinder();
+            Set<OWLEntity> foundEntities = finder.getMatchingOWLEntities(toMatch);
+            foundEntities.retainAll(resultsList);
+            output = new ArrayList<>(foundEntities);
+        }
+        if(filterEntityTypes) {
+            if (!classes.isSelected()) {
+                output.removeAll(classesList);
+            }
+            if (!properties.isSelected()) {
+                output.removeAll(propertiesList);
+            }
+            if (!individuals.isSelected()) {
+                output.removeAll(individualsList);
+            }
+            if (!datatypes.isSelected()) {
+                output.removeAll(datatypesList);
+            }
+        }
+        txtFieldFilteredResults = output;
+        Collections.sort(txtFieldFilteredResults);
+        setListData(txtFieldFilteredResults, true);
+    }
+
+    private void categoriseEntityTypes() {
+        for(OWLEntity e : resultsList) {
+            if(e.isOWLClass()) {
+                classesList.add(e);
+            } else if(e instanceof OWLProperty) {
+                propertiesList.add(e);
+            } else if(e.isOWLNamedIndividual()) {
+                individualsList.add(e);
+            } else if(e.isOWLDatatype()) {
+                datatypesList.add(e);
+            }
+        }
+        categorisedEntityTypes = true;
     }
 
     private void setListData(List<OWLEntity> list, boolean filteredList) {
         if(list.size() > MAX_LIST_SIZE) {
+            paged = true;
             pagedResultsList = divideList(list);
             totalPages = pagedResultsList.size();
             currentPage = 0;
@@ -349,42 +416,13 @@ public class QueryResultsPanel extends JPanel implements Disposable {
                 updateStatus(list);
             }
         } else {
+            paged = false;
             results.setListData(list.toArray(new OWLEntity[list.size()]));
             if(filteredList) {
                 updateStatus(list);
                 setPagedResultsList(false);
             }
         }
-    }
-
-    private void filterTextField() {
-        if(resultsList.isEmpty()) {
-            return;
-        }
-        String toMatch = filterTextField.getText();
-        if(toMatch.isEmpty()) {
-            setListData(entityTypesFilteredResults, true);
-            return;
-        }
-        OWLEntityFinder finder = editorKit.getModelManager().getOWLEntityFinder();
-        List<OWLEntity> output = new ArrayList<>();
-        Set<OWLEntity> entities = finder.getMatchingOWLEntities(toMatch);
-        for(OWLEntity e : entities) {
-            if(resultsList.contains(e)) {
-                if(classes.isSelected() && e.isOWLClass()) {
-                    output.add(e);
-                } else if(properties.isSelected() && (e.isOWLAnnotationProperty() || e.isOWLDataProperty() || e.isOWLObjectProperty())) {
-                    output.add(e);
-                } else if(individuals.isSelected() && e.isOWLNamedIndividual()) {
-                    output.add(e);
-                } else if(datatypes.isSelected() && e.isOWLDatatype()) {
-                    output.add(e);
-                }
-            }
-        }
-        txtFieldFilteredResults = new ArrayList<>(output);
-        Collections.sort(txtFieldFilteredResults);
-        setListData(txtFieldFilteredResults, true);
     }
 
     private void exportResults() {
@@ -408,8 +446,9 @@ public class QueryResultsPanel extends JPanel implements Disposable {
 
     public void setResults(FilteredQuery query, Collection<OWLEntity> entities) {
         answeredQuery = checkNotNull(query);
-        resultsList = new ArrayList<>(checkNotNull(entities));
-        Collections.sort(resultsList);
+        List<OWLEntity> list = new ArrayList<>(entities);
+        Collections.sort(list);
+        resultsList = ImmutableList.copyOf(list);
         entityTypesFilteredResults = resultsList;
         txtFieldFilteredResults = resultsList;
         setListData(resultsList, true);
@@ -431,13 +470,34 @@ public class QueryResultsPanel extends JPanel implements Disposable {
     }
 
     private List<OWLEntity> getResults() {
-        List<OWLEntity> output = new ArrayList<>(txtFieldFilteredResults);
-        output.retainAll(entityTypesFilteredResults);
+        List<OWLEntity> output = new ArrayList<>();
+        if(paged) {
+            pagedResultsList.forEach(output::addAll);
+        } else {
+            ListModel<OWLEntity> model = results.getModel();
+            for (int i = 0; i < model.getSize(); i++) {
+                output.add(model.getElementAt(i));
+            }
+        }
         return output;
     }
 
     private void updateStatus(Collection<OWLEntity> entities) {
         statusLbl.setText(entities.size() + (entities.size() == 1 ? " match" : " matches"));
+    }
+
+    public void setCheckBoxSelection(boolean selected) {
+        classes.setSelected(selected);
+        properties.setSelected(selected);
+        individuals.setSelected(selected);
+        datatypes.setSelected(selected);
+    }
+
+    private void clearBuckets() {
+        classesList.clear();
+        propertiesList.clear();
+        individualsList.clear();
+        datatypesList.clear();
     }
 
     @Override
