@@ -48,11 +48,10 @@ public class NegatedQuery extends ComplexQuery {
         boolean needOperator = false;
         for (SearchTabQuery filter : filters) {
             if (needOperator) {
-                sb.append("   ");
+                sb.append("\n   ");
                 sb.append(booleanOperator).append(" ");
             }
             sb.append(filter.getAlgebraString());
-            sb.append("\n");
             needOperator = true;
         }
         sb.append(")");
