@@ -277,14 +277,18 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         if(!isNested) {
             searchBtn.setEnabled(true);
         }
+        clearBtn.setEnabled(true);
         refresh();
     }
 
     public void removeQueryPanel(QueryPanel queryPanel) {
         // The query panel gets disposed and removed from the UI by the panel's own close button. Here just remove from the list.
         queries.remove(queryPanel);
-        if(queries.isEmpty() && !isNested) {
-            searchBtn.setEnabled(false);
+        if(queries.isEmpty()) {
+            if(!isNested) {
+                searchBtn.setEnabled(false);
+            }
+            clearBtn.setEnabled(false);
         }
     }
 
@@ -295,6 +299,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         if(!isNested) {
             searchBtn.setEnabled(false);
         }
+        clearBtn.setEnabled(false);
         refresh();
     }
 
