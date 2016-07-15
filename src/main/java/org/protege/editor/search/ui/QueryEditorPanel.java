@@ -28,10 +28,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class QueryEditorPanel extends JPanel implements Disposable {
-    private static final long serialVersionUID = -6361886183937479454L;
+    private static final long serialVersionUID = -8077360412312971485L;
     private JButton addQueryBtn, addNegatedQueryBtn, addNestedQueryBtn, clearBtn, searchBtn, stopBtn;
     private JRadioButton matchAll, matchAny;
-    private boolean allowNestedQueries = true, allowNegatedQueries = true, allowSearch = true, isNested = false;
+    private boolean allowNestedQueries = true, allowNegatedQueries = true, isNested = false;
     private List<QueryPanel> queries = new ArrayList<>();
     private TreeSet<Integer> constraints = new TreeSet<>();
     private JPanel queriesPanel;
@@ -54,13 +54,11 @@ public class QueryEditorPanel extends JPanel implements Disposable {
      * @param editorKit OWL Editor Kit
      * @param allowNestedQueries    true if nested queries should be allowed, false otherwise
      * @param allowNegatedQueries   true if negated queries should be allowed, false otherwise
-     * @param allowSearch   true if search should be allowed in this panel, false otherwise
      */
-    public QueryEditorPanel(OWLEditorKit editorKit, boolean allowNestedQueries, boolean allowNegatedQueries, boolean allowSearch) {
+    public QueryEditorPanel(OWLEditorKit editorKit, boolean allowNestedQueries, boolean allowNegatedQueries) {
         this.editorKit = checkNotNull(editorKit);
         this.allowNestedQueries = checkNotNull(allowNestedQueries);
         this.allowNegatedQueries = checkNotNull(allowNegatedQueries);
-        this.allowSearch = checkNotNull(allowSearch);
         isNested = true;
         initUi();
     }
@@ -338,7 +336,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
             queryBtnPanel.add(addNestedQueryBtn);
         }
         header.add(queryBtnPanel, BorderLayout.WEST);
-        if(!allowSearch) {
+        if(isNested) {
             header.add(getControlsPanel(false), BorderLayout.EAST);
         }
         return header;
@@ -388,7 +386,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     @Override
     public void dispose() {
         editorKit.getModelManager().removeListener(activeOntologyChanged);
-        if(allowSearch) {
+        if(!isNested) {
             searchBtn.removeActionListener(searchBtnListener);
         }
         clearEditorPanel();
