@@ -457,6 +457,7 @@ public class SearchTabManager extends LuceneSearcher {
             for (ProgressMonitor pm : progressMonitors) {
                 pm.setSize(100);
                 pm.setStarted();
+                pm.setMessage("processing query");
             }
         });
     }
