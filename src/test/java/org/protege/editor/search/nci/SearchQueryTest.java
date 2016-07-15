@@ -585,7 +585,7 @@ public class SearchQueryTest {
          */
         NestedQuery.Builder builder = getNestedQueryBuilder();
         builder.add(getQueryFactory().createPropertyValueAbsentFilter(KoalaOntology.rdfsSeeAlso));
-        NestedQuery query = builder.build(KoalaOntology.hasHabitatIri, true);
+        NestedQuery query = builder.build(KoalaOntology.hasHabitat, true);
         Set<OWLEntity> results = query.evaluate(null);
         assertThat(results, hasSize(3));
         assertThat(results, containsInAnyOrder(
@@ -603,7 +603,7 @@ public class SearchQueryTest {
         builder = getNestedQueryBuilder();
         builder.add(getQueryFactory().createPropertyValueAbsentFilter(KoalaOntology.rdfsSeeAlso));
         builder.add(getQueryFactory().createContainsFilter(KoalaOntology.rdfsLabel, "eucalypt"));
-        query = builder.build(KoalaOntology.hasHabitatIri, true);
+        query = builder.build(KoalaOntology.hasHabitat, true);
         results = query.evaluate(null);
         assertThat(results, hasSize(1));
         assertThat(results, containsInAnyOrder(
@@ -621,7 +621,7 @@ public class SearchQueryTest {
         NegatedQuery.Builder negatedBuilder = getNegatedQueryBuilder();
         negatedBuilder.add(getQueryFactory().createContainsFilter(KoalaOntology.rdfsLabel, "eucalypt"));
         builder.add(negatedBuilder.build(true));
-        query = builder.build(KoalaOntology.hasHabitatIri, true);
+        query = builder.build(KoalaOntology.hasHabitat, true);
         results = query.evaluate(null);
         assertThat(results, hasSize(2));
         assertThat(results, containsInAnyOrder(
@@ -642,7 +642,7 @@ public class SearchQueryTest {
         negatedBuilder = getNegatedQueryBuilder();
         negatedBuilder.add(getQueryFactory().createContainsFilter(KoalaOntology.rdfsLabel, "eucalypt"));
         builder.add(negatedBuilder.build(true));
-        query = builder.build(KoalaOntology.hasHabitatIri, true);
+        query = builder.build(KoalaOntology.hasHabitat, true);
         results = query.evaluate(null);
         assertThat(results, hasSize(0));
         
@@ -660,7 +660,7 @@ public class SearchQueryTest {
         negatedBuilder = getNegatedQueryBuilder();
         negatedBuilder.add(getQueryFactory().createContainsFilter(KoalaOntology.rdfsLabel, "eucalypt"));
         builder.add(negatedBuilder.build(true));
-        query = builder.build(KoalaOntology.hasHabitatIri, false);
+        query = builder.build(KoalaOntology.hasHabitat, false);
         results = query.evaluate(null);
         assertThat(results, hasSize(3));
         assertThat(results, containsInAnyOrder(
