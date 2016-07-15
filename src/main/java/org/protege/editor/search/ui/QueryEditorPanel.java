@@ -28,8 +28,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class QueryEditorPanel extends JPanel implements Disposable {
-    private static final long serialVersionUID = -8077360412312971485L;
-    private JButton addQueryBtn, addNegatedQueryBtn, addNestedQueryBtn, clearBtn, searchBtn, stopBtn;
+    private static final long serialVersionUID = -3601633790972154822L;
+    private JButton addQueryBtn, addNegatedQueryBtn, addNestedQueryBtn, clearBtn, searchBtn, stopBtn, indexBtn;
     private JRadioButton matchAll, matchAny;
     private boolean allowNestedQueries = true, allowNegatedQueries = true, isNested = false;
     private List<QueryPanel> queries = new ArrayList<>();
@@ -151,6 +151,10 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         // TODO stop search
         stopBtn.setVisible(false);
         searchBtn.setVisible(true);
+    };
+
+    private ActionListener indexBtnListener = e -> {
+        // TODO index ontology
     };
 
     private void handleResults(FilteredQuery query, Collection<OWLEntity> results) {
@@ -338,6 +342,12 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         header.add(queryBtnPanel, BorderLayout.WEST);
         if(isNested) {
             header.add(getControlsPanel(false), BorderLayout.EAST);
+        } else {
+            indexBtn = new JButton("Build Index");
+            indexBtn.addActionListener(indexBtnListener);
+            JPanel indexPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            indexPanel.add(indexBtn);
+            header.add(indexPanel, BorderLayout.EAST);
         }
         return header;
     }
@@ -354,7 +364,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         searchBtn.setEnabled(false);
         searchPanel.add(searchBtn);
 
-        stopBtn = new JButton("Stop search");
+        stopBtn = new JButton("Stop Search");
         stopBtn.addActionListener(stopBtnListener);
         stopBtn.setVisible(false);
         searchPanel.add(stopBtn);
