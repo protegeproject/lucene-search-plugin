@@ -66,6 +66,7 @@ import org.semanticweb.owlapi.model.OWLSubPropertyChainOfAxiom;
 import org.semanticweb.owlapi.model.OWLSymmetricObjectPropertyAxiom;
 import org.semanticweb.owlapi.model.OWLTransitiveObjectPropertyAxiom;
 import org.semanticweb.owlapi.util.AxiomSubjectProvider;
+import org.semanticweb.owlapi.vocab.XSDVocabulary;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -163,7 +164,20 @@ public class SearchTabIndexer extends AbstractLuceneIndexer {
                     doc.add(new TextField(IndexField.DISPLAY_NAME, getDisplayName(entity), Store.YES));
                     doc.add(new StringField(IndexField.ANNOTATION_IRI, getEntityId(axiom.getProperty()), Store.YES));
                     doc.add(new TextField(IndexField.ANNOTATION_DISPLAY_NAME, getDisplayName(axiom.getProperty()), Store.YES));
-                    doc.add(new TextField(IndexField.ANNOTATION_TEXT, getAnnotationText(axiom.getAnnotation()), Store.YES));
+                    OWLAnnotationValue value = axiom.getAnnotation().getValue();
+                    if (value instanceof OWLLiteral) {
+                        OWLLiteral literal = (OWLLiteral) value;
+                        if (literal.getDatatype().getIRI().equals(XSDVocabulary.ANY_URI.getIRI())) {
+                            doc.add(new StringField(IndexField.ANNOTATION_VALUE_IRI, literal.getLiteral(), Store.YES));
+                        }
+                        else {
+                            doc.add(new TextField(IndexField.ANNOTATION_TEXT, strip(literal.getLiteral()), Store.YES));
+                        }
+                    }
+                    else if (value instanceof IRI) {
+                        IRI iri = (IRI) value;
+                        doc.add(new StringField(IndexField.ANNOTATION_VALUE_IRI, iri.toString(), Store.YES));
+                    }
                     documents.add(doc);
                 }
             }
@@ -320,9 +334,9 @@ public class SearchTabIndexer extends AbstractLuceneIndexer {
                      * Clean up the XML tags from the annotation text
                      */
                     OWLLiteral literal = (OWLLiteral) value;
-                    return String.format("\"%s\"", strip(literal.getLiteral()));
+                    return strip(literal.getLiteral());
                 }
-                return String.format("\"%s\"", value.toString());
+                return value.toString();
             }
 
             private String strip(String s) {

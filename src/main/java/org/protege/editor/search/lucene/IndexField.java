@@ -34,6 +34,8 @@ public final class IndexField {
 
     public static final String ANNOTATION_TEXT = "annotationText";
 
+    public static final String ANNOTATION_VALUE_IRI = "annotationValueIri";
+
     public static final String FILLER_IRI = "fillerIri";
 
     public static final String FILLER_DISPLAY_NAME = "fillerDisplayName";
