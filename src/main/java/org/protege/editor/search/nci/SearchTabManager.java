@@ -77,7 +77,6 @@ public class SearchTabManager extends LuceneSearcher {
         categories.add(SearchCategory.IRI);
         categories.add(SearchCategory.ANNOTATION_VALUE);
         categories.add(SearchCategory.LOGICAL_AXIOM);
-        currentActiveOntology = editorKit.getOWLModelManager().getActiveOntology();
         ontologyChangeListener = new OWLOntologyChangeListener() {
             public void ontologiesChanged(List<? extends OWLOntologyChange> changes) throws OWLException {
                 updateIndex(changes);
@@ -96,11 +95,17 @@ public class SearchTabManager extends LuceneSearcher {
                         return;
                     }
                     currentActiveOntology = newActiveOntology;
-                    loadOrCreateIndexDirectory();
-                    markIndexAsStale(false);
+                    loadIndexDirectory(newActiveOntology, false); // false = reload index directory, if any
+                    markIndexAsStale();
                 }
                 else if (isCacheMutatingEvent(event)) {
-                    markIndexAsStale(true);
+                    try {
+                        logger.info("Rebuilding index");
+                        rebuildIndex();
+                    }
+                    catch (IOException e) {
+                        logger.error("... rebuild index failed", e);
+                    }
                 }
                 else if (isCacheSavingEvent(event)) {
                     saveIndex();
@@ -123,6 +128,11 @@ public class SearchTabManager extends LuceneSearcher {
         return event.isType(EventType.ONTOLOGY_SAVED);
     }
 
+    public void rebuildIndex() throws IOException {
+        loadIndexDirectory(currentActiveOntology, true); // true = recreate the index directory
+        service.submit(this::buildingIndex);
+    }
+
     private void updateIndex(List<? extends OWLOntologyChange> changes) {
         if (indexDelegator != null) {
             service.submit(() -> updatingIndex(changes));
@@ -138,20 +148,10 @@ public class SearchTabManager extends LuceneSearcher {
         }
         catch (IOException e) {
             logger.error("... update index failed");
-            e.printStackTrace();
         }
     }
 
-    private void markIndexAsStale(boolean forceDelete) {
-        if (forceDelete) {
-            if (indexDirectory != null) { // remove the index
-                logger.info("Rebuilding index");
-                OWLOntology activeOntology = editorKit.getOWLModelManager().getActiveOntology();
-                LuceneSearchPreferences.removeIndexLocation(activeOntology);
-                indexDirectory = null;
-                indexDelegator = null;
-            }
-        }
+    private void markIndexAsStale() {
         lastSearchId.set(0);
     }
 
@@ -200,8 +200,8 @@ public class SearchTabManager extends LuceneSearcher {
     public void performSearch(String searchString, SearchResultHandler searchResultHandler) {
         try {
             if (lastSearchId.getAndIncrement() == 0) {
-                Directory indexDirectory = getIndexDirectory();
-                if (!DirectoryReader.indexExists(indexDirectory)) {
+                if (!DirectoryReader.indexExists(getIndexDirectory())) {
+                    logger.info("Building index");
                     service.submit(this::buildingIndex);
                 }
             }
@@ -216,8 +216,8 @@ public class SearchTabManager extends LuceneSearcher {
     public void performSearch(SearchTabQuery userQuery, SearchTabResultHandler searchTabResultHandler) {
         try {
             if (lastSearchId.getAndIncrement() == 0) {
-                Directory indexDirectory = getIndexDirectory();
-                if (!DirectoryReader.indexExists(indexDirectory)) {
+                if (!DirectoryReader.indexExists(getIndexDirectory())) {
+                    logger.info("Building index");
                     service.submit(this::buildingIndex);
                 }
             }
@@ -228,18 +228,23 @@ public class SearchTabManager extends LuceneSearcher {
         }
     }
 
-    private void loadOrCreateIndexDirectory() {
+    private void loadIndexDirectory(OWLOntology targetOntology, boolean forceReset) {
+        if (targetOntology.isEmpty()) {
+            return; // no loading if the active ontology is empty
+        }
         try {
-            if (!currentActiveOntology.isEmpty()) {
-                Directory directory = null;
-                if (shouldStoreInDisk()) {
-                    String indexLocation = LuceneSearchPreferences.getIndexLocation(currentActiveOntology);
-                    directory = FSDirectory.open(Paths.get(indexLocation));
-                }
-                else {
-                    logger.info("Storing index into RAM memory");
-                    directory = new RAMDirectory();
-                }
+            if (forceReset) {
+                LuceneSearchPreferences.removeIndexLocation(targetOntology);
+            }
+            if (shouldStoreInDisk()) {
+                String indexLocation = LuceneSearchPreferences.getIndexLocation(targetOntology);
+                logger.info("Loading index from " + indexLocation);
+                Directory directory = FSDirectory.open(Paths.get(indexLocation));
+                setIndexDirectory(directory);
+            }
+            else {
+                logger.info("Storing index into RAM memory");
+                Directory directory = new RAMDirectory();
                 setIndexDirectory(directory);
             }
         }
@@ -267,9 +272,6 @@ public class SearchTabManager extends LuceneSearcher {
     }
 
     private Directory getIndexDirectory() {
-        if (indexDirectory == null) {
-            loadOrCreateIndexDirectory();
-        }
         return indexDirectory;
     }
 
@@ -279,14 +281,11 @@ public class SearchTabManager extends LuceneSearcher {
     }
 
     private void fireIndexDirectoryChange() throws IOException {
-        if (DirectoryReader.indexExists(indexDirectory)) {
-            setupIndexDelegator();
-        }
+        setupIndexDelegator();
     }
 
     private void setupIndexDelegator() throws IOException {
-        Directory indexDirectory = getIndexDirectory();
-        IndexDelegator newDelegator = IndexDelegator.getInstance(indexDirectory, indexer.getIndexWriterConfig());
+        IndexDelegator newDelegator = IndexDelegator.getInstance(getIndexDirectory(), indexer.getIndexWriterConfig());
         setIndexDelegator(newDelegator);
     }
 
@@ -308,10 +307,7 @@ public class SearchTabManager extends LuceneSearcher {
     private void buildingIndex() {
         fireIndexingStarted();
         try {
-            setupIndexDelegator();
-            indexer.doIndex(indexDelegator,
-                    new SearchContext(editorKit),
-                    progress -> fireIndexingProgressed(progress));
+            indexer.doIndex(indexDelegator, new SearchContext(editorKit), progress -> fireIndexingProgressed(progress));
             saveIndex();
         }
         catch (IOException e) {
