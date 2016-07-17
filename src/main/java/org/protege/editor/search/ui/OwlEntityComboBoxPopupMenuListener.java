@@ -1,7 +1,6 @@
 package org.protege.editor.search.ui;
 
 import org.protege.editor.owl.OWLEditorKit;
-import org.protege.editor.owl.ui.renderer.OWLModelManagerEntityRenderer;
 import org.semanticweb.owlapi.model.OWLEntity;
 import org.semanticweb.owlapi.model.OWLOntology;
 
@@ -75,13 +74,6 @@ public class OwlEntityComboBoxPopupMenuListener implements PopupMenuListener {
         entities.addAll(ont.getAnnotationPropertiesInSignature());
         entities.addAll(ont.getObjectPropertiesInSignature());
         entities.addAll(ont.getDataPropertiesInSignature());
-        int widest = 0;
-        OWLModelManagerEntityRenderer renderer = editorKit.getModelManager().getOWLEntityRenderer();
-        for(OWLEntity e : entities) {
-            String str = renderer.render(e);
-            int lineWidth = fontMetrics.stringWidth(str);
-            widest = Math.max(widest, lineWidth);
-        }
-        return widest+50;
+        return LuceneUiUtils.getWidestEntityStringRendering(editorKit, entities, fontMetrics);
     }
 }

@@ -25,7 +25,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class AddPropertyDialogPanel extends JPanel implements VerifiedInputEditor {
-    private static final long serialVersionUID = 6438433027597161350L;
+    private static final long serialVersionUID = -1063096290922111127L;
     private List<InputVerificationStatusChangedListener> listeners = new ArrayList<>();
     private OWLEditorKit editorKit;
     private JLabel filterLbl, propertiesLbl, propertySelectionLbl;
@@ -34,6 +34,7 @@ public class AddPropertyDialogPanel extends JPanel implements VerifiedInputEdito
     private List<OWLEntity> allPropertiesList, filteredPropertiesList;
     private boolean currentlyValid = false;
     private List<OWLEntity> selectedProperties, propertiesToExclude;
+    private SortedListModel<OWLEntity> listModel = new SortedListModel<>();
 
     /**
      * Constructor
@@ -62,6 +63,9 @@ public class AddPropertyDialogPanel extends JPanel implements VerifiedInputEdito
         propertiesScrollpane.setBorder(LuceneUiUtils.MATTE_BORDER);
         propertiesScrollpane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
+        int widest = LuceneUiUtils.getWidestEntityStringRendering(editorKit, allPropertiesList, getFontMetrics(getFont()));
+        propertiesScrollpane.setPreferredSize(new Dimension(widest, 250));
+
         Insets insets = new Insets(2, 2, 2, 2);
         int rowIndex = 0;
         add(propertiesLbl, new GridBagConstraints(0, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, insets, 0, 0));
@@ -78,14 +82,14 @@ public class AddPropertyDialogPanel extends JPanel implements VerifiedInputEdito
         propertiesList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         propertiesList.addListSelectionListener(listSelectionListener);
         propertiesList.setCellRenderer(new OWLCellRenderer(editorKit));
-        propertiesList.setVisibleRowCount(15);
+        propertiesList.setModel(listModel);
         propertiesList.setBorder(new EmptyBorder(2, 2, 0, 2));
 
         allPropertiesList = LuceneUiUtils.getProperties(editorKit);
         if(!propertiesToExclude.isEmpty()) {
             allPropertiesList.removeAll(propertiesToExclude);
         }
-        propertiesList.setListData(allPropertiesList.toArray(new OWLEntity[allPropertiesList.size()]));
+        listModel.addAll(allPropertiesList);
     }
 
     private ListSelectionListener listSelectionListener = e -> {
@@ -133,7 +137,8 @@ public class AddPropertyDialogPanel extends JPanel implements VerifiedInputEdito
     private void filterTextField() {
         String toMatch = filterTextField.getText();
         if(toMatch.isEmpty()) {
-            propertiesList.setListData(allPropertiesList.toArray(new OWLEntity[allPropertiesList.size()]));
+            listModel.clear();
+            listModel.addAll(allPropertiesList);
             return;
         }
         OWLEntityFinder finder = editorKit.getModelManager().getOWLEntityFinder();
@@ -146,9 +151,8 @@ public class AddPropertyDialogPanel extends JPanel implements VerifiedInputEdito
         }
         filteredPropertiesList = new ArrayList<>(output);
         Collections.sort(filteredPropertiesList);
-        propertiesList.setListData(filteredPropertiesList.toArray(new OWLEntity[filteredPropertiesList.size()]));
-        propertiesList.revalidate();
-        propertiesList.repaint();
+        listModel.clear();
+        listModel.addAll(filteredPropertiesList);
     }
 
     public static Optional<List<OWLEntity>> showDialog(OWLEditorKit editorKit, List<OWLEntity> propertiesToExlude) {

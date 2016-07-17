@@ -9,8 +9,6 @@ import org.protege.editor.search.lucene.SearchContext;
 import org.protege.editor.search.nci.*;
 import org.semanticweb.owlapi.model.OWLEntity;
 import org.semanticweb.owlapi.model.OWLProperty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -20,7 +18,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
+import java.util.TreeSet;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -30,12 +28,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class QueryEditorPanel extends JPanel implements Disposable {
-    private static final long serialVersionUID = 3627451909514603615L;
-    private static Logger logger = LoggerFactory.getLogger(QueryEditorPanel.class.getName());
-    private JButton addQueryBtn, addNegatedQueryBtn, addNestedQueryBtn, clearBtn, searchBtn;
+    private static final long serialVersionUID = -3601633790972154822L;
+    private JButton addQueryBtn, addNegatedQueryBtn, addNestedQueryBtn, clearBtn, searchBtn, stopBtn, indexBtn;
     private JRadioButton matchAll, matchAny;
-    private boolean allowNestedQueries = true, allowNegatedQueries = true, allowSearch = true, isNested = false;
+    private boolean allowNestedQueries = true, allowNegatedQueries = true, isNested = false;
     private List<QueryPanel> queries = new ArrayList<>();
+    private TreeSet<Integer> constraints = new TreeSet<>();
     private JPanel queriesPanel;
     private OWLEditorKit editorKit;
 
@@ -56,13 +54,11 @@ public class QueryEditorPanel extends JPanel implements Disposable {
      * @param editorKit OWL Editor Kit
      * @param allowNestedQueries    true if nested queries should be allowed, false otherwise
      * @param allowNegatedQueries   true if negated queries should be allowed, false otherwise
-     * @param allowSearch   true if search should be allowed in this panel, false otherwise
      */
-    public QueryEditorPanel(OWLEditorKit editorKit, boolean allowNestedQueries, boolean allowNegatedQueries, boolean allowSearch) {
+    public QueryEditorPanel(OWLEditorKit editorKit, boolean allowNestedQueries, boolean allowNegatedQueries) {
         this.editorKit = checkNotNull(editorKit);
         this.allowNestedQueries = checkNotNull(allowNestedQueries);
         this.allowNegatedQueries = checkNotNull(allowNegatedQueries);
-        this.allowSearch = checkNotNull(allowSearch);
         isNested = true;
         initUi();
     }
@@ -133,6 +129,8 @@ public class QueryEditorPanel extends JPanel implements Disposable {
             boolean isMatchAll = (match == MatchCriteria.MATCH_ALL);
             FilteredQuery userQuery = builder.build(isMatchAll);
             if(userQuery != null) {
+                searchBtn.setVisible(false);
+                stopBtn.setVisible(true);
                 searchManager.performSearch(userQuery, searchResults -> handleResults(userQuery, searchResults));
             }
             if(emptyQueries) {
@@ -149,10 +147,22 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         }
     };
 
+    private ActionListener stopBtnListener = e -> {
+        // TODO stop search
+        stopBtn.setVisible(false);
+        searchBtn.setVisible(true);
+    };
+
+    private ActionListener indexBtnListener = e -> {
+        // TODO index ontology
+    };
+
     private void handleResults(FilteredQuery query, Collection<OWLEntity> results) {
         LuceneQueryPanel queryPanel = getLuceneQueryPanel();
         if(queryPanel != null) {
             queryPanel.getResultsPanel().setResults(query, results);
+            stopBtn.setVisible(false);
+            searchBtn.setVisible(true);
         }
     }
 
@@ -198,7 +208,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         boolean isMatchAll = (match == MatchCriteria.MATCH_ALL) ? true : false;
         return builder.build(isMatchAll);
     }
-    
+
     private NestedQuery getNestedQuery(NestedQueryPanel queryPanel, BasicQuery.Factory queryFactory, LuceneSearcher searcher) {
         NestedQuery.Builder builder = new NestedQuery.Builder(searcher);
         QueryEditorPanel editorPanel = queryPanel.getQueryEditorPanel();
@@ -257,21 +267,41 @@ public class QueryEditorPanel extends JPanel implements Disposable {
 
     private void addQuery(QueryPanel queryPanel) {
         Insets insets = (isNested ? new Insets(2, 25, 0, 0) : new Insets(4, 4, 0, 4));
-        GridBagConstraints c = new GridBagConstraints(0, queries.size(), 1, 1, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.HORIZONTAL, insets, 0, 0);
+        int gridy = queries.size();
+        if(!constraints.isEmpty()) {
+            int max = constraints.last();
+            gridy = Math.max((max+1), queries.size());
+        }
+        GridBagConstraints c = new GridBagConstraints(0, gridy, 1, 1, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.HORIZONTAL, insets, 0, 0);
+        constraints.add(c.gridy);
         queries.add(queryPanel);
         queriesPanel.add(queryPanel, c);
+        if(!isNested) {
+            searchBtn.setEnabled(true);
+        }
+        clearBtn.setEnabled(true);
         refresh();
     }
 
     public void removeQueryPanel(QueryPanel queryPanel) {
         // The query panel gets disposed and removed from the UI by the panel's own close button. Here just remove from the list.
         queries.remove(queryPanel);
+        if(queries.isEmpty()) {
+            if(!isNested) {
+                searchBtn.setEnabled(false);
+            }
+            clearBtn.setEnabled(false);
+        }
     }
 
     private void clearEditorPanel() {
         queries.forEach(QueryPanel::dispose);
         queries.clear();
         queriesPanel.removeAll();
+        if(!isNested) {
+            searchBtn.setEnabled(false);
+        }
+        clearBtn.setEnabled(false);
         refresh();
     }
 
@@ -310,8 +340,14 @@ public class QueryEditorPanel extends JPanel implements Disposable {
             queryBtnPanel.add(addNestedQueryBtn);
         }
         header.add(queryBtnPanel, BorderLayout.WEST);
-        if(!allowSearch) {
+        if(isNested) {
             header.add(getControlsPanel(false), BorderLayout.EAST);
+        } else {
+            indexBtn = new JButton("Build Index");
+            indexBtn.addActionListener(indexBtnListener);
+            JPanel indexPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            indexPanel.add(indexBtn);
+            header.add(indexPanel, BorderLayout.EAST);
         }
         return header;
     }
@@ -321,23 +357,18 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         Border topBorder = new MatteBorder(1, 0, 0, 0, LuceneUiUtils.MATTE_BORDER_COLOR);
         footer.setBorder(topBorder);
         footer.add(getControlsPanel(true), BorderLayout.WEST);
+
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-
-        // TODO: remove
-        JButton testDialog = new JButton("Test Popup Dialog");
-        testDialog.addActionListener(e -> {
-            Optional<OWLEntity> ent = LuceneQueryPanel.showDialog(editorKit);
-            if(ent.isPresent()) {
-                logger.info("[LucenePopupDialog]    Selected entity: " + ent.get().getIRI());
-            } else {
-                logger.info("[LucenePopupDialog]    No entity selected");
-            }
-        });
-        searchPanel.add(testDialog);
-
         searchBtn = new JButton("Search");
         searchBtn.addActionListener(searchBtnListener);
+        searchBtn.setEnabled(false);
         searchPanel.add(searchBtn);
+
+        stopBtn = new JButton("Stop Search");
+        stopBtn.addActionListener(stopBtnListener);
+        stopBtn.setVisible(false);
+        searchPanel.add(stopBtn);
+
         footer.add(searchPanel, BorderLayout.EAST);
         return footer;
     }
@@ -365,7 +396,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     @Override
     public void dispose() {
         editorKit.getModelManager().removeListener(activeOntologyChanged);
-        if(allowSearch) {
+        if(!isNested) {
             searchBtn.removeActionListener(searchBtnListener);
         }
         clearEditorPanel();

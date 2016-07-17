@@ -2,6 +2,7 @@ package org.protege.editor.search.ui;
 
 import org.protege.editor.core.ui.error.ErrorLogPanel;
 import org.protege.editor.owl.OWLEditorKit;
+import org.protege.editor.owl.ui.renderer.OWLModelManagerEntityRenderer;
 import org.semanticweb.owlapi.model.OWLEntity;
 import org.semanticweb.owlapi.model.OWLOntology;
 
@@ -14,6 +15,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -56,5 +58,16 @@ public class LuceneUiUtils {
         entities.addAll(ont.getObjectPropertiesInSignature());
         entities.addAll(ont.getDataPropertiesInSignature());
         return entities;
+    }
+
+    public static int getWidestEntityStringRendering(OWLEditorKit editorKit, Collection<OWLEntity> entities, FontMetrics fontMetrics) {
+        int widest = 0;
+        OWLModelManagerEntityRenderer renderer = editorKit.getModelManager().getOWLEntityRenderer();
+        for(OWLEntity e : entities) {
+            String str = renderer.render(e);
+            int lineWidth = fontMetrics.stringWidth(str);
+            widest = Math.max(widest, lineWidth);
+        }
+        return widest+60;
     }
 }

@@ -47,7 +47,7 @@ public class NestedQueryPanel extends QueryPanel {
         parent.add(getPropertySelectionPanel());
         add(parent, BorderLayout.NORTH);
 
-        editorPanel = new QueryEditorPanel(editorKit, false, true, false);
+        editorPanel = new QueryEditorPanel(editorKit, false, true);
         add(editorPanel, BorderLayout.CENTER);
     }
 
