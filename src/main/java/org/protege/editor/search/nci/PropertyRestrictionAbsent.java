@@ -9,6 +9,7 @@ import org.semanticweb.owlapi.model.OWLEntity;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Josef Hardi <johardi@stanford.edu><br>
@@ -52,22 +53,28 @@ public class PropertyRestrictionAbsent extends BasicQuery {
     }
 
     @Override
-    public Set<OWLEntity> evaluate(SearchProgressListener listener) throws QueryEvaluationException {
+    public Set<OWLEntity> evaluate(SearchProgressListener listener, AtomicBoolean stopSearch) throws QueryEvaluationException {
         SearchDocumentHandler handler = new SearchDocumentHandler(searcher.getEditorKit());
         Set<Document> docs = evaluate();
         int counter = 0;
         for (Document doc : docs) {
+            if (stopSearch.get()) { // if should stop
+                return getResults(handler.getSearchResults());
+            }
             handler.handle(doc);
             if (listener != null) {
                 listener.fireSearchingProgressed((counter++*100)/docs.size());
             }
         }
-        /*
-         * Compute the final results using difference operation A - B
-         */
-        Set<OWLEntity> producedResults = handler.getSearchResults();
+        return getResults(handler.getSearchResults());
+    }
+
+    /*
+     * Compute the final results using difference operation A - B
+     */
+    private Set<OWLEntity> getResults(Set<OWLEntity> positiveResult) {
         Set<OWLEntity> finalResults = new HashSet<>(resultSpace);
-        ResultSetUtils.difference(finalResults, producedResults);
+        ResultSetUtils.difference(finalResults, positiveResult);
         return finalResults;
     }
 

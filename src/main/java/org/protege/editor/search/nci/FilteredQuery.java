@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Josef Hardi <johardi@stanford.edu><br>
@@ -53,10 +54,10 @@ public class FilteredQuery extends ComplexQuery {
     }
 
     @Override
-    public Set<OWLEntity> evaluate(SearchProgressListener listener) throws QueryEvaluationException {
+    public Set<OWLEntity> evaluate(SearchProgressListener listener, AtomicBoolean stopSearch) throws QueryEvaluationException {
         Set<OWLEntity> toReturn = new HashSet<>();
         for (SearchTabQuery filter : filters) {
-            Set<OWLEntity> evalResult = filter.evaluate(listener);
+            Set<OWLEntity> evalResult = filter.evaluate(listener, stopSearch);
             if (isMatchAll) {
                 ResultSetUtils.intersect(toReturn, evalResult);
             }

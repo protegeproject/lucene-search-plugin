@@ -8,6 +8,7 @@ import org.apache.lucene.search.Query;
 import org.semanticweb.owlapi.model.OWLEntity;
 
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Josef Hardi <johardi@stanford.edu><br>
@@ -48,11 +49,14 @@ public class PropertyValuePresent extends BasicQuery {
     }
 
     @Override
-    public Set<OWLEntity> evaluate(SearchProgressListener listener) throws QueryEvaluationException {
+    public Set<OWLEntity> evaluate(SearchProgressListener listener, AtomicBoolean stopSearch) throws QueryEvaluationException {
         SearchDocumentHandler handler = new SearchDocumentHandler(searcher.getEditorKit());
         Set<Document> docs = evaluate();
         int counter = 0;
         for (Document doc : docs) {
+            if (stopSearch.get()) { // if should stop
+                return handler.getSearchResults();
+            }
             handler.handle(doc);
             if (listener != null) {
                 listener.fireSearchingProgressed((counter++*100)/docs.size());

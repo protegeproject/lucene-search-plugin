@@ -1,33 +1,63 @@
 package org.protege.editor.search.nci;
 
-import com.google.common.base.Stopwatch;
+import org.protege.editor.owl.OWLEditorKit;
+import org.protege.editor.owl.model.event.EventType;
+import org.protege.editor.owl.model.event.OWLModelManagerChangeEvent;
+import org.protege.editor.owl.model.event.OWLModelManagerListener;
+import org.protege.editor.owl.model.search.SearchCategory;
+import org.protege.editor.owl.model.search.SearchInput;
+import org.protege.editor.owl.model.search.SearchResult;
+import org.protege.editor.owl.model.search.SearchResultHandler;
+import org.protege.editor.owl.model.search.SearchStringParser;
+import org.protege.editor.search.lucene.AddChangeSet;
+import org.protege.editor.search.lucene.AddChangeSetHandler;
+import org.protege.editor.search.lucene.IndexDelegator;
+import org.protege.editor.search.lucene.LuceneSearchPreferences;
+import org.protege.editor.search.lucene.LuceneSearchQueryBuilder;
+import org.protege.editor.search.lucene.LuceneSearcher;
+import org.protege.editor.search.lucene.LuceneStringParser;
+import org.protege.editor.search.lucene.QueryEvaluationException;
+import org.protege.editor.search.lucene.RemoveChangeSet;
+import org.protege.editor.search.lucene.RemoveChangeSetHandler;
+import org.protege.editor.search.lucene.ResultDocumentHandler;
+import org.protege.editor.search.lucene.SearchContext;
+import org.protege.editor.search.lucene.SearchQuery;
+import org.protege.editor.search.lucene.SearchUtils;
+import org.protege.editor.search.ui.LuceneListener;
+
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.RAMDirectory;
-import org.protege.editor.owl.OWLEditorKit;
-import org.protege.editor.owl.model.event.EventType;
-import org.protege.editor.owl.model.event.OWLModelManagerChangeEvent;
-import org.protege.editor.owl.model.event.OWLModelManagerListener;
-import org.protege.editor.owl.model.search.*;
-import org.protege.editor.search.lucene.*;
-import org.protege.editor.search.ui.LuceneListener;
-import org.semanticweb.owlapi.model.*;
+import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLEntity;
+import org.semanticweb.owlapi.model.OWLException;
+import org.semanticweb.owlapi.model.OWLOntology;
+import org.semanticweb.owlapi.model.OWLOntologyChange;
+import org.semanticweb.owlapi.model.OWLOntologyChangeListener;
 import org.semanticweb.owlapi.util.ProgressMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+
+import javax.swing.SwingUtilities;
+
+import com.google.common.base.Stopwatch;
 
 /**
  * Author: Josef Hardi <josef.hardi@stanford.edu><br>
@@ -46,6 +76,8 @@ public class SearchTabManager extends LuceneSearcher {
     private ExecutorService service = Executors.newSingleThreadExecutor();
 
     private AtomicLong lastSearchId = new AtomicLong(0);
+
+    private AtomicBoolean stopSearch = new AtomicBoolean(false);
 
     private SearchStringParser searchStringParser = new LuceneStringParser();
 
@@ -221,11 +253,16 @@ public class SearchTabManager extends LuceneSearcher {
                     service.submit(this::buildingIndex);
                 }
             }
+            stopSearch.set(false);
             service.submit(new SearchTabCallable(lastSearchId.incrementAndGet(), userQuery, searchTabResultHandler));
         }
         catch (IOException e) {
             logger.error("Failed to perform search", e);
         }
+    }
+
+    public void stopSearch() {
+        stopSearch.set(true);
     }
 
     private void loadIndexDirectory(OWLOntology targetOntology, boolean forceReset) {
@@ -389,7 +426,7 @@ public class SearchTabManager extends LuceneSearcher {
             try {
                 logger.debug("... executing query " + pluginQuery);
                 fireSearchStarted();
-                Set<OWLEntity> finalResults = pluginQuery.evaluate(progress -> fireSearchingProgressed(progress));
+                Set<OWLEntity> finalResults = pluginQuery.evaluate(progress -> fireSearchingProgressed(progress), stopSearch);
                 fireSearchFinished();
                 stopwatch.stop();
                 logger.debug("... finished search {} in {} ms ({} results)", searchId, stopwatch.elapsed(TimeUnit.MILLISECONDS), finalResults.size());

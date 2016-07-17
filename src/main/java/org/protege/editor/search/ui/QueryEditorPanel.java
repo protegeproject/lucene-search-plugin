@@ -36,6 +36,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     private TreeSet<Integer> constraints = new TreeSet<>();
     private JPanel queriesPanel;
     private OWLEditorKit editorKit;
+    private SearchTabManager searchManager;
 
     /**
      * Constructor
@@ -95,7 +96,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
 
     private ActionListener searchBtnListener = e -> {
         if (editorKit.getSearchManager() instanceof SearchTabManager) {
-            SearchTabManager searchManager = (SearchTabManager) editorKit.getSearchManager();
+            searchManager = (SearchTabManager) editorKit.getSearchManager();
             BasicQuery.Factory queryFactory = new BasicQuery.Factory(new SearchContext(editorKit), searchManager);
             boolean emptyQueries = false;
 
@@ -148,7 +149,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     };
 
     private ActionListener stopBtnListener = e -> {
-        // TODO stop search
+        searchManager.stopSearch();
         stopBtn.setVisible(false);
         searchBtn.setVisible(true);
     };

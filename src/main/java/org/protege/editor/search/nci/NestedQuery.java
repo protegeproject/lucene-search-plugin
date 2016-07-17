@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Josef Hardi <johardi@stanford.edu><br>
@@ -79,20 +80,23 @@ public class NestedQuery extends ComplexQuery {
     }
 
     @Override
-    public Set<OWLEntity> evaluate(SearchProgressListener listener) throws QueryEvaluationException {
+    public Set<OWLEntity> evaluate(SearchProgressListener listener, AtomicBoolean stopSearch) throws QueryEvaluationException {
         Set<OWLEntity> toReturn = new HashSet<>();
-        Set<OWLEntity> fillers = evaluateFillerQuery(listener);
+        Set<OWLEntity> fillers = evaluateFillerQuery(listener, stopSearch);
         for (OWLEntity filler : fillers) {
             if (filler instanceof OWLClass) {
+                if (stopSearch.get()) { // if should stop
+                    return toReturn;
+                }
                 if (property instanceof OWLObjectProperty) {
                     Query luceneQuery = createObjectRestrictionQuery(property.getIRI().toString(), filler.getIRI().toString());
                     KeywordQuery query = new KeywordQuery(luceneQuery, searcher);
-                    toReturn.addAll(query.evaluate(listener));
+                    toReturn.addAll(query.evaluate(listener, stopSearch));
                 }
                 else if (property instanceof OWLAnnotationProperty) {
                     Query luceneQuery = createAnnotationRestrictionQuery(property.getIRI().toString(), filler.getIRI().toString());
                     KeywordQuery query = new KeywordQuery(luceneQuery, searcher);
-                    toReturn.addAll(query.evaluate(listener));
+                    toReturn.addAll(query.evaluate(listener, stopSearch));
                 }
             }
         }
@@ -119,10 +123,13 @@ public class NestedQuery extends ComplexQuery {
         }
     }
 
-    private Set<OWLEntity> evaluateFillerQuery(SearchProgressListener listener) throws QueryEvaluationException {
+    private Set<OWLEntity> evaluateFillerQuery(SearchProgressListener listener, AtomicBoolean stopSearch) throws QueryEvaluationException {
         Set<OWLEntity> toReturn = new HashSet<>();
         for (SearchTabQuery filter : fillerFilters) {
-            Set<OWLEntity> evalResult = filter.evaluate(listener);
+            if (stopSearch.get()) { // if should stop
+                return toReturn;
+            }
+            Set<OWLEntity> evalResult = filter.evaluate(listener, stopSearch);
             if (isMatchAll) {
                 ResultSetUtils.intersect(toReturn, evalResult);
             }

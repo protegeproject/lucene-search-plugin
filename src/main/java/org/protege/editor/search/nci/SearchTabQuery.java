@@ -5,6 +5,7 @@ import org.protege.editor.search.lucene.QueryEvaluationException;
 import org.semanticweb.owlapi.model.OWLEntity;
 
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Josef Hardi <johardi@stanford.edu><br>
@@ -14,7 +15,7 @@ import java.util.Set;
  */
 public interface SearchTabQuery {
 
-    Set<OWLEntity> evaluate(SearchProgressListener listener) throws QueryEvaluationException;
+    Set<OWLEntity> evaluate(SearchProgressListener listener, AtomicBoolean stopProcess) throws QueryEvaluationException;
 
     String getAlgebraString();
 
