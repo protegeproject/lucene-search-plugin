@@ -55,6 +55,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.annotation.Nonnull;
 import javax.swing.SwingUtilities;
 
 import com.google.common.base.Stopwatch;
@@ -116,19 +117,24 @@ public class SearchTabManager extends LuceneSearcher {
         };
         modelManagerListener = new OWLModelManagerListener() {
             public void handleChange(OWLModelManagerChangeEvent event) {
+                OWLOntology newActiveOntology = editorKit.getOWLModelManager().getActiveOntology();
                 if (isCacheChangingEvent(event)) {
-                    /*
-                     * A workaround: Protege signals ACTIVE_ONTOLOGY_CHANGED twice when opening an ontology.
-                     * The loadOrCreateIndexDirectory() method shouldn't be called twice if the new active
-                     * ontology is the same as the current active ontology.
-                     */
-                    OWLOntology newActiveOntology = editorKit.getOWLModelManager().getActiveOntology();
-                    if (currentActiveOntology != null && currentActiveOntology.equals(newActiveOntology)) {
-                        return;
+                    if (currentActiveOntology != null) {
+                        /*
+                         * A workaround: Protege signals ACTIVE_ONTOLOGY_CHANGED twice when opening an ontology.
+                         * The loadOrCreateIndexDirectory() method shouldn't be called twice if the new active
+                         * ontology is the same as the current active ontology.
+                         */
+                        if (!currentActiveOntology.equals(newActiveOntology)) {
+                            loadIndex(newActiveOntology);
+                        }
+                        else {
+                            // ignore if equals
+                        }
                     }
-                    currentActiveOntology = newActiveOntology;
-                    loadIndexDirectory(newActiveOntology, false); // false = reload index directory, if any
-                    markIndexAsStale();
+                    else {
+                        loadIndex(newActiveOntology);
+                    }
                 }
                 else if (isCacheMutatingEvent(event)) {
                     rebuildIndex();
@@ -136,10 +142,19 @@ public class SearchTabManager extends LuceneSearcher {
                 else if (isCacheSavingEvent(event)) {
                     saveIndex();
                 }
+                else if (isPreferenceChangingEvent(event)) {
+                    loadIndex(newActiveOntology);
+                }
             }
         };
         editorKit.getOWLModelManager().addOntologyChangeListener(ontologyChangeListener);
         editorKit.getModelManager().addListener(modelManagerListener);
+        initialiseIndex();
+    }
+
+    private void initialiseIndex() {
+        OWLOntology activeOntology = editorKit.getOWLModelManager().getActiveOntology();
+        loadIndex(activeOntology);
     }
 
     private boolean isCacheChangingEvent(OWLModelManagerChangeEvent event) {
@@ -152,6 +167,24 @@ public class SearchTabManager extends LuceneSearcher {
 
     private boolean isCacheSavingEvent(OWLModelManagerChangeEvent event) {
         return event.isType(EventType.ONTOLOGY_SAVED);
+    }
+
+    private boolean isPreferenceChangingEvent(OWLModelManagerChangeEvent event) {
+        /*
+         * A workaround: Protege signals ENTITY_RENDERER_CHANGED each time users select "OK" when closing
+         * the preferences window. This might not ideal workaround because it signals changes in the entity
+         * IRI settings.
+         */
+        return event.isType(EventType.ENTITY_RENDERER_CHANGED);
+    }
+
+    private void loadIndex(OWLOntology activeOntology) {
+        if (activeOntology != null && !activeOntology.isEmpty()) {
+            logger.info("Loading index");
+            currentActiveOntology = activeOntology;
+            loadIndexDirectory(activeOntology, false); // false = reload index directory, if any
+            markIndexAsStale();
+        }
     }
 
     public void rebuildIndex() {
@@ -260,10 +293,7 @@ public class SearchTabManager extends LuceneSearcher {
         stopSearch.set(true);
     }
 
-    private void loadIndexDirectory(OWLOntology targetOntology, boolean forceReset) {
-        if (targetOntology.isEmpty()) {
-            return; // no loading if the active ontology is empty
-        }
+    private void loadIndexDirectory(@Nonnull OWLOntology targetOntology, boolean forceReset) {
         try {
             if (forceReset) {
                 removeIndexDirectory();
@@ -271,7 +301,6 @@ public class SearchTabManager extends LuceneSearcher {
             }
             if (shouldStoreInDisk()) {
                 String indexLocation = LuceneSearchPreferences.getIndexLocation(targetOntology);
-                logger.info("Loading index from " + indexLocation);
                 Directory directory = FSDirectory.open(Paths.get(indexLocation));
                 setIndexDirectory(directory);
             }
