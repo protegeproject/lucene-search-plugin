@@ -117,7 +117,7 @@ public class SearchTabManager extends LuceneSearcher {
         };
         modelManagerListener = new OWLModelManagerListener() {
             public void handleChange(OWLModelManagerChangeEvent event) {
-                OWLOntology newActiveOntology = editorKit.getOWLModelManager().getActiveOntology();
+                OWLOntology activeOntology = editorKit.getOWLModelManager().getActiveOntology();
                 if (isCacheChangingEvent(event)) {
                     if (currentActiveOntology != null) {
                         /*
@@ -125,25 +125,25 @@ public class SearchTabManager extends LuceneSearcher {
                          * The loadOrCreateIndexDirectory() method shouldn't be called twice if the new active
                          * ontology is the same as the current active ontology.
                          */
-                        if (!currentActiveOntology.equals(newActiveOntology)) {
-                            loadIndex(newActiveOntology);
+                        if (!currentActiveOntology.equals(activeOntology)) {
+                            loadIndex(activeOntology);
                         }
                         else {
                             // ignore if equals
                         }
                     }
                     else {
-                        loadIndex(newActiveOntology);
+                        loadIndex(activeOntology);
                     }
                 }
                 else if (isCacheMutatingEvent(event)) {
-                    rebuildIndex(newActiveOntology);
+                    rebuildIndex(activeOntology);
                 }
                 else if (isCacheSavingEvent(event)) {
-                    saveIndex(newActiveOntology);
+                    saveIndex(activeOntology);
                 }
                 else if (isPreferenceChangingEvent(event)) {
-                    loadIndex(newActiveOntology);
+                    loadIndex(activeOntology);
                 }
             }
         };
