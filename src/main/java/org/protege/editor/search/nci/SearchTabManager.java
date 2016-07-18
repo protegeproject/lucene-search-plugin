@@ -131,13 +131,7 @@ public class SearchTabManager extends LuceneSearcher {
                     markIndexAsStale();
                 }
                 else if (isCacheMutatingEvent(event)) {
-                    try {
-                        logger.info("Rebuilding index");
-                        rebuildIndex();
-                    }
-                    catch (IOException e) {
-                        logger.error("... rebuild index failed", e);
-                    }
+                    rebuildIndex();
                 }
                 else if (isCacheSavingEvent(event)) {
                     saveIndex();
@@ -160,7 +154,8 @@ public class SearchTabManager extends LuceneSearcher {
         return event.isType(EventType.ONTOLOGY_SAVED);
     }
 
-    public void rebuildIndex() throws IOException {
+    public void rebuildIndex() {
+        logger.info("Rebuilding index");
         loadIndexDirectory(currentActiveOntology, true); // true = recreate the index directory
         service.submit(this::buildingIndex);
     }
@@ -271,6 +266,7 @@ public class SearchTabManager extends LuceneSearcher {
         }
         try {
             if (forceReset) {
+                removeIndexDirectory();
                 LuceneSearchPreferences.removeIndexLocation(targetOntology);
             }
             if (shouldStoreInDisk()) {
@@ -312,6 +308,10 @@ public class SearchTabManager extends LuceneSearcher {
         return indexDirectory;
     }
 
+    private void removeIndexDirectory() throws IOException {
+        setIndexDelegator(null);
+    }
+
     private void setIndexDirectory(Directory indexDirectory) throws IOException {
         this.indexDirectory = indexDirectory;
         fireIndexDirectoryChange();
@@ -322,7 +322,10 @@ public class SearchTabManager extends LuceneSearcher {
     }
 
     private void setupIndexDelegator() throws IOException {
-        IndexDelegator newDelegator = IndexDelegator.getInstance(getIndexDirectory(), indexer.getIndexWriterConfig());
+        IndexDelegator newDelegator = null;
+        if (getIndexDirectory() != null) {
+            newDelegator = IndexDelegator.getInstance(getIndexDirectory(), indexer.getIndexWriterConfig());
+        }
         setIndexDelegator(newDelegator);
     }
 

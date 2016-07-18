@@ -155,7 +155,15 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     };
 
     private ActionListener indexBtnListener = e -> {
-        // TODO index ontology
+        if (editorKit.getSearchManager() instanceof SearchTabManager) {
+            searchManager = (SearchTabManager) editorKit.getSearchManager();
+            searchManager.rebuildIndex();
+        }
+        else {
+            JOptionPane.showMessageDialog(editorKit.getOWLWorkspace(), new JLabel("Unable to perform Lucene search. Ensure that" +
+                            " 'Lucene search tab' is selected in the Protege preferences (under the 'General' tab, in the 'Search type' option)."),
+                    "Lucene Search Manager not selected", JOptionPane.INFORMATION_MESSAGE);
+        }
     };
 
     private void handleResults(FilteredQuery query, Collection<OWLEntity> results) {
