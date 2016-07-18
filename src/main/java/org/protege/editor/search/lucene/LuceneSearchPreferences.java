@@ -165,6 +165,15 @@ public class LuceneSearchPreferences {
         return getPreferenceValue(getLocationKey(ontology));
     }
 
+    /**
+     * Find a valid index directory path for the given input ontology object. The method will
+     * first check if the ontology has an index directory already and reuse it. Otherwise,
+     * the method will return a newly created directory path.
+     *
+     * @param ontology
+     *          An OWL ontology object
+     * @return A full path location of the index directory
+     */
     public static String findIndexLocation(OWLOntology ontology) {
         Optional<String> location = getIndexLocation(ontology);
         if (location.isPresent()) {
