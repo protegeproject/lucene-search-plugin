@@ -192,7 +192,10 @@ public class LuceneSearchPreferences {
             if (location.isPresent()) {
                 unregisterLocation(locationKey);
                 unsetIndexSnapshot(getHashKey(locationKey));
-                FileUtils.deleteDirectory(new File(location.get()));
+                File f = new File(location.get());
+                if (f.exists() && f.isDirectory()) {
+                    FileUtils.deleteDirectory(f);
+                }
             }
         }
         catch (IOException e) {
