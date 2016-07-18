@@ -230,11 +230,20 @@ public class SearchTabManager extends LuceneSearcher {
 
     @Override
     public void dispose() {
-        if (editorKit == null) {
-            return;
-        }
         editorKit.getOWLModelManager().removeOntologyChangeListener(ontologyChangeListener);
         editorKit.getModelManager().removeListener(modelManagerListener);
+        disposeIndexDelegator();
+    }
+
+    private void disposeIndexDelegator() {
+        try {
+            if (indexDelegator != null) {
+                indexDelegator.dispose();
+            }
+        }
+        catch (IOException e) {
+            logger.error("Failed to dispose index delegator", e);
+        }
     }
 
     @Override
