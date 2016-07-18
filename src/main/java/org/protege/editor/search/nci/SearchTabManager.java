@@ -312,7 +312,7 @@ public class SearchTabManager extends LuceneSearcher {
                 LuceneSearchPreferences.removeIndexLocation(targetOntology);
             }
             if (shouldStoreInDisk(targetOntology)) {
-                String indexLocation = LuceneSearchPreferences.getIndexLocation(targetOntology);
+                String indexLocation = LuceneSearchPreferences.findIndexLocation(targetOntology);
                 Directory directory = FSDirectory.open(Paths.get(indexLocation));
                 setIndexDirectory(directory);
             }
