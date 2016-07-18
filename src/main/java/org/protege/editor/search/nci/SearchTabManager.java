@@ -197,6 +197,7 @@ public class SearchTabManager extends LuceneSearcher {
 
     private void updateIndex(List<? extends OWLOntologyChange> changes) {
         if (indexDelegator != null) {
+            logger.info("Updating index from " + changes.size() + " change(s)");
             service.submit(() -> updatingIndex(changes));
         }
     }
