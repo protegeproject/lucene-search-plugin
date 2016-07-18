@@ -115,7 +115,6 @@ public class LuceneSearchPreferences {
      *          A directory location set by the user.
      */
     public static void setBaseDirectory(String baseDirectory) {
-        logger.info("Base index directory set to {}", baseDirectory);
         getPreferences().putString(BASE_DIR, prepare(baseDirectory));
     }
 
