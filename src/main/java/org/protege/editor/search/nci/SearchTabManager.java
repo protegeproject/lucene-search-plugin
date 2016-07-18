@@ -310,7 +310,7 @@ public class SearchTabManager extends LuceneSearcher {
                 removeIndexDirectory();
                 LuceneSearchPreferences.removeIndexLocation(targetOntology);
             }
-            if (shouldStoreInDisk()) {
+            if (shouldStoreInDisk(targetOntology)) {
                 String indexLocation = LuceneSearchPreferences.getIndexLocation(targetOntology);
                 Directory directory = FSDirectory.open(Paths.get(indexLocation));
                 setIndexDirectory(directory);
@@ -326,9 +326,9 @@ public class SearchTabManager extends LuceneSearcher {
         }
     }
 
-    private boolean shouldStoreInDisk() {
+    private boolean shouldStoreInDisk(OWLOntology targetOntology) {
         if (LuceneSearchPreferences.useInMemoryIndexStoring()) {
-            IRI documentIri = editorKit.getOWLModelManager().getOWLOntologyManager().getOntologyDocumentIRI(currentActiveOntology);
+            IRI documentIri = editorKit.getOWLModelManager().getOWLOntologyManager().getOntologyDocumentIRI(targetOntology);
             try {
                 URL resourceUrl = documentIri.toURI().toURL();
                 URLConnection connection = resourceUrl.openConnection();
