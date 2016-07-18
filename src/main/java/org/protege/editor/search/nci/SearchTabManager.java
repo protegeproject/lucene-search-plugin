@@ -180,7 +180,7 @@ public class SearchTabManager extends LuceneSearcher {
 
     private void loadIndex(OWLOntology activeOntology) {
         if (activeOntology != null && !activeOntology.isEmpty()) {
-            logger.info("Loading index");
+            logger.info("Initializing index");
             currentActiveOntology = activeOntology;
             loadIndexDirectory(activeOntology, false); // false = reload index directory, if any
             markIndexAsStale();
