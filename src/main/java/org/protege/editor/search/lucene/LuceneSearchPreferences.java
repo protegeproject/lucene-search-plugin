@@ -154,8 +154,19 @@ public class LuceneSearchPreferences {
         getPreferences().putStringList(INDEXED_ONTOLOGY, currentList);
     }
 
+    /**
+     * Get the index directory path given the input ontology object.
+     *
+     * @param ontology
+     *          An OWL ontology object
+     * @return A full path location of the index directory
+     */
+    public static Optional<String> getIndexLocation(OWLOntology ontology) {
+        return getPreferenceValue(getLocationKey(ontology));
+    }
+
     public static String findIndexLocation(OWLOntology ontology) {
-        Optional<String> location = getPreferenceValue(getLocationKey(ontology));
+        Optional<String> location = getIndexLocation(ontology);
         if (location.isPresent()) {
             String cachedLocation = location.get();
             /*
