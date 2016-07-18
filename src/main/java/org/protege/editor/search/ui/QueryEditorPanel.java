@@ -36,7 +36,6 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     private TreeSet<Integer> constraints = new TreeSet<>();
     private JPanel queriesPanel;
     private OWLEditorKit editorKit;
-    private SearchTabManager searchManager;
 
     /**
      * Constructor
@@ -94,77 +93,91 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         }
     };
 
-    private ActionListener searchBtnListener = e -> {
+    private SearchTabManager getSearchManager() {
+        SearchTabManager searchManager = null;
         if (editorKit.getSearchManager() instanceof SearchTabManager) {
             searchManager = (SearchTabManager) editorKit.getSearchManager();
-            BasicQuery.Factory queryFactory = new BasicQuery.Factory(new SearchContext(editorKit), searchManager);
-            boolean emptyQueries = false;
+        }
+        return searchManager;
+    }
 
-            // build a lucene query object from all the query clauses
-            FilteredQuery.Builder builder = new FilteredQuery.Builder();
-            for(QueryPanel queryPanel : queries) {
-                if(queryPanel.isBasicQuery()) {
-                    BasicQuery basicQuery = getBasicQuery((BasicQueryPanel) queryPanel, queryFactory);
-                    if(basicQuery != null) {
-                        builder.add(basicQuery);
-                    } else {
-                        emptyQueries = true;
-                    }
-                } else if(queryPanel.isNegatedQuery()) {
-                    NegatedQuery negatedQuery = getNegatedQuery((NegatedQueryPanel) queryPanel, queryFactory, searchManager);
-                    if(negatedQuery != null && !negatedQuery.getFilters().isEmpty()) {
-                        builder.add(negatedQuery);
-                    } else {
-                        emptyQueries = true;
-                    }
-                } else if(queryPanel.isNestedQuery()) {
-                    NestedQuery nestedQuery = getNestedQuery((NestedQueryPanel) queryPanel, queryFactory, searchManager);
-                    if(nestedQuery != null && !nestedQuery.getFillerFilters().isEmpty()) {
-                        builder.add(nestedQuery);
-                    } else {
-                        emptyQueries = true;
-                    }
+    private ActionListener searchBtnListener = e -> {
+        SearchTabManager searchManager = getSearchManager();
+        if (searchManager == null) {
+            showInvalidSearchManagerErrorDialog(); return;
+        }
+        BasicQuery.Factory queryFactory = new BasicQuery.Factory(new SearchContext(editorKit), searchManager);
+        boolean emptyQueries = false;
+
+        // build a lucene query object from all the query clauses
+        FilteredQuery.Builder builder = new FilteredQuery.Builder();
+        for(QueryPanel queryPanel : queries) {
+            if(queryPanel.isBasicQuery()) {
+                BasicQuery basicQuery = getBasicQuery((BasicQueryPanel) queryPanel, queryFactory);
+                if(basicQuery != null) {
+                    builder.add(basicQuery);
+                } else {
+                    emptyQueries = true;
+                }
+            } else if(queryPanel.isNegatedQuery()) {
+                NegatedQuery negatedQuery = getNegatedQuery((NegatedQueryPanel) queryPanel, queryFactory, searchManager);
+                if(negatedQuery != null && !negatedQuery.getFilters().isEmpty()) {
+                    builder.add(negatedQuery);
+                } else {
+                    emptyQueries = true;
+                }
+            } else if(queryPanel.isNestedQuery()) {
+                NestedQuery nestedQuery = getNestedQuery((NestedQueryPanel) queryPanel, queryFactory, searchManager);
+                if(nestedQuery != null && !nestedQuery.getFillerFilters().isEmpty()) {
+                    builder.add(nestedQuery);
+                } else {
+                    emptyQueries = true;
                 }
             }
-            MatchCriteria match = getMatchCriteria();
-            boolean isMatchAll = (match == MatchCriteria.MATCH_ALL);
-            FilteredQuery userQuery = builder.build(isMatchAll);
-            if(userQuery != null) {
-                searchBtn.setVisible(false);
-                stopBtn.setVisible(true);
-                searchManager.performSearch(userQuery, searchResults -> handleResults(userQuery, searchResults));
-            }
-            if(emptyQueries) {
-                JOptionPane.showMessageDialog(editorKit.getOWLWorkspace(),
-                        new JLabel("One or more queries were not completely formulated, and were ignored. To prevent this message, " +
-                                "ensure that all query fields are filled or remove empty query panels."),
-                        "Detected one or more empty queries", JOptionPane.INFORMATION_MESSAGE);
-            }
         }
-        else {
-            JOptionPane.showMessageDialog(editorKit.getOWLWorkspace(), new JLabel("Unable to perform Lucene search. Ensure that" +
-                            " 'Lucene search tab' is selected in the Protege preferences (under the 'General' tab, in the 'Search type' option)."),
-                    "Lucene Search Manager not selected", JOptionPane.INFORMATION_MESSAGE);
+        MatchCriteria match = getMatchCriteria();
+        boolean isMatchAll = (match == MatchCriteria.MATCH_ALL);
+        FilteredQuery userQuery = builder.build(isMatchAll);
+        if(userQuery != null) {
+            searchBtn.setVisible(false);
+            stopBtn.setVisible(true);
+            searchManager.performSearch(userQuery, searchResults -> handleResults(userQuery, searchResults));
+        }
+        if(emptyQueries) {
+            JOptionPane.showMessageDialog(editorKit.getOWLWorkspace(),
+                    new JLabel("One or more queries were not completely formulated, and were ignored. To prevent this message, " +
+                            "ensure that all query fields are filled or remove empty query panels."),
+                    "Detected one or more empty queries", JOptionPane.INFORMATION_MESSAGE);
         }
     };
 
     private ActionListener stopBtnListener = e -> {
-        searchManager.stopSearch();
-        stopBtn.setVisible(false);
-        searchBtn.setVisible(true);
+        SearchTabManager searchManager = getSearchManager();
+        if (searchManager != null) {
+            searchManager.stopSearch();
+            stopBtn.setVisible(false);
+            searchBtn.setVisible(true);
+        }
+        else {
+            showInvalidSearchManagerErrorDialog();
+        }
     };
 
     private ActionListener indexBtnListener = e -> {
-        if (editorKit.getSearchManager() instanceof SearchTabManager) {
-            searchManager = (SearchTabManager) editorKit.getSearchManager();
+        SearchTabManager searchManager = getSearchManager();
+        if (searchManager != null) {
             searchManager.rebuildIndex();
         }
         else {
-            JOptionPane.showMessageDialog(editorKit.getOWLWorkspace(), new JLabel("Unable to perform Lucene search. Ensure that" +
-                            " 'Lucene search tab' is selected in the Protege preferences (under the 'General' tab, in the 'Search type' option)."),
-                    "Lucene Search Manager not selected", JOptionPane.INFORMATION_MESSAGE);
+            showInvalidSearchManagerErrorDialog();
         }
     };
+
+    private void showInvalidSearchManagerErrorDialog() {
+        JOptionPane.showMessageDialog(editorKit.getOWLWorkspace(), new JLabel("Unable to perform Lucene search. Ensure that" +
+                " 'Lucene search tab' is selected in the Protege preferences (under the 'General' tab, in the 'Search type' option)."),
+                "Invalid search manager", JOptionPane.INFORMATION_MESSAGE);
+    }
 
     private void handleResults(FilteredQuery query, Collection<OWLEntity> results) {
         LuceneQueryPanel queryPanel = getLuceneQueryPanel();
