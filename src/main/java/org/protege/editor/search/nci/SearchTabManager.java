@@ -137,7 +137,7 @@ public class SearchTabManager extends LuceneSearcher {
                     }
                 }
                 else if (isCacheMutatingEvent(event)) {
-                    rebuildIndex();
+                    rebuildIndex(newActiveOntology);
                 }
                 else if (isCacheSavingEvent(event)) {
                     saveIndex();
@@ -187,10 +187,12 @@ public class SearchTabManager extends LuceneSearcher {
         }
     }
 
-    public void rebuildIndex() {
-        logger.info("Rebuilding index");
-        loadIndexDirectory(currentActiveOntology, true); // true = recreate the index directory
-        service.submit(this::buildingIndex);
+    public void rebuildIndex(OWLOntology targetOntology) {
+        if (targetOntology != null && !targetOntology.isEmpty()) {
+            logger.info("Rebuilding index");
+            loadIndexDirectory(targetOntology, true); // true = recreate the index directory
+            service.submit(this::buildingIndex);
+        }
     }
 
     private void updateIndex(List<? extends OWLOntologyChange> changes) {

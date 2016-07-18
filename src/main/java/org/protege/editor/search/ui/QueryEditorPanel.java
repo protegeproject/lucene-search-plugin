@@ -166,7 +166,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
     private ActionListener indexBtnListener = e -> {
         SearchTabManager searchManager = getSearchManager();
         if (searchManager != null) {
-            searchManager.rebuildIndex();
+            searchManager.rebuildIndex(editorKit.getOWLModelManager().getActiveOntology());
         }
         else {
             showInvalidSearchManagerErrorDialog();
