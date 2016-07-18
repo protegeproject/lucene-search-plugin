@@ -154,7 +154,7 @@ public class LuceneSearchPreferences {
         getPreferences().putStringList(INDEXED_ONTOLOGY, currentList);
     }
 
-    public static String getIndexLocation(OWLOntology ontology) {
+    public static String findIndexLocation(OWLOntology ontology) {
         Optional<String> location = getPreferenceValue(getLocationKey(ontology));
         if (location.isPresent()) {
             String cachedLocation = location.get();
