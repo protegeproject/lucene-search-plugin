@@ -142,9 +142,6 @@ public class SearchTabManager extends LuceneSearcher {
                 else if (isCacheSavingEvent(event)) {
                     saveIndex(activeOntology);
                 }
-                else if (isPreferenceChangingEvent(event)) {
-                    loadIndex(activeOntology);
-                }
             }
         };
         editorKit.getOWLModelManager().addOntologyChangeListener(ontologyChangeListener);
@@ -167,15 +164,6 @@ public class SearchTabManager extends LuceneSearcher {
 
     private boolean isCacheSavingEvent(OWLModelManagerChangeEvent event) {
         return event.isType(EventType.ONTOLOGY_SAVED);
-    }
-
-    private boolean isPreferenceChangingEvent(OWLModelManagerChangeEvent event) {
-        /*
-         * A workaround: Protege signals ENTITY_RENDERER_CHANGED each time users select "OK" when closing
-         * the preferences window. This might not ideal workaround because it signals changes in the entity
-         * IRI settings.
-         */
-        return event.isType(EventType.ENTITY_RENDERER_CHANGED);
     }
 
     private void loadIndex(OWLOntology activeOntology) {
@@ -240,13 +228,17 @@ public class SearchTabManager extends LuceneSearcher {
 
     private void disposeIndexDelegator() {
         try {
-            if (indexDelegator != null) {
+            if (indexDelegator != null && indexLocationExists()) {
                 indexDelegator.dispose();
             }
         }
         catch (IOException e) {
             logger.error("Failed to dispose index delegator", e);
         }
+    }
+
+    private boolean indexLocationExists() {
+        return LuceneSearchPreferences.getIndexLocation(currentActiveOntology).isPresent();
     }
 
     @Override
