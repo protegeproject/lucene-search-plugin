@@ -115,7 +115,6 @@ public class LuceneSearchPreferences {
      *          A directory location set by the user.
      */
     public static void setBaseDirectory(String baseDirectory) {
-        logger.info("Base index directory set to {}", baseDirectory);
         getPreferences().putString(BASE_DIR, prepare(baseDirectory));
     }
 
@@ -155,8 +154,28 @@ public class LuceneSearchPreferences {
         getPreferences().putStringList(INDEXED_ONTOLOGY, currentList);
     }
 
-    public static String getIndexLocation(OWLOntology ontology) {
-        Optional<String> location = getPreferenceValue(getLocationKey(ontology));
+    /**
+     * Get the index directory path given the input ontology object.
+     *
+     * @param ontology
+     *          An OWL ontology object
+     * @return A full path location of the index directory
+     */
+    public static Optional<String> getIndexLocation(OWLOntology ontology) {
+        return getPreferenceValue(getLocationKey(ontology));
+    }
+
+    /**
+     * Find a valid index directory path for the given input ontology object. The method will
+     * first check if the ontology has an index directory already and reuse it. Otherwise,
+     * the method will return a newly created directory path.
+     *
+     * @param ontology
+     *          An OWL ontology object
+     * @return A full path location of the index directory
+     */
+    public static String findIndexLocation(OWLOntology ontology) {
+        Optional<String> location = getIndexLocation(ontology);
         if (location.isPresent()) {
             String cachedLocation = location.get();
             /*

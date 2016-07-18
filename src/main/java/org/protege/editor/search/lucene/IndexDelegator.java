@@ -91,6 +91,7 @@ public class IndexDelegator implements Disposable {
     public void dispose() throws IOException {
         if (isOpen(indexWriter)) {
             indexWriter.close();
+            directory.close();
         }
     }
 

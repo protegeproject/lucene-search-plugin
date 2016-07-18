@@ -229,7 +229,7 @@ public class LuceneSearchManager extends LuceneSearcher {
             if (!currentActiveOntology.isEmpty()) {
                 Directory directory = null;
                 if (shouldStoreInDisk()) {
-                    String indexLocation = LuceneSearchPreferences.getIndexLocation(currentActiveOntology);
+                    String indexLocation = LuceneSearchPreferences.findIndexLocation(currentActiveOntology);
                     directory = FSDirectory.open(Paths.get(indexLocation));
                 }
                 else {
