@@ -13,7 +13,6 @@ import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.semanticweb.owlapi.model.HasFiller;
 import org.semanticweb.owlapi.model.IRI;
-import org.semanticweb.owlapi.model.OWLAnnotation;
 import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLAnnotationProperty;
 import org.semanticweb.owlapi.model.OWLAnnotationValue;
@@ -325,18 +324,6 @@ public class SearchTabIndexer extends AbstractLuceneIndexer {
 
             private String getDisplayName(OWLObject object) {
                 return objectRenderer.getRendering(object);
-            }
-
-            private String getAnnotationText(OWLAnnotation annotation) {
-                OWLAnnotationValue value = annotation.getValue();
-                if (value instanceof OWLLiteral) {
-                    /*
-                     * Clean up the XML tags from the annotation text
-                     */
-                    OWLLiteral literal = (OWLLiteral) value;
-                    return strip(literal.getLiteral());
-                }
-                return value.toString();
             }
 
             private String strip(String s) {
