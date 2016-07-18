@@ -140,7 +140,7 @@ public class SearchTabManager extends LuceneSearcher {
                     rebuildIndex(newActiveOntology);
                 }
                 else if (isCacheSavingEvent(event)) {
-                    saveIndex();
+                    saveIndex(newActiveOntology);
                 }
                 else if (isPreferenceChangingEvent(event)) {
                     loadIndex(newActiveOntology);
@@ -217,8 +217,8 @@ public class SearchTabManager extends LuceneSearcher {
         lastSearchId.set(0);
     }
 
-    private void saveIndex() {
-        LuceneSearchPreferences.setIndexSnapshot(currentActiveOntology);
+    private void saveIndex(OWLOntology targetOntology) {
+        LuceneSearchPreferences.setIndexSnapshot(targetOntology);
     }
 
     @Override
@@ -388,7 +388,7 @@ public class SearchTabManager extends LuceneSearcher {
         fireIndexingStarted();
         try {
             indexer.doIndex(indexDelegator, new SearchContext(editorKit), progress -> fireIndexingProgressed(progress));
-            saveIndex();
+            saveIndex(currentActiveOntology);
         }
         catch (IOException e) {
             logger.error("... build index failed", e);
