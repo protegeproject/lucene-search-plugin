@@ -199,9 +199,12 @@
                             lucene-analyzers-phonetic,
                             commons-codec
                         </Embed-Dependency>
+                        <_exportcontents>
+                            org.apache.lucene.*,
+                            org.apache.commons.codec.*,
+                            org.tartarus.snowball
+                        </_exportcontents>
                         <Import-Package>
-                            !org.apache.lucene.queries.*,
-                            !org.apache.lucene.sandbox.*,
                             org.protege.editor.owl.ui,
                             *
                         </Import-Package>
