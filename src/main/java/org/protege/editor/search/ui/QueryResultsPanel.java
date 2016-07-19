@@ -443,6 +443,8 @@ public class QueryResultsPanel extends JPanel implements Disposable {
     }
 
     public void setResults(FilteredQuery query, Collection<OWLEntity> entities) {
+        filterTextField.setText("");
+        setCheckBoxSelection(true);
         exportBtn.setEnabled(true);
         answeredQuery = checkNotNull(query);
         List<OWLEntity> list = new ArrayList<>(entities);
