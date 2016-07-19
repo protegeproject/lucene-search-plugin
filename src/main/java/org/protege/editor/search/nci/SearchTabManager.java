@@ -10,7 +10,6 @@ import org.protege.editor.owl.model.search.SearchResult;
 import org.protege.editor.owl.model.search.SearchResultHandler;
 import org.protege.editor.owl.model.search.SearchStringParser;
 import org.protege.editor.search.lucene.AddChangeSet;
-import org.protege.editor.search.lucene.AddChangeSetHandler;
 import org.protege.editor.search.lucene.IndexDelegator;
 import org.protege.editor.search.lucene.LuceneSearchPreferences;
 import org.protege.editor.search.lucene.LuceneSearchQueryBuilder;
@@ -18,7 +17,6 @@ import org.protege.editor.search.lucene.LuceneSearcher;
 import org.protege.editor.search.lucene.LuceneStringParser;
 import org.protege.editor.search.lucene.QueryEvaluationException;
 import org.protege.editor.search.lucene.RemoveChangeSet;
-import org.protege.editor.search.lucene.RemoveChangeSetHandler;
 import org.protege.editor.search.lucene.ResultDocumentHandler;
 import org.protege.editor.search.lucene.SearchContext;
 import org.protege.editor.search.lucene.SearchQuery;
@@ -192,9 +190,9 @@ public class SearchTabManager extends LuceneSearcher {
 
     private void updatingIndex(List<? extends OWLOntologyChange> changes) {
         try {
-            RemoveChangeSet removeChangeSet = RemoveChangeSet.create(changes, new RemoveChangeSetHandler(editorKit));
+            RemoveChangeSet removeChangeSet = RemoveChangeSet.create(changes, new SearchTabRemoveChangeSetHandler(editorKit));
             indexer.doRemove(indexDelegator, removeChangeSet);
-            AddChangeSet addChangeSet = AddChangeSet.create(changes, new AddChangeSetHandler(editorKit));
+            AddChangeSet addChangeSet = AddChangeSet.create(changes, new SearchTabAddChangeSetHandler(editorKit));
             indexer.doAppend(indexDelegator, addChangeSet);
         }
         catch (IOException e) {
