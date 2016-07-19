@@ -205,6 +205,8 @@
                             org.tartarus.snowball
                         </_exportcontents>
                         <Import-Package>
+                            !org.apache.lucene.queries.*,
+                            !org.apache.lucene.sandbox.*,
                             org.protege.editor.owl.ui,
                             *
                         </Import-Package>
