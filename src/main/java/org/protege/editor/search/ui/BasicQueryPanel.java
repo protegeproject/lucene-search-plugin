@@ -74,6 +74,8 @@ public class BasicQueryPanel extends QueryPanel {
         add(propertyComboBox, new GridBagConstraints(0, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, insets, 0, 0));
         add(queryTypeComboBox, new GridBagConstraints(1, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, insets, 0, 0));
         add(value, new GridBagConstraints(2, rowIndex, 2, 1, 1.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.HORIZONTAL, insets, 0, 0));
+
+        propertyComboBox.setSelectedItem(TabPreferences.getDefaultProperty(editorKit));
     }
 
     private OWLOntologyChangeListener ontologyEditingListener = changes -> {
@@ -91,6 +93,7 @@ public class BasicQueryPanel extends QueryPanel {
                     OWLEntity selectedEntity = (OWLEntity) obj;
                     List<QueryType> queryTypes = QueryType.getTypesForOWLObject(selectedEntity);
                     queryTypeComboBox.setModel(new DefaultComboBoxModel(queryTypes.toArray()));
+                    queryTypeComboBox.setSelectedItem(TabPreferences.getDefaultQueryType());
                     if (selectedEntity.isOWLObjectProperty()) {
                         value.setVisible(false);
                         valueLbl.setVisible(false);

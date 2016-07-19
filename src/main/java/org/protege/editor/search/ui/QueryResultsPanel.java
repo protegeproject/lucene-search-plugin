@@ -33,8 +33,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class QueryResultsPanel extends JPanel implements Disposable {
-    private static final long serialVersionUID = -4778246819575114548L;
-    private static final int MAX_LIST_SIZE = 500;
+    private static final long serialVersionUID = 8625864045536664635L;
     private OWLEditorKit editorKit;
     private JList<OWLEntity> results;
     private List<List<OWLEntity>> pagedResultsList;
@@ -95,10 +94,8 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         editorKit.getSearchManager().addProgressMonitor(new ProgressMonitor() {
             @Override
             public void setStarted() {
-                backBtn.setVisible(false);
-                forwardBtn.setVisible(false);
+                setPagedResultsList(false);
                 statusLbl.setText("");
-                pageLbl.setText("");
                 searchProgressBar.setValue(0);
                 visibilityTimer.restart();
             }
@@ -225,7 +222,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
     };
 
     private void updatePageLabel() {
-        pageLbl.setText("· Page " + (currentPage+1) + " of " + totalPages + "  (" + MAX_LIST_SIZE  + " results per page)");
+        pageLbl.setText("· Page " + (currentPage+1) + " of " + totalPages + "  (" + getMaximumResultsSize()  + " results per page)");
     }
 
     private void selectEntity() {
@@ -289,6 +286,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         JPanel exportPanel = new JPanel(new FlowLayout());
         exportBtn = new JButton("Export Results");
         exportBtn.addActionListener(exportBtnListener);
+        exportBtn.setEnabled(false);
         exportPanel.add(exportBtn);
         header.add(exportPanel, BorderLayout.EAST);
         return header;
@@ -403,7 +401,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
     }
 
     private void setListData(List<OWLEntity> list, boolean filteredList) {
-        if(list.size() > MAX_LIST_SIZE) {
+        if(list.size() > getMaximumResultsSize()) {
             paged = true;
             pagedResultsList = divideList(list);
             totalPages = pagedResultsList.size();
@@ -445,6 +443,9 @@ public class QueryResultsPanel extends JPanel implements Disposable {
     }
 
     public void setResults(FilteredQuery query, Collection<OWLEntity> entities) {
+        filterTextField.setText("");
+        setCheckBoxSelection(true);
+        exportBtn.setEnabled(true);
         answeredQuery = checkNotNull(query);
         List<OWLEntity> list = new ArrayList<>(entities);
         Collections.sort(list);
@@ -458,13 +459,13 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         List<List<OWLEntity>> output = new ArrayList<>();
         int lastIndex = 0;
         while(lastIndex < list.size()) {
-            int range = lastIndex + MAX_LIST_SIZE;
+            int range = lastIndex + getMaximumResultsSize();
             if(range > list.size()) {
                 range = list.size();
             }
             List<OWLEntity> sublist = list.subList(lastIndex, range);
             output.add(sublist);
-            lastIndex += MAX_LIST_SIZE;
+            lastIndex += getMaximumResultsSize();
         }
         return output;
     }
@@ -480,6 +481,10 @@ public class QueryResultsPanel extends JPanel implements Disposable {
             }
         }
         return output;
+    }
+
+    public int getMaximumResultsSize() {
+        return TabPreferences.getMaximumResultsPerPage();
     }
 
     private void updateStatus(Collection<OWLEntity> entities) {

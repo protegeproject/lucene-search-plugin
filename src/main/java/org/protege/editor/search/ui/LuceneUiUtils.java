@@ -3,8 +3,10 @@ package org.protege.editor.search.ui;
 import org.protege.editor.core.ui.error.ErrorLogPanel;
 import org.protege.editor.owl.OWLEditorKit;
 import org.protege.editor.owl.ui.renderer.OWLModelManagerEntityRenderer;
+import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLEntity;
 import org.semanticweb.owlapi.model.OWLOntology;
+import org.semanticweb.owlapi.model.OWLProperty;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -17,6 +19,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -37,7 +40,8 @@ public class LuceneUiUtils {
     public static final String
             CLOSE_ICON_FILENAME = "close.png",
             BACK_ICON_FILENAME = "back.png",
-            FORWARD_ICON_FILENAME = "forward.png";
+            FORWARD_ICON_FILENAME = "forward.png",
+            SEARCH_ICON_FILENAME = "search.png";
 
     public static Icon getIcon(String filename, int width, int height) {
         BufferedImage icon = null;
@@ -69,5 +73,21 @@ public class LuceneUiUtils {
             widest = Math.max(widest, lineWidth);
         }
         return widest+60;
+    }
+
+    public static Optional<OWLProperty> getPropertyForIri(OWLEditorKit editorKit, IRI iri) {
+        List<OWLEntity> properties = getProperties(editorKit);
+        for(OWLEntity e : properties) {
+            if(e.getIRI().equals(iri)) {
+                if(e.isOWLAnnotationProperty()) {
+                    return Optional.of(e.asOWLAnnotationProperty());
+                } else if(e.isOWLDataProperty()) {
+                    return Optional.of(e.asOWLDataProperty());
+                } else if(e.isOWLObjectProperty()) {
+                    return Optional.of(e.asOWLObjectProperty());
+                }
+            }
+        }
+        return Optional.empty();
     }
 }

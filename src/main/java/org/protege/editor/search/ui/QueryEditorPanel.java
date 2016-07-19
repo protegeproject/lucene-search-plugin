@@ -28,8 +28,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class QueryEditorPanel extends JPanel implements Disposable {
-    private static final long serialVersionUID = -3601633790972154822L;
-    private JButton addQueryBtn, addNegatedQueryBtn, addNestedQueryBtn, clearBtn, searchBtn, stopBtn, indexBtn;
+    private static final long serialVersionUID = -158606985148088808L;
+    private JButton addQueryBtn, addNegatedQueryBtn, addNestedQueryBtn, clearBtn, searchBtn, stopBtn, indexBtn, settingsBtn;
     private JRadioButton matchAll, matchAny;
     private boolean allowNestedQueries = true, allowNegatedQueries = true, isNested = false;
     private List<QueryPanel> queries = new ArrayList<>();
@@ -171,6 +171,10 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         else {
             showInvalidSearchManagerErrorDialog();
         }
+    };
+
+    private ActionListener settingsBtnListener = e -> {
+        TabPreferencesDialogPanel.showDialog(editorKit);
     };
 
     private void showInvalidSearchManagerErrorDialog() {
@@ -367,8 +371,13 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         } else {
             indexBtn = new JButton("Build Index");
             indexBtn.addActionListener(indexBtnListener);
+            
+            settingsBtn = new JButton("Settings");
+            settingsBtn.addActionListener(settingsBtnListener);
+            
             JPanel indexPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
             indexPanel.add(indexBtn);
+            indexPanel.add(settingsBtn);
             header.add(indexPanel, BorderLayout.EAST);
         }
         return header;
@@ -382,6 +391,9 @@ public class QueryEditorPanel extends JPanel implements Disposable {
 
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         searchBtn = new JButton("Search");
+        searchBtn.setIcon(LuceneUiUtils.getIcon(LuceneUiUtils.SEARCH_ICON_FILENAME, 15, 15));
+        searchBtn.setIconTextGap(8);
+        searchBtn.setFont(new Font(getFont().getName(), Font.BOLD, 13));
         searchBtn.addActionListener(searchBtnListener);
         searchBtn.setEnabled(false);
         searchPanel.add(searchBtn);

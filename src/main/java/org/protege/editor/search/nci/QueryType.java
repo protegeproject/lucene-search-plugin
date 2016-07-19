@@ -72,6 +72,30 @@ public final class QueryType {
         return types; 
     }
 
+    public static QueryType valueOf(String queryTypeName) {
+        if(queryTypeName.equals(CONTAINS.name)) {
+            return CONTAINS;
+        } else if(queryTypeName.equals(STARTS_WITH.name)) {
+            return STARTS_WITH;
+        } else if(queryTypeName.equals(ENDS_WITH.name)) {
+            return ENDS_WITH;
+        } else if(queryTypeName.equals(EXACT_MATCH.name)) {
+            return EXACT_MATCH;
+        } else if(queryTypeName.equals(PROPERTY_VALUE_ABSENT.name)) {
+            return PROPERTY_VALUE_ABSENT;
+        } else if(queryTypeName.equals(PROPERTY_VALUE_PRESENT.name)) {
+            return PROPERTY_VALUE_PRESENT;
+        } else if(queryTypeName.equals(PROPERTY_RESTRICTION_ABSENT.name)) {
+            return PROPERTY_RESTRICTION_ABSENT;
+        } else if(queryTypeName.equals(PROPERTY_RESTRICTION_PRESENT.name)) {
+            return PROPERTY_RESTRICTION_PRESENT;
+        } else if(queryTypeName.equals(IS.name)) {
+            return IS;
+        } else {
+            throw new IllegalArgumentException("Unknown query type: " + queryTypeName);
+        }
+    }
+
     @Override
     public String toString() {
         return displayName;

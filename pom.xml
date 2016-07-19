@@ -188,7 +188,6 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-Activator>org.protege.editor.owl.ProtegeOWL</Bundle-Activator>
                         <Bundle-ClassPath>.</Bundle-ClassPath>
                         <Bundle-SymbolicName>org.protege.editor.search;singleton:=true</Bundle-SymbolicName>
                         <Bundle-Vendor>The Protege Development Team</Bundle-Vendor>
