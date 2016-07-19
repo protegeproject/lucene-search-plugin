@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nonnull;
+
 import com.google.common.base.Stopwatch;
 
 /**
@@ -37,12 +39,12 @@ public class IndexDelegator implements Disposable {
     private IndexSearcher indexSearcher;
 
     // Prevent external instantiation
-    private IndexDelegator(IndexWriter writer, Directory directory) {
+    private IndexDelegator(@Nonnull IndexWriter writer, @Nonnull Directory directory) {
         this.indexWriter = writer;
         this.directory = directory;
     }
 
-    public static IndexDelegator getInstance(Directory directory, IndexWriterConfig writerConfig) throws IOException {
+    public static IndexDelegator getInstance(@Nonnull Directory directory, @Nonnull IndexWriterConfig writerConfig) throws IOException {
         IndexWriter writer = new IndexWriter(directory, writerConfig);
         return new IndexDelegator(writer, directory);
     }
