@@ -38,6 +38,8 @@ public class IndexDelegator implements Disposable {
 
     private IndexSearcher indexSearcher;
 
+    private DirectoryReader currentReader;
+
     // Prevent external instantiation
     private IndexDelegator(@Nonnull IndexWriter writer, @Nonnull Directory directory) {
         this.indexWriter = writer;
@@ -55,7 +57,15 @@ public class IndexDelegator implements Disposable {
 
     public IndexSearcher getSearcher() throws IOException {
         if (indexSearcher == null) {
-            indexSearcher = new IndexSearcher(DirectoryReader.open(directory));
+            currentReader = DirectoryReader.open(directory);
+            indexSearcher = new IndexSearcher(currentReader);
+        }
+        else {
+            DirectoryReader reader = DirectoryReader.openIfChanged(currentReader);
+            if (reader != null) {
+                currentReader = reader;
+                indexSearcher = new IndexSearcher(reader);
+            }
         }
         return indexSearcher;
     }
@@ -94,6 +104,9 @@ public class IndexDelegator implements Disposable {
         if (isOpen(indexWriter)) {
             indexWriter.close();
             directory.close();
+            if (currentReader != null) {
+                currentReader.close();
+            }
         }
     }
 
