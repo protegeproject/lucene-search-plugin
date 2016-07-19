@@ -8,7 +8,10 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause.Occur;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.Directory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +20,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Nonnull;
 
 import com.google.common.base.Stopwatch;
 
@@ -36,13 +41,15 @@ public class IndexDelegator implements Disposable {
 
     private IndexSearcher indexSearcher;
 
+    private DirectoryReader currentReader;
+
     // Prevent external instantiation
-    private IndexDelegator(IndexWriter writer, Directory directory) {
+    private IndexDelegator(@Nonnull IndexWriter writer, @Nonnull Directory directory) {
         this.indexWriter = writer;
         this.directory = directory;
     }
 
-    public static IndexDelegator getInstance(Directory directory, IndexWriterConfig writerConfig) throws IOException {
+    public static IndexDelegator getInstance(@Nonnull Directory directory, @Nonnull IndexWriterConfig writerConfig) throws IOException {
         IndexWriter writer = new IndexWriter(directory, writerConfig);
         return new IndexDelegator(writer, directory);
     }
@@ -53,7 +60,15 @@ public class IndexDelegator implements Disposable {
 
     public IndexSearcher getSearcher() throws IOException {
         if (indexSearcher == null) {
-            indexSearcher = new IndexSearcher(DirectoryReader.open(directory));
+            currentReader = DirectoryReader.open(directory);
+            indexSearcher = new IndexSearcher(currentReader);
+        }
+        else {
+            DirectoryReader reader = DirectoryReader.openIfChanged(currentReader);
+            if (reader != null) {
+                currentReader = reader;
+                indexSearcher = new IndexSearcher(reader);
+            }
         }
         return indexSearcher;
     }
@@ -82,7 +97,11 @@ public class IndexDelegator implements Disposable {
 
     public void removeIndex(RemoveChangeSet changeSet) throws IOException {
         for (List<Term> terms : changeSet) {
-            indexWriter.deleteDocuments(terms.toArray(new Term[terms.size()]));
+            BooleanQuery.Builder builder = new BooleanQuery.Builder();
+            for (Term term : terms) {
+                builder.add(new TermQuery(term), Occur.MUST);
+            }
+            indexWriter.deleteDocuments(builder.build());
         }
         commitIndex();
     }
@@ -92,6 +111,9 @@ public class IndexDelegator implements Disposable {
         if (isOpen(indexWriter)) {
             indexWriter.close();
             directory.close();
+            if (currentReader != null) {
+                currentReader.close();
+            }
         }
     }
 
