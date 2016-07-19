@@ -21,7 +21,6 @@ import org.protege.editor.search.lucene.ResultDocumentHandler;
 import org.protege.editor.search.lucene.SearchContext;
 import org.protege.editor.search.lucene.SearchQuery;
 import org.protege.editor.search.lucene.SearchUtils;
-import org.protege.editor.search.ui.LuceneListener;
 
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.search.IndexSearcher;
@@ -93,8 +92,6 @@ public class SearchTabManager extends LuceneSearcher {
     private OWLOntology currentActiveOntology;
 
     private final List<ProgressMonitor> progressMonitors = new ArrayList<>();
-
-    private final List<LuceneListener> searchListeners = new ArrayList<>();
 
     public SearchTabManager() {
         // NO-OP
@@ -211,10 +208,6 @@ public class SearchTabManager extends LuceneSearcher {
     @Override
     public void addProgressMonitor(ProgressMonitor pm) {
         progressMonitors.add(pm);
-    }
-
-    public void addSearchListener(LuceneListener ll) {
-        searchListeners.add(ll);
     }
 
     @Override
