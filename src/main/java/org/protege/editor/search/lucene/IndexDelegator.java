@@ -8,7 +8,10 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause.Occur;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.Directory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,7 +97,11 @@ public class IndexDelegator implements Disposable {
 
     public void removeIndex(RemoveChangeSet changeSet) throws IOException {
         for (List<Term> terms : changeSet) {
-            indexWriter.deleteDocuments(terms.toArray(new Term[terms.size()]));
+            BooleanQuery.Builder builder = new BooleanQuery.Builder();
+            for (Term term : terms) {
+                builder.add(new TermQuery(term), Occur.MUST);
+            }
+            indexWriter.deleteDocuments(builder.build());
         }
         commitIndex();
     }
