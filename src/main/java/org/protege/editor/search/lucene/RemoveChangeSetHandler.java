@@ -15,6 +15,7 @@ import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLDeclarationAxiom;
 import org.semanticweb.owlapi.model.OWLEntity;
+import org.semanticweb.owlapi.model.OWLObject;
 import org.semanticweb.owlapi.model.RemoveAxiom;
 import org.semanticweb.owlapi.util.OWLOntologyChangeVisitorAdapter;
 
@@ -82,12 +83,18 @@ public class RemoveChangeSetHandler extends OWLOntologyChangeVisitorAdapter {
         return entity.getIRI().toString();
     }
 
-    protected String getType(OWLEntity entity) {
-        return entity.getEntityType().getName();
+    protected String getType(OWLObject object) {
+        if (object instanceof OWLEntity) {
+            return ((OWLEntity) object).getEntityType().getName();
+        }
+        else if (object instanceof OWLAxiom) {
+            return ((OWLAxiom) object).getAxiomType().getName();
+        }
+        return "(Unknown type)";
     }
 
-    protected String getDisplayName(OWLEntity entity) {
-        return objectRenderer.getRendering(entity);
+    protected String getDisplayName(OWLObject object) {
+        return objectRenderer.getRendering(object);
     }
 
     protected String getAnnotationText(OWLAnnotation annotation) {
