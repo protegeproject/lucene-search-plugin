@@ -18,7 +18,7 @@ import com.jgoodies.common.base.Strings;
  */
 public class LuceneStringParser implements SearchStringParser {
 
-    private static final Pattern filteredSearchStringPattern = Pattern.compile("([^:,]*):(\"[^\"]*\"|[^,\"]*)");
+    private static final Pattern filteredSearchStringPattern = Pattern.compile("([^=,]*)=(\"[^\"]*\"|[^,\"]*)");
 
     @Override
     public SearchInput parse(String searchString) {
