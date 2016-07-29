@@ -11,7 +11,7 @@ import org.semanticweb.owlapi.model.OWLEntity;
 import org.semanticweb.owlapi.model.OWLProperty;
 
 import javax.swing.*;
-import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
 import java.awt.event.ActionListener;
@@ -28,8 +28,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class QueryEditorPanel extends JPanel implements Disposable {
-    private static final long serialVersionUID = -158606985148088808L;
-    private JButton addQueryBtn, addNegatedQueryBtn, addNestedQueryBtn, clearBtn, searchBtn, stopBtn, indexBtn, settingsBtn;
+    private static final long serialVersionUID = -4646883821975278260L;
+    private JButton addQueryBtn, addNegatedQueryBtn, addNestedQueryBtn, clearBtn, searchBtn, stopBtn;
     private JRadioButton matchAll, matchAny;
     private boolean allowNestedQueries = true, allowNegatedQueries = true, isNested = false;
     private List<QueryPanel> queries = new ArrayList<>();
@@ -76,7 +76,7 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         if(!isNested) {
             // add scrollpane to the top-level panel
             JScrollPane topScrollPane = new JScrollPane(queriesPanelHolder);
-            topScrollPane.setBorder(LuceneUiUtils.EMPTY_BORDER);
+            topScrollPane.setBorder(LuceneUiUtils.MATTE_BORDER);
             topScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
             add(topScrollPane, BorderLayout.CENTER);
             add(getFooterPanel(), BorderLayout.SOUTH);
@@ -173,13 +173,9 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         }
     };
 
-    private ActionListener settingsBtnListener = e -> {
-        TabPreferencesDialogPanel.showDialog(editorKit);
-    };
-
     private void showInvalidSearchManagerErrorDialog() {
         JOptionPane.showMessageDialog(editorKit.getOWLWorkspace(), new JLabel("Unable to perform Lucene search. Ensure that" +
-                " 'Lucene search tab' is selected in the Protege preferences (under the 'General' tab, in the 'Search type' option)."),
+                " 'Lucene search tab' is selected in the Protégé preferences (under the 'General' tab, in the 'Search type' option)."),
                 "Invalid search manager", JOptionPane.INFORMATION_MESSAGE);
     }
 
@@ -349,44 +345,32 @@ public class QueryEditorPanel extends JPanel implements Disposable {
         if(isNested) {
             header.setBorder(new MatteBorder(0, 1, 1, 1, LuceneUiUtils.MATTE_BORDER_COLOR));
         } else {
-            header.setBorder(new MatteBorder(0, 0, 1, 0, LuceneUiUtils.MATTE_BORDER_COLOR));
+            header.setBorder(new EmptyBorder(0, 0, 1, 0));
         }
         JPanel queryBtnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        addQueryBtn = new JButton("Basic Query");
+        addQueryBtn = new JButton("Add Basic Query");
         addQueryBtn.addActionListener(e -> addBasicQuery());
         queryBtnPanel.add(addQueryBtn);
         if (allowNegatedQueries) {
-            addNegatedQueryBtn = new JButton("Negated Query");
+            addNegatedQueryBtn = new JButton("Add Negated Query");
             addNegatedQueryBtn.addActionListener(e -> addNegatedQuery());
             queryBtnPanel.add(addNegatedQueryBtn);
         }
         if (allowNestedQueries) {
-            addNestedQueryBtn = new JButton("Nested Query");
+            addNestedQueryBtn = new JButton("Add Nested Query");
             addNestedQueryBtn.addActionListener(e -> addNestedQuery());
             queryBtnPanel.add(addNestedQueryBtn);
         }
         header.add(queryBtnPanel, BorderLayout.WEST);
         if(isNested) {
             header.add(getControlsPanel(false), BorderLayout.EAST);
-        } else {
-            indexBtn = new JButton("Build Index");
-            indexBtn.addActionListener(indexBtnListener);
-            
-            settingsBtn = new JButton("Settings");
-            settingsBtn.addActionListener(settingsBtnListener);
-            
-            JPanel indexPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-            indexPanel.add(indexBtn);
-            indexPanel.add(settingsBtn);
-            header.add(indexPanel, BorderLayout.EAST);
         }
         return header;
     }
 
     private JPanel getFooterPanel() {
         JPanel footer = new JPanel(new BorderLayout());
-        Border topBorder = new MatteBorder(1, 0, 0, 0, LuceneUiUtils.MATTE_BORDER_COLOR);
-        footer.setBorder(topBorder);
+        footer.setBorder(new EmptyBorder(1, 0, 0, 0));
         footer.add(getControlsPanel(true), BorderLayout.WEST);
 
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));

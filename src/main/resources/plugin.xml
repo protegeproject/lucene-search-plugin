@@ -2,7 +2,7 @@
 
 <plugin>
     <extension id="SearchTabManager" point="org.protege.editor.owl.searchmanager">
-        <name value="Lucene search tab" />
+        <name value="Lucene search" />
         <class value="org.protege.editor.search.nci.SearchTabManager" />
     </extension>
 
@@ -33,5 +33,33 @@
         <class value="org.protege.editor.search.ui.LuceneQueryView"/>
         <headerColor value="@org.protege.ontologycolor"/>
         <category value="Query"/>
+    </extension>
+
+    <!-- Menus -->
+
+    <extension id="Lucene"
+               name="Top Level Lucene Menu"
+               point="org.protege.editor.core.application.EditorKitMenuAction">
+        <name value="Lucene"/>
+        <path value="/SlotG"/>
+        <editorKitId value="OWLEditorKit"/>
+    </extension>
+
+    <extension id="BuildIndex"
+               name="Build Index Menu"
+               point="org.protege.editor.core.application.EditorKitMenuAction">
+        <name value="Build index"/>
+        <path value="org.protege.editor.search.Lucene/SlotA-G"/>
+        <editorKitId value="OWLEditorKit"/>
+        <class value="org.protege.editor.search.ui.IndexAction"/>
+    </extension>
+
+    <extension id="OpenSettings"
+               name="Open Settings Menu"
+               point="org.protege.editor.core.application.EditorKitMenuAction">
+        <name value="Settings"/>
+        <path value="org.protege.editor.search.Lucene/SlotB-G"/>
+        <editorKitId value="OWLEditorKit"/>
+        <class value="org.protege.editor.search.ui.OpenSettingsAction"/>
     </extension>
 </plugin>

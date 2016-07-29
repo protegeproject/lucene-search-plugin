@@ -36,12 +36,8 @@ public class LuceneQueryPanel extends JPanel implements Disposable {
 
     private void initUi() {
         setLayout(new BorderLayout());
-
         editorPanel = new QueryEditorPanel(editorKit);
         resultsPanel = new QueryResultsPanel(editorKit);
-        editorPanel.setBorder(LuceneUiUtils.MATTE_BORDER);
-        resultsPanel.setBorder(LuceneUiUtils.MATTE_BORDER);
-
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, editorPanel, resultsPanel);
         splitPane.setPreferredSize(new Dimension(1300, 600));
         splitPane.setBorder(LuceneUiUtils.EMPTY_BORDER);

@@ -3,6 +3,7 @@ package org.protege.editor.search.ui;
 import com.google.common.collect.ImmutableList;
 import org.protege.editor.core.Disposable;
 import org.protege.editor.core.ui.error.ErrorLogPanel;
+import org.protege.editor.core.ui.util.AugmentedJTextField;
 import org.protege.editor.owl.OWLEditorKit;
 import org.protege.editor.owl.model.event.EventType;
 import org.protege.editor.owl.model.event.OWLModelManagerListener;
@@ -16,7 +17,6 @@ import org.semanticweb.owlapi.util.ProgressMonitor;
 import javax.swing.*;
 import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.MatteBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
@@ -33,7 +33,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class QueryResultsPanel extends JPanel implements Disposable {
-    private static final long serialVersionUID = 8625864045536664635L;
+    private static final long serialVersionUID = 7092126431925193562L;
     private OWLEditorKit editorKit;
     private JList<OWLEntity> results;
     private List<List<OWLEntity>> pagedResultsList;
@@ -42,7 +42,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
     private List<OWLEntity> classesList = new ArrayList<>(), propertiesList = new ArrayList<>(),
             individualsList = new ArrayList<>(), datatypesList = new ArrayList<>();
     private JCheckBox classes, properties, individuals, datatypes;
-    private JTextField filterTextField;
+    private AugmentedJTextField filterTextField;
     private JLabel statusLbl, pageLbl;
     private JButton exportBtn, backBtn, forwardBtn;
     private int currentPage = 0, totalPages;
@@ -77,7 +77,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         JPanel resultsPanel = new JPanel(new BorderLayout());
         JScrollPane scrollPane = new JScrollPane(results);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.setBorder(LuceneUiUtils.EMPTY_BORDER);
+        scrollPane.setBorder(LuceneUiUtils.MATTE_BORDER);
 
         resultsPanel.setBorder(LuceneUiUtils.EMPTY_BORDER);
         resultsPanel.add(scrollPane, BorderLayout.CENTER);
@@ -252,7 +252,6 @@ public class QueryResultsPanel extends JPanel implements Disposable {
 
     private JPanel getHeaderPanel() {
         JPanel header = new JPanel(new BorderLayout());
-        header.setBorder(new MatteBorder(0, 0, 1, 0, LuceneUiUtils.MATTE_BORDER_COLOR));
         header.setPreferredSize(new Dimension(0, 40));
 
         JPanel pagesPanel = new JPanel(new GridBagLayout());
@@ -294,10 +293,8 @@ public class QueryResultsPanel extends JPanel implements Disposable {
 
     private JPanel getFooterPanel() {
         JPanel footer = new JPanel(new GridBagLayout());
-        footer.setBorder(new MatteBorder(1, 0, 0, 0, LuceneUiUtils.MATTE_BORDER_COLOR));
         footer.setPreferredSize(new Dimension(0, 40));
 
-        JLabel filterLbl = new JLabel("Filter:");
         classes = new JCheckBox("Classes");
         properties = new JCheckBox("Properties");
         individuals = new JCheckBox("Individuals");
@@ -311,23 +308,22 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         individuals.addActionListener(individualsListener);
         datatypes.addActionListener(datatypesListener);
 
-        filterTextField = new JTextField();
+        filterTextField = new AugmentedJTextField("Filter results");
         filterTextField.setMinimumSize(new Dimension(60, 22));
         filterTextField.getDocument().addDocumentListener(filterTextListener);
 
         Insets insets = new Insets(2, 4, 2, 4);
         int rowIndex = 0;
-        footer.add(filterLbl, new GridBagConstraints(0, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_TRAILING, GridBagConstraints.NONE, insets, 0, 0));
-        footer.add(filterTextField, new GridBagConstraints(1, rowIndex, 1, 1, 100.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.HORIZONTAL, insets, 0, 0));
-        footer.add(classes, new GridBagConstraints(2, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, insets, 0, 0));
-        footer.add(properties, new GridBagConstraints(3, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, insets, 0, 0));
-        footer.add(individuals, new GridBagConstraints(4, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, insets, 0, 0));
-        footer.add(datatypes, new GridBagConstraints(5, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, insets, 0, 0));
+        footer.add(filterTextField, new GridBagConstraints(0, rowIndex, 1, 1, 100.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.HORIZONTAL, insets, 0, 0));
+        footer.add(classes, new GridBagConstraints(1, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, insets, 0, 0));
+        footer.add(properties, new GridBagConstraints(2, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, insets, 0, 0));
+        footer.add(individuals, new GridBagConstraints(3, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, insets, 0, 0));
+        footer.add(datatypes, new GridBagConstraints(4, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, insets, 0, 0));
         return footer;
     }
 
     private void filterEntityType(JCheckBox checkBox, List<OWLEntity> bucket) {
-        if(!categorisedEntityTypes) {
+        if(!categorisedEntityTypes && resultsList != null) {
             categoriseEntityTypes();
         }
         entityTypesFilteredResults = new ArrayList<>(getResults());
@@ -335,11 +331,13 @@ public class QueryResultsPanel extends JPanel implements Disposable {
             entityTypesFilteredResults.removeAll(bucket);
         } else {
             filterTextField(false);
-            List<OWLEntity> l = new ArrayList<>(bucket);
-            l.retainAll(txtFieldFilteredResults);
-            for(OWLEntity e : l) {
-                if(!entityTypesFilteredResults.contains(e)) {
-                    entityTypesFilteredResults.add(e);
+            if(txtFieldFilteredResults != null) {
+                List<OWLEntity> l = new ArrayList<>(bucket);
+                l.retainAll(txtFieldFilteredResults);
+                for (OWLEntity e : l) {
+                    if (!entityTypesFilteredResults.contains(e)) {
+                        entityTypesFilteredResults.add(e);
+                    }
                 }
             }
         }
@@ -353,7 +351,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
      * @param filterEntityTypes true if this filter should take into account the status of entity type filter checkboxes, false otherwise
      */
     private void filterTextField(boolean filterEntityTypes) {
-        if(resultsList.isEmpty()) {
+        if(resultsList == null || resultsList.isEmpty()) {
             return;
         }
         String toMatch = filterTextField.getText();

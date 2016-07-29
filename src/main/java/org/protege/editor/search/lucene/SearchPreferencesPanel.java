@@ -4,24 +4,11 @@ import org.protege.editor.core.ui.preferences.PreferencesLayoutPanel;
 import org.protege.editor.core.ui.util.JOptionPaneEx;
 import org.protege.editor.owl.ui.preferences.OWLPreferencesPanel;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
+import javax.swing.*;
+import javax.swing.text.NumberFormatter;
+import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFormattedTextField;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.JSpinner;
-import javax.swing.JTextField;
-import javax.swing.SpinnerNumberModel;
-import javax.swing.text.NumberFormatter;
 
 /**
  * Author: Josef Hardi <josef.hardi@stanford.edu><br>
@@ -116,7 +103,6 @@ public class SearchPreferencesPanel extends OWLPreferencesPanel {
         panel.addGroupComponent(btnRemoveSelected);
         panel.addVerticalPadding();
 
-        panel.addGroup("Advanced");
         JPanel pnlAdvancedOption = new JPanel();
         JCheckBox useCustomInDiskIndexing = new JCheckBox("Set Lucene to store the index in memory when the ontology file size is less than");
         useCustomInDiskIndexing.setSelected(LuceneSearchPreferences.useInMemoryIndexStoring());
