@@ -9,7 +9,6 @@ import org.protege.editor.owl.model.search.SearchInput;
 import org.protege.editor.owl.model.search.SearchResult;
 import org.protege.editor.owl.model.search.SearchResultHandler;
 import org.protege.editor.owl.model.search.SearchStringParser;
-import org.protege.editor.owl.model.search.impl.SearchMetadataImportContext;
 
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.search.IndexSearcher;
@@ -38,6 +37,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.annotation.Nonnull;
 import javax.swing.SwingUtilities;
 
 import com.google.common.base.Stopwatch;
@@ -82,12 +82,12 @@ public class LuceneSearchManager extends LuceneSearcher {
 
     @Override
     public void initialise() {
-        this.editorKit = getEditorKit();
+        editorKit = getEditorKit();
+        indexer = new LuceneIndexer(editorKit);
         categories.add(SearchCategory.DISPLAY_NAME);
         categories.add(SearchCategory.IRI);
         categories.add(SearchCategory.ANNOTATION_VALUE);
         categories.add(SearchCategory.LOGICAL_AXIOM);
-        currentActiveOntology = editorKit.getOWLModelManager().getActiveOntology();
         ontologyChangeListener = new OWLOntologyChangeListener() {
             public void ontologiesChanged(List<? extends OWLOntologyChange> changes) {
                 updateIndex(changes);
@@ -95,30 +95,41 @@ public class LuceneSearchManager extends LuceneSearcher {
         };
         modelManagerListener = new OWLModelManagerListener() {
             public void handleChange(OWLModelManagerChangeEvent event) {
+                OWLOntology activeOntology = editorKit.getOWLModelManager().getActiveOntology();
                 if (isCacheChangingEvent(event)) {
-                    /*
-                     * A workaround: Protege signals ACTIVE_ONTOLOGY_CHANGED twice when opening an ontology.
-                     * The loadOrCreateIndexDirectory() method shouldn't be called twice if new active
-                     * ontology is the same with the current active ontology.
-                     */
-                    OWLOntology newActiveOntology = editorKit.getOWLModelManager().getActiveOntology();
-                    if (currentActiveOntology != null && currentActiveOntology.equals(newActiveOntology)) {
-                        return;
+                    if (currentActiveOntology != null) {
+                        /*
+                         * A workaround: Protege signals ACTIVE_ONTOLOGY_CHANGED twice when opening an ontology.
+                         * The loadOrCreateIndexDirectory() method shouldn't be called twice if the new active
+                         * ontology is the same as the current active ontology.
+                         */
+                        if (!currentActiveOntology.equals(activeOntology)) {
+                            loadIndex(activeOntology);
+                        }
+                        else {
+                            // ignore if equals
+                        }
                     }
-                    currentActiveOntology = newActiveOntology;
-                    loadOrCreateIndexDirectory();
-                    markIndexAsStale(false);
+                    else {
+                        loadIndex(activeOntology);
+                    }
                 }
                 else if (isCacheMutatingEvent(event)) {
-                    markIndexAsStale(true);
+                    rebuildIndex(activeOntology);
                 }
                 else if (isCacheSavingEvent(event)) {
-                    saveIndex();
+                    saveIndex(activeOntology);
                 }
             }
         };
         editorKit.getOWLModelManager().addOntologyChangeListener(ontologyChangeListener);
         editorKit.getModelManager().addListener(modelManagerListener);
+        initializeIndex();
+    }
+
+    private void initializeIndex() {
+        OWLOntology activeOntology = editorKit.getOWLModelManager().getActiveOntology();
+        loadIndex(activeOntology);
     }
 
     private boolean isCacheChangingEvent(OWLModelManagerChangeEvent event) {
@@ -133,8 +144,26 @@ public class LuceneSearchManager extends LuceneSearcher {
         return event.isType(EventType.ONTOLOGY_SAVED);
     }
 
+    private void loadIndex(OWLOntology activeOntology) {
+        if (activeOntology != null && !activeOntology.isEmpty()) {
+            logger.info("Initializing index");
+            currentActiveOntology = activeOntology;
+            loadIndexDirectory(activeOntology, false); // false = reload index directory, if any
+            markIndexAsStale();
+        }
+    }
+
+    public void rebuildIndex(OWLOntology targetOntology) {
+        if (targetOntology != null && !targetOntology.isEmpty()) {
+            logger.info("Rebuilding index");
+            loadIndexDirectory(targetOntology, true); // true = recreate the index directory
+            service.submit(this::buildingIndex);
+        }
+    }
+
     private void updateIndex(List<? extends OWLOntologyChange> changes) {
         if (indexDelegator != null) {
+            logger.info("Updating index from " + changes.size() + " change(s)");
             service.submit(() -> updatingIndex(changes));
         }
     }
@@ -142,9 +171,9 @@ public class LuceneSearchManager extends LuceneSearcher {
     private void updatingIndex(List<? extends OWLOntologyChange> changes) {
         try {
             RemoveChangeSet removeChangeSet = RemoveChangeSet.create(changes, new RemoveChangeSetHandler(editorKit));
-            getIndexer().doRemove(indexDelegator, removeChangeSet);
+            indexer.doRemove(indexDelegator, removeChangeSet);
             AddChangeSet addChangeSet = AddChangeSet.create(changes, new AddChangeSetHandler(editorKit));
-            getIndexer().doAppend(indexDelegator, addChangeSet);
+            indexer.doAppend(indexDelegator, addChangeSet);
         }
         catch (IOException e) {
             logger.error("... update index failed");
@@ -152,20 +181,12 @@ public class LuceneSearchManager extends LuceneSearcher {
         }
     }
 
-    private void markIndexAsStale(boolean forceDelete) {
-        if (forceDelete) {
-            if (indexDirectory != null) { // remove the index
-                logger.info("Rebuilding index");
-                LuceneSearchPreferences.removeIndexLocation(currentActiveOntology);
-                indexDirectory = null;
-                indexDelegator = null;
-            }
-        }
+    private void markIndexAsStale() {
         lastSearchId.set(0);
     }
 
-    private void saveIndex() {
-        LuceneSearchPreferences.setIndexSnapshot(currentActiveOntology);
+    private void saveIndex(OWLOntology targetOntology) {
+        LuceneSearchPreferences.setIndexSnapshot(targetOntology);
     }
 
     @Override
@@ -175,18 +196,24 @@ public class LuceneSearchManager extends LuceneSearcher {
 
     @Override
     public void dispose() {
-        if (editorKit == null) {
-            return;
-        }
         editorKit.getOWLModelManager().removeOntologyChangeListener(ontologyChangeListener);
         editorKit.getModelManager().removeListener(modelManagerListener);
+        disposeIndexDelegator();
     }
 
-    public AbstractLuceneIndexer getIndexer() {
-        if (indexer == null) {
-            indexer = new LuceneIndexer(editorKit);
+    private void disposeIndexDelegator() {
+        try {
+            if (indexDelegator != null && indexLocationExists()) {
+                indexDelegator.dispose();
+            }
         }
-        return indexer;
+        catch (IOException e) {
+            logger.error("Failed to dispose index delegator", e);
+        }
+    }
+
+    private boolean indexLocationExists() {
+        return LuceneSearchPreferences.getIndexLocation(currentActiveOntology).isPresent();
     }
 
     @Override
@@ -212,8 +239,8 @@ public class LuceneSearchManager extends LuceneSearcher {
     public void performSearch(String searchString, SearchResultHandler searchResultHandler) {
         try {
             if (lastSearchId.getAndIncrement() == 0) {
-                Directory indexDirectory = getIndexDirectory();
-                if (!DirectoryReader.indexExists(indexDirectory)) {
+                if (!DirectoryReader.indexExists(getIndexDirectory())) {
+                    logger.info("Building index");
                     service.submit(this::buildingIndex);
                 }
             }
@@ -225,18 +252,20 @@ public class LuceneSearchManager extends LuceneSearcher {
         }
     }
 
-    private void loadOrCreateIndexDirectory() {
+    private void loadIndexDirectory(@Nonnull OWLOntology targetOntology, boolean forceReset) {
         try {
-            if (!currentActiveOntology.isEmpty()) {
-                Directory directory = null;
-                if (shouldStoreInDisk()) {
-                    String indexLocation = LuceneSearchPreferences.findIndexLocation(currentActiveOntology);
-                    directory = FSDirectory.open(Paths.get(indexLocation));
-                }
-                else {
-                    logger.info("Storing index into RAM memory");
-                    directory = new RAMDirectory();
-                }
+            if (forceReset) {
+                removeIndexDirectory();
+                LuceneSearchPreferences.removeIndexLocation(targetOntology);
+            }
+            if (shouldStoreInDisk(targetOntology)) {
+                String indexLocation = LuceneSearchPreferences.findIndexLocation(targetOntology);
+                Directory directory = FSDirectory.open(Paths.get(indexLocation));
+                setIndexDirectory(directory);
+            }
+            else {
+                logger.info("Storing index into RAM memory");
+                Directory directory = new RAMDirectory();
                 setIndexDirectory(directory);
             }
         }
@@ -245,9 +274,9 @@ public class LuceneSearchManager extends LuceneSearcher {
         }
     }
 
-    private boolean shouldStoreInDisk() {
+    private boolean shouldStoreInDisk(OWLOntology targetOntology) {
         if (LuceneSearchPreferences.useInMemoryIndexStoring()) {
-            IRI documentIri = editorKit.getOWLModelManager().getOWLOntologyManager().getOntologyDocumentIRI(currentActiveOntology);
+            IRI documentIri = editorKit.getOWLModelManager().getOWLOntologyManager().getOntologyDocumentIRI(targetOntology);
             try {
                 URL resourceUrl = documentIri.toURI().toURL();
                 URLConnection connection = resourceUrl.openConnection();
@@ -264,10 +293,11 @@ public class LuceneSearchManager extends LuceneSearcher {
     }
 
     private Directory getIndexDirectory() {
-        if (indexDirectory == null) {
-            loadOrCreateIndexDirectory();
-        }
         return indexDirectory;
+    }
+
+    private void removeIndexDirectory() throws IOException {
+        setIndexDelegator(null);
     }
 
     private void setIndexDirectory(Directory indexDirectory) throws IOException {
@@ -276,14 +306,14 @@ public class LuceneSearchManager extends LuceneSearcher {
     }
 
     private void fireIndexDirectoryChange() throws IOException {
-        if (DirectoryReader.indexExists(indexDirectory)) {
-            setupIndexDelegator();
-        }
+        setupIndexDelegator();
     }
 
     private void setupIndexDelegator() throws IOException {
-        Directory indexDirectory = getIndexDirectory();
-        IndexDelegator newDelegator = IndexDelegator.getInstance(indexDirectory, getIndexer().getIndexWriterConfig());
+        IndexDelegator newDelegator = null;
+        if (getIndexDirectory() != null) {
+            newDelegator = IndexDelegator.getInstance(getIndexDirectory(), indexer.getIndexWriterConfig());
+        }
         setIndexDelegator(newDelegator);
     }
 
@@ -305,11 +335,8 @@ public class LuceneSearchManager extends LuceneSearcher {
     private void buildingIndex() {
         fireIndexingStarted();
         try {
-            setupIndexDelegator();
-            getIndexer().doIndex(indexDelegator,
-                    new SearchMetadataImportContext(editorKit),
-                    progress -> fireIndexingProgressed(progress));
-            saveIndex();
+            indexer.doIndex(indexDelegator, new SearchContext(editorKit), progress -> fireIndexingProgressed(progress));
+            saveIndex(currentActiveOntology);
         }
         catch (IOException e) {
             logger.error("... build index failed", e);
@@ -380,7 +407,8 @@ public class LuceneSearchManager extends LuceneSearcher {
         SwingUtilities.invokeLater(() -> {
             for (ProgressMonitor pm : progressMonitors) {
                 pm.setSize(100);
-                pm.setMessage("Initializing index");
+                pm.setIndeterminate(true);
+                pm.setMessage("initializing index");
                 pm.setStarted();
             }
         });
