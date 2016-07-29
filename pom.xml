@@ -171,16 +171,15 @@
                             lucene-queryparser,
                             lucene-analyzers-phonetic
                         </Embed-Dependency>
-                        <Export-Package>
-                            org.apache.commons.codec.*,
-                            org.protege.editor.*,
-                            org.protege.owlapi.*
-                        </Export-Package>
+                        <_exportcontents>
+                            org.apache.lucene.*, <!-- required to avoid build warning -->
+                            org.tartarus.snowball <!-- required to avoid build warning -->
+                        </_exportcontents>
                         <Import-Package>
                             org.protege.editor.owl.*;version="5.0.0",
                             org.semanticweb.owlapi.*;version="[4.1.3,5.0.0)",
                             org.apache.lucene.*;resolution:=optional,
-                            org.apache.commons.codec.*,
+                            org.apache.commons.codec.*;resolution:=optional,
                             *
                         </Import-Package>
                         <Include-Resource>{maven-resources}</Include-Resource>
