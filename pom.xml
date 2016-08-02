@@ -202,6 +202,9 @@
                             org.apache.lucene.*,
                             org.tartarus.snowball
                         </_exportcontents>
+                        <Export-Package>
+                        	org.protege.editor.search.*
+                        </Export-Package>
                         <Import-Package>
                             !org.apache.lucene.queries.*,
                             !org.apache.lucene.sandbox.*,
