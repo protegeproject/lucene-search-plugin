@@ -1,5 +1,6 @@
 package org.protege.editor.search.ui;
 
+import org.imgscalr.Scalr;
 import org.protege.editor.core.ui.error.ErrorLogPanel;
 import org.protege.editor.owl.OWLEditorKit;
 import org.protege.editor.owl.ui.renderer.OWLModelManagerEntityRenderer;
@@ -51,7 +52,7 @@ public class LuceneUiUtils {
         } catch (IOException e) {
             ErrorLogPanel.showErrorDialog(e);
         }
-        Image img = icon.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+        Image img = Scalr.resize(icon, Scalr.Method.ULTRA_QUALITY, width, height);
         return new ImageIcon(img);
     }
 

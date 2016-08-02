@@ -130,12 +130,6 @@
         </dependency>
 
         <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>1.10</version>
-        </dependency>
-
-        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
             <version>${logback.version}</version>
@@ -145,6 +139,12 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.imgscalr</groupId>
+            <artifactId>imgscalr-lib</artifactId>
+            <version>4.2</version>
         </dependency>
 
         <dependency>
@@ -196,11 +196,10 @@
                             lucene-analyzers-common,
                             lucene-queryparser,
                             lucene-analyzers-phonetic,
-                            commons-codec
+                            imgscalr-lib
                         </Embed-Dependency>
                         <_exportcontents>
                             org.apache.lucene.*,
-                            org.apache.commons.codec.*,
                             org.tartarus.snowball
                         </_exportcontents>
                         <Import-Package>

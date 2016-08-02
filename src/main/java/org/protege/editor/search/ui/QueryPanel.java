@@ -37,6 +37,10 @@ public abstract class QueryPanel extends JPanel implements Disposable {
 
     protected JButton getCloseButton() {
         closeBtn = new JButton(LuceneUiUtils.getIcon(LuceneUiUtils.CLOSE_ICON_FILENAME, 11, 11));
+        closeBtn.setBorderPainted(false);
+        closeBtn.setContentAreaFilled(false);
+        closeBtn.setFocusPainted(false);
+        closeBtn.setOpaque(false);
         closeBtn.addActionListener(closeBtnListener);
         return closeBtn;
     }

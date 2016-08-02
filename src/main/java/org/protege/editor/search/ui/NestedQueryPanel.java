@@ -41,7 +41,7 @@ public class NestedQueryPanel extends QueryPanel {
         JLabel title = new JLabel("<html><b>" + NAME + "</b></html>");
         title.setForeground(new Color(8, 84, 170));
         topPanel.add(title, new GridBagConstraints(0, 0, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.HORIZONTAL, new Insets(3, 5, 0, 5), 0, 0));
-        topPanel.add(getCloseButton(), new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_TRAILING, GridBagConstraints.NONE, new Insets(0, 5, 0, 5), 0, 0));
+        topPanel.add(getCloseButton(), new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_TRAILING, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 
         parent.add(topPanel);
         parent.add(getPropertySelectionPanel());

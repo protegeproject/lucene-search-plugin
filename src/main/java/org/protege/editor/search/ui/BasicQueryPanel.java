@@ -65,7 +65,7 @@ public class BasicQueryPanel extends QueryPanel {
 
         Insets insets = new Insets(0, 5, 2, 5);
         int rowIndex = 0;
-        add(getCloseButton(), new GridBagConstraints(3, rowIndex, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING, GridBagConstraints.NONE, insets, 0, 0));
+        add(getCloseButton(), new GridBagConstraints(3, rowIndex, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_TRAILING, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
         rowIndex++;
         add(propertyLbl, new GridBagConstraints(0, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, insets, 0, 0));
         add(queryTypeLbl, new GridBagConstraints(1, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, new Insets(0, 9, 2, 5), 0, 0));
