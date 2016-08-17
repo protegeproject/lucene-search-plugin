@@ -1,9 +1,12 @@
 package org.protege.editor.search.ui;
 
+import org.protege.editor.owl.OWLEditorKit;
 import org.semanticweb.owlapi.model.OWLEntity;
 
 import javax.swing.plaf.basic.BasicComboBoxEditor;
 import java.awt.*;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * @author Rafael Gonçalves <br>
@@ -11,12 +14,14 @@ import java.awt.*;
  * Stanford University
  */
 public class OwlEntityComboBoxEditor extends BasicComboBoxEditor {
+    private final OWLEditorKit editorKit;
 
     /**
      * No-arguments Constructor
      */
-    public OwlEntityComboBoxEditor() {
+    public OwlEntityComboBoxEditor(OWLEditorKit editorKit) {
         super();
+        this.editorKit = checkNotNull(editorKit);
     }
 
     @Override
@@ -27,7 +32,7 @@ public class OwlEntityComboBoxEditor extends BasicComboBoxEditor {
     @Override
     public void setItem(Object object) {
         if(object != null && object instanceof OWLEntity) {
-            super.setItem(((OWLEntity) object).getIRI().getShortForm());
+            super.setItem(editorKit.getOWLModelManager().getRendering((OWLEntity) object));
         } else {
             super.setItem("");
         }

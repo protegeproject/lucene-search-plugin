@@ -51,7 +51,7 @@ public class OwlEntityComboBox extends JComboBox<OWLEntity> {
         setBackground(Color.WHITE);
         setMaximumRowCount(MAX_VISIBLE_ROWS);
         setRenderer(new OWLCellRenderer(editorKit));
-        setEditor(new OwlEntityComboBoxEditor());
+        setEditor(new OwlEntityComboBoxEditor(editorKit));
         setPreferredSize(new Dimension(200, 21));
         addPopupMenuListener(new OwlEntityComboBoxPopupMenuListener(editorKit));
         insertItemAt(null, 0);
