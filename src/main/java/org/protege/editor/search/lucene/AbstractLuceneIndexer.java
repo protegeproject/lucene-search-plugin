@@ -24,18 +24,22 @@ public abstract class AbstractLuceneIndexer extends OWLObjectVisitorAdapter {
 
     private final Analyzer DEFAULT_ANALYZER = new StandardAnalyzer();
 
-    private Analyzer textAnalyzer;
+    private final Analyzer textAnalyzer;
 
     public AbstractLuceneIndexer() {
-        setTextAnalyzer(DEFAULT_ANALYZER);
+        textAnalyzer = DEFAULT_ANALYZER;
     }
 
-    public void setTextAnalyzer(Analyzer analyzer) {
+    public AbstractLuceneIndexer(Analyzer analyzer) {
         textAnalyzer = analyzer;
     }
 
     public IndexWriterConfig getIndexWriterConfig() {
         return new IndexWriterConfig(textAnalyzer);
+    }
+
+    public Analyzer getTextAnalyzer() {
+        return textAnalyzer;
     }
 
     public abstract IndexItemsCollector getIndexItemsCollector();
