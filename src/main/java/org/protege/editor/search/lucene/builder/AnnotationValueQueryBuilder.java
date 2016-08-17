@@ -38,7 +38,8 @@ public class AnnotationValueQueryBuilder extends SearchQueryBuilder {
             query = LuceneUtils.createRegexQuery(IndexField.ANNOTATION_TEXT, keyword.getString());
         }
         else {
-            query = LuceneUtils.createQuery(IndexField.ANNOTATION_TEXT, keyword.getSyntacticString());
+            String keywordString = keyword.getSyntacticString();
+            query = LuceneUtils.createQuery(IndexField.ANNOTATION_TEXT, keywordString, searcher.getTextAnalyzer());
         }
         return new BasicSearchQuery(query, SearchCategory.ANNOTATION_VALUE, searcher);
     }

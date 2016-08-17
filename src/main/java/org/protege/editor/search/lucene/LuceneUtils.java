@@ -1,5 +1,6 @@
 package org.protege.editor.search.lucene;
 
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -22,6 +23,16 @@ public class LuceneUtils {
     public static Query createQuery(String searchField, String searchString) {
         try {
             QueryParser parser = new QueryParser(searchField, new StandardAnalyzer());
+            return parser.parse(searchString);
+        }
+        catch (ParseException e) {
+            return createTermQuery(searchField, ""); // return an empty term query
+        }
+    }
+
+    public static Query createQuery(String searchField, String searchString, Analyzer textAnalyzer) {
+        try {
+            QueryParser parser = new QueryParser(searchField, textAnalyzer);
             return parser.parse(searchString);
         }
         catch (ParseException e) {

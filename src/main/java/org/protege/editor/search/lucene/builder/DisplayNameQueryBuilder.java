@@ -38,7 +38,8 @@ public class DisplayNameQueryBuilder extends SearchQueryBuilder {
             query = LuceneUtils.createRegexQuery(IndexField.DISPLAY_NAME, keyword.getString());
         }
         else {
-            query = LuceneUtils.createQuery(IndexField.DISPLAY_NAME, keyword.getSyntacticString());
+            String keywordString = keyword.getSyntacticString();
+            query = LuceneUtils.createQuery(IndexField.DISPLAY_NAME, keywordString, searcher.getTextAnalyzer());
         }
         return new BasicSearchQuery(query, SearchCategory.DISPLAY_NAME, searcher);
     }

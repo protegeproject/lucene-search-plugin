@@ -36,7 +36,7 @@ public class FilteredAnnotationQueryBuilder extends SearchQueryBuilder {
     public SearchQuery buildSearchQueryFor(SearchKeyword keyword) {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         builder.add(LuceneUtils.createTermQuery(IndexField.ANNOTATION_DISPLAY_NAME, keyword.getField()), Occur.MUST);
-        builder.add(LuceneUtils.createQuery(IndexField.ANNOTATION_TEXT, keyword.getString()), Occur.MUST);
+        builder.add(LuceneUtils.createQuery(IndexField.ANNOTATION_TEXT, keyword.getString(), searcher.getTextAnalyzer()), Occur.MUST);
         return new BasicSearchQuery(builder.build(), SearchCategory.ANNOTATION_VALUE, searcher);
     }
 
