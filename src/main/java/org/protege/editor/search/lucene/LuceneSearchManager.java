@@ -217,7 +217,12 @@ public class LuceneSearchManager extends LuceneSearcher {
     }
 
     @Override
-    public IndexSearcher getIndexSearcher() throws IOException {
+    protected AbstractLuceneIndexer getIndexer() {
+        return indexer;
+    }
+
+    @Override
+    protected IndexSearcher getIndexSearcher() throws IOException {
         if (indexDelegator == null) {
             throw new RuntimeException("No index was loaded");
         }
