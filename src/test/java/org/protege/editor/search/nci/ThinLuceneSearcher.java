@@ -3,6 +3,7 @@ package org.protege.editor.search.nci;
 import org.protege.editor.owl.OWLEditorKit;
 import org.protege.editor.owl.model.search.SearchCategory;
 import org.protege.editor.owl.model.search.SearchResultHandler;
+import org.protege.editor.search.lucene.AbstractLuceneIndexer;
 import org.protege.editor.search.lucene.LuceneSearcher;
 
 import org.apache.lucene.search.IndexSearcher;
@@ -29,6 +30,11 @@ public class ThinLuceneSearcher extends LuceneSearcher {
     @Override
     public void initialise() throws Exception {
         // NO-OP
+    }
+
+    @Override
+    protected AbstractLuceneIndexer getIndexer() {
+        return null;
     }
 
     @Override
