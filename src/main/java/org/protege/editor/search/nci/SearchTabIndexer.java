@@ -7,6 +7,7 @@ import org.protege.editor.search.lucene.AbstractLuceneIndexer;
 import org.protege.editor.search.lucene.IndexField;
 import org.protege.editor.search.lucene.IndexItemsCollector;
 
+import org.apache.lucene.analysis.standard.ClassicAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.StringField;
@@ -82,7 +83,7 @@ public class SearchTabIndexer extends AbstractLuceneIndexer {
     private final OWLModelManager objectRenderer;
 
     public SearchTabIndexer(OWLEditorKit editorKit) {
-        super();
+        super(new ClassicAnalyzer());
         entityFinder = editorKit.getOWLModelManager().getOWLEntityFinder();
         objectRenderer = editorKit.getOWLModelManager();
     }

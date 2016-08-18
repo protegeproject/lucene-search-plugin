@@ -9,6 +9,7 @@ import org.protege.editor.owl.model.search.SearchInput;
 import org.protege.editor.owl.model.search.SearchResult;
 import org.protege.editor.owl.model.search.SearchResultHandler;
 import org.protege.editor.owl.model.search.SearchStringParser;
+import org.protege.editor.search.lucene.AbstractLuceneIndexer;
 import org.protege.editor.search.lucene.AddChangeSet;
 import org.protege.editor.search.lucene.IndexDelegator;
 import org.protege.editor.search.lucene.LuceneSearchPreferences;
@@ -233,7 +234,12 @@ public class SearchTabManager extends LuceneSearcher {
     }
 
     @Override
-    public IndexSearcher getIndexSearcher() throws IOException {
+    protected AbstractLuceneIndexer getIndexer() {
+        return indexer;
+    }
+
+    @Override
+    protected IndexSearcher getIndexSearcher() throws IOException {
         if (indexDelegator == null) {
             throw new RuntimeException("No index was loaded");
         }
