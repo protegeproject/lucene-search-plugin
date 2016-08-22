@@ -186,7 +186,7 @@ public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
     };
 
     private ActionListener browseBtnListener = e -> {
-        selectedFile = UIUtil.saveFile(this, "Choose CSV file location", "CSV file", null, "lucene-export.csv");
+        selectedFile = UIUtil.saveFile(this, "Choose CSV file location", "CSV file", Collections.singleton("csv"), "lucene-export.csv");
         if(selectedFile != null) {
             String filename;
             if(!selectedFile.getName().endsWith(".csv")) {
@@ -198,9 +198,7 @@ public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
         }
     };
 
-    private ActionListener editCustomTextBtnListener = e -> {
-        customText = CustomTextDialogPanel.showDialog(editorKit, customText);
-    };
+    private ActionListener editCustomTextBtnListener = e -> customText = CustomTextDialogPanel.showDialog(editorKit, customText);
 
     private void checkInputs() {
         boolean allValid = true;
