@@ -2,8 +2,8 @@ package org.protege.editor.search.lucene;
 
 import org.protege.editor.owl.model.find.OWLEntityFinderPreferences;
 import org.protege.editor.owl.model.search.SearchInput;
-import org.protege.editor.owl.model.search.SearchKeyword;
 import org.protege.editor.owl.model.search.SearchStringParser;
+import org.protege.editor.owl.model.search.SearchTerm;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,16 +32,16 @@ public class LuceneStringParser implements SearchStringParser {
                     searchField = m.group(1).trim();
                     searchString = m.group(2).trim();
                 }
-                SearchKeyword keyword = createSearchKeyword(searchField, searchString);
-                builder.add(keyword);
+                SearchTerm term = createSearchTerm(searchField, searchString);
+                builder.add(term);
             }
         }
         return builder.build();
     }
 
-    private static SearchKeyword createSearchKeyword(String searchField, String searchString) {
+    private static SearchTerm createSearchTerm(String searchField, String searchString) {
         OWLEntityFinderPreferences prefs = OWLEntityFinderPreferences.getInstance();
-        return new SearchKeyword(searchField,
+        return new SearchTerm(searchField,
                 searchString,
                 toLuceneSyntax(searchString),
                 prefs.isCaseSensitive(), // is case-sensitive

@@ -1,7 +1,7 @@
 package org.protege.editor.search.lucene;
 
 import org.protege.editor.owl.model.search.SearchCategory;
-import org.protege.editor.owl.model.search.SearchKeyword;
+import org.protege.editor.owl.model.search.SearchTerm;
 
 import java.util.Collection;
 
@@ -13,7 +13,7 @@ import java.util.Collection;
  */
 public abstract class SearchQueryBuilder {
 
-    public abstract boolean isBuilderFor(SearchKeyword keyword, Collection<SearchCategory> categories);
+    public abstract boolean isBuilderFor(SearchTerm term, Collection<SearchCategory> categories);
 
-    public abstract SearchQuery buildSearchQueryFor(SearchKeyword keyword);
+    public abstract SearchQuery buildSearchQueryFor(SearchTerm term);
 }

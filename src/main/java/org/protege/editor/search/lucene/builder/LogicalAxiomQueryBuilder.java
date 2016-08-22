@@ -1,7 +1,7 @@
 package org.protege.editor.search.lucene.builder;
 
 import org.protege.editor.owl.model.search.SearchCategory;
-import org.protege.editor.owl.model.search.SearchKeyword;
+import org.protege.editor.owl.model.search.SearchTerm;
 import org.protege.editor.search.lucene.BasicSearchQuery;
 import org.protege.editor.search.lucene.IndexField;
 import org.protege.editor.search.lucene.LuceneSearcher;
@@ -32,22 +32,22 @@ public class LogicalAxiomQueryBuilder extends SearchQueryBuilder {
     }
 
     @Override
-    public SearchQuery buildSearchQueryFor(SearchKeyword keyword) {
+    public SearchQuery buildSearchQueryFor(SearchTerm term) {
         final Query query;
-        if (keyword.searchByRegex()) {
-            query = LuceneUtils.createRegexQuery(IndexField.AXIOM_DISPLAY_NAME, keyword.getString());
+        if (term.searchByRegex()) {
+            query = LuceneUtils.createRegexQuery(IndexField.AXIOM_DISPLAY_NAME, term.getString());
         }
         else {
-            String keywordString = keyword.getSyntacticString();
+            String keywordString = term.getSyntacticString();
             query = LuceneUtils.createQuery(IndexField.AXIOM_DISPLAY_NAME, keywordString, searcher.getTextAnalyzer());
         }
         return new BasicSearchQuery(query, SearchCategory.LOGICAL_AXIOM, searcher);
     }
 
     @Override
-    public boolean isBuilderFor(SearchKeyword keyword, Collection<SearchCategory> categories) {
+    public boolean isBuilderFor(SearchTerm term, Collection<SearchCategory> categories) {
         if (categories.contains(SearchCategory.LOGICAL_AXIOM)) {
-            return (keyword.hasField()) ? false : true;
+            return (term.hasField()) ? false : true;
         }
         return false;
     }
