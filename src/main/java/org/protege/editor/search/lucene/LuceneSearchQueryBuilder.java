@@ -3,7 +3,7 @@ package org.protege.editor.search.lucene;
 import org.protege.editor.owl.model.search.SearchCategory;
 import org.protege.editor.owl.model.search.SearchInput;
 import org.protege.editor.owl.model.search.SearchInputVisitor;
-import org.protege.editor.owl.model.search.SearchKeyword;
+import org.protege.editor.owl.model.search.SearchTerm;
 import org.protege.editor.search.lucene.builder.AnnotationValueQueryBuilder;
 import org.protege.editor.search.lucene.builder.DisplayNameQueryBuilder;
 import org.protege.editor.search.lucene.builder.EntityIriQueryBuilder;
@@ -39,11 +39,11 @@ public class LuceneSearchQueryBuilder implements SearchInputVisitor {
 
     @Override
     public void visit(SearchInput searchInput) {
-        for (SearchKeyword keyword : searchInput) {
+        for (SearchTerm term : searchInput) {
             UnionQuery.Builder unionQueryBuilder = new UnionQuery.Builder();
             for (SearchQueryBuilder queryBuilder : getBuilders()) {
-                if (queryBuilder.isBuilderFor(keyword, categories)) {
-                    unionQueryBuilder.add(queryBuilder.buildSearchQueryFor(keyword));
+                if (queryBuilder.isBuilderFor(term, categories)) {
+                    unionQueryBuilder.add(queryBuilder.buildSearchQueryFor(term));
                 }
             }
             searchQueries.add(unionQueryBuilder.build());
