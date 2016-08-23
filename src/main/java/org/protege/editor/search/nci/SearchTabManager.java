@@ -132,9 +132,6 @@ public class SearchTabManager extends LuceneSearcher {
                         loadIndex(activeOntology);
                     }
                 }
-                else if (isCacheMutatingEvent(event)) {
-                    rebuildIndex(activeOntology);
-                }
                 else if (isCacheSavingEvent(event)) {
                     saveIndex(activeOntology);
                 }
@@ -152,10 +149,6 @@ public class SearchTabManager extends LuceneSearcher {
 
     private boolean isCacheChangingEvent(OWLModelManagerChangeEvent event) {
         return event.isType(EventType.ACTIVE_ONTOLOGY_CHANGED);
-    }
-
-    private boolean isCacheMutatingEvent(OWLModelManagerChangeEvent event) {
-        return event.isType(EventType.ENTITY_RENDERING_CHANGED);
     }
 
     private boolean isCacheSavingEvent(OWLModelManagerChangeEvent event) {
