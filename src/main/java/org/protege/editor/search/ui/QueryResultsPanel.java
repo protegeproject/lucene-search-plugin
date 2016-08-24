@@ -251,10 +251,9 @@ public class QueryResultsPanel extends JPanel implements Disposable {
     }
 
     private JPanel getHeaderPanel() {
-        JPanel header = new JPanel(new BorderLayout());
+        JPanel header = new JPanel(new GridBagLayout());
         header.setPreferredSize(new Dimension(0, 40));
 
-        JPanel pagesPanel = new JPanel(new GridBagLayout());
         backBtn = new JButton(LuceneUiUtils.getIcon(LuceneUiUtils.BACK_ICON_FILENAME, 12, 12));
         forwardBtn = new JButton(LuceneUiUtils.getIcon(LuceneUiUtils.FORWARD_ICON_FILENAME, 12, 12));
         backBtn.setVisible(false);
@@ -265,29 +264,26 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         forwardBtn.setBackground(Color.WHITE);
         forwardBtn.setPreferredSize(new Dimension(36, 27));
         forwardBtn.addActionListener(forwardBtnListener);
-        pagesPanel.add(searchProgressBar,
-                new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_TRAILING, GridBagConstraints.NONE, new Insets(0, 5, 0, 0), 0, 0));
-        pagesPanel.add(backBtn,
-                new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_TRAILING, GridBagConstraints.NONE, new Insets(0, 5, 0, 0), 0, 0));
-        pagesPanel.add(forwardBtn,
-                new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, new Insets(0, 0, 0, 5), 0, 0));
+        header.add(searchProgressBar,
+                new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.NONE, new Insets(0, 5, 0, 0), 0, 0));
+        header.add(backBtn,
+                new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.NONE, new Insets(0, 5, 0, 0), 0, 0));
+        header.add(forwardBtn,
+                new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.NONE, new Insets(0, 0, 0, 5), 0, 0));
 
         statusLbl = new JLabel();
         statusLbl.setBorder(new EmptyBorder(0, 4, 0, 0));
-        pagesPanel.add(statusLbl,
-                new GridBagConstraints(2, 0, 1, 1, 1.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 1, 0, 0), 0, 0));
+        header.add(statusLbl,
+                new GridBagConstraints(2, 0, 1, 1, 0.0, 1.0, GridBagConstraints.LINE_START, GridBagConstraints.BOTH, new Insets(0, 1, 0, 0), 0, 0));
 
         pageLbl = new JLabel("");
-        pagesPanel.add(pageLbl,
-                new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 4, 0, 0), 0, 0));
-        header.add(pagesPanel, BorderLayout.WEST);
+        header.add(pageLbl,
+                new GridBagConstraints(3, 0, 1, 1, 0.5, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.NONE, new Insets(0, 4, 0, 0), 0, 0));
 
-        JPanel exportPanel = new JPanel(new FlowLayout());
-        exportBtn = new JButton("Export Results");
+        exportBtn = new JButton("Export");
         exportBtn.addActionListener(exportBtnListener);
         exportBtn.setEnabled(false);
-        exportPanel.add(exportBtn);
-        header.add(exportPanel, BorderLayout.EAST);
+        header.add(exportBtn, new GridBagConstraints(4, 0, 1, 1, 1.0, 0.0, GridBagConstraints.LINE_END, GridBagConstraints.NONE, new Insets(0, 2, 0, 0), 0, 0));
         return header;
     }
 
@@ -314,7 +310,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
 
         Insets insets = new Insets(2, 4, 2, 4);
         int rowIndex = 0;
-        footer.add(filterTextField, new GridBagConstraints(0, rowIndex, 1, 1, 100.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.HORIZONTAL, insets, 0, 0));
+        footer.add(filterTextField, new GridBagConstraints(0, rowIndex, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.HORIZONTAL, insets, 0, 0));
         footer.add(classes, new GridBagConstraints(1, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, insets, 0, 0));
         footer.add(properties, new GridBagConstraints(2, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, insets, 0, 0));
         footer.add(individuals, new GridBagConstraints(3, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, insets, 0, 0));
