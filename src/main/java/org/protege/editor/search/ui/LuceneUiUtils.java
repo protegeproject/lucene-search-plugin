@@ -65,7 +65,7 @@ public class LuceneUiUtils {
         return entities;
     }
 
-    public static int getWidestEntityStringRendering(OWLEditorKit editorKit, Collection<OWLEntity> entities, FontMetrics fontMetrics) {
+    public static int getWidestEntityStringRendering(OWLEditorKit editorKit, Collection<? extends OWLEntity> entities, FontMetrics fontMetrics) {
         int widest = 0;
         OWLModelManagerEntityRenderer renderer = editorKit.getModelManager().getOWLEntityRenderer();
         for(OWLEntity e : entities) {

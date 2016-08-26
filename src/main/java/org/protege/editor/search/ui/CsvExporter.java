@@ -26,24 +26,24 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class CsvExporter {
+    private static final Logger logger = LoggerFactory.getLogger(CsvExporter.class.getName());
     private final boolean includeHeaders, includeEntityTypes, useCurrentRendering, includeSuperclasses, includeCustomText;
     private final String fileDelimiter, propertyValuesDelimiter, customText;
     private final List<OWLEntity> results, properties;
     private final File outputFile;
-    private OWLEditorKit editorKit;
-    private OWLModelManagerEntityRenderer entityRenderer;
-    private OWLObjectRenderer objectRenderer;
-    private OWLOntology ont;
-    private OwlClassExpressionVisitor visitor = new OwlClassExpressionVisitor();
-    private static final Logger logger = LoggerFactory.getLogger(CsvExporter.class.getName());
+    private final OWLEditorKit editorKit;
+    private final OWLModelManagerEntityRenderer entityRenderer;
+    private final OWLObjectRenderer objectRenderer;
+    private final OWLOntology ont;
+    private final OwlClassExpressionVisitor visitor = new OwlClassExpressionVisitor();
 
     /**
      * Package-private constructor. Use {@link CsvExporterBuilder}
      *
      * @param editorKit OWL Editor Kit
      * @param outputFile    Output file for CSV export
-     * @param results   List of entities in the results set that should be exported
-     * @param properties    List of properties selected to be exported
+     * @param output   List of entities that should be exported
+     * @param properties    List of properties whose restrictions on output entities should be exported
      * @param fileDelimiter Primary delimiter for entries
      * @param propertyValuesDelimiter   Delimiter for the (potentially multiple) values of the properties selected
      * @param includeHeaders  true if headers (e.g., property names) should be included in the first row of the file, false otherwise
@@ -53,11 +53,12 @@ public class CsvExporter {
      * @param includeCustomText true if a row should be added at the end of the file containing custom text, false otherwise
      * @param customText    Custom text to be included in the last row of the file
      */
-    CsvExporter(OWLEditorKit editorKit, File outputFile, List<OWLEntity> results, List<OWLEntity> properties, String fileDelimiter, String propertyValuesDelimiter, boolean includeHeaders,
-                boolean includeEntityTypes, boolean useCurrentRendering, boolean includeSuperclasses, boolean includeCustomText, String customText) {
+    CsvExporter(OWLEditorKit editorKit, File outputFile, List<OWLEntity> output, List<OWLEntity> properties, String fileDelimiter,
+                        String propertyValuesDelimiter, boolean includeHeaders, boolean includeEntityTypes, boolean useCurrentRendering,
+                        boolean includeSuperclasses, boolean includeCustomText, String customText) {
         this.editorKit = checkNotNull(editorKit);
         this.outputFile = checkNotNull(outputFile);
-        this.results = checkNotNull(results);
+        this.results = checkNotNull(output);
         this.properties = checkNotNull(properties);
         this.fileDelimiter = checkNotNull(fileDelimiter);
         this.propertyValuesDelimiter = checkNotNull(propertyValuesDelimiter);
@@ -72,6 +73,10 @@ public class CsvExporter {
         entityRenderer = manager.getOWLEntityRenderer();
         objectRenderer = manager.getOWLObjectRenderer();
         ont = manager.getActiveOntology();
+    }
+
+    public static CsvExporterBuilder builder(OWLEditorKit editorKit, File outputFile) {
+        return new CsvExporterBuilder(editorKit, outputFile);
     }
 
     public void export() throws IOException {

@@ -24,8 +24,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Center for Biomedical Informatics Research <br>
  * Stanford University
  */
-public class AddPropertyDialogPanel extends JPanel implements VerifiedInputEditor {
-    private static final long serialVersionUID = -1063096290922111127L;
+public class AddPropertyToExportDialogPanel extends JPanel implements VerifiedInputEditor {
+    private static final long serialVersionUID = 4446893064828619852L;
     private List<InputVerificationStatusChangedListener> listeners = new ArrayList<>();
     private OWLEditorKit editorKit;
     private JLabel filterLbl, propertiesLbl, propertySelectionLbl;
@@ -42,7 +42,7 @@ public class AddPropertyDialogPanel extends JPanel implements VerifiedInputEdito
      * @param editorKit OWL Editor Kit
      * @param propertiesToExclude  List of OWL entities containing properties to exclude as they are already added
      */
-    public AddPropertyDialogPanel(OWLEditorKit editorKit, List<OWLEntity> propertiesToExclude) {
+    public AddPropertyToExportDialogPanel(OWLEditorKit editorKit, List<OWLEntity> propertiesToExclude) {
         this.editorKit = checkNotNull(editorKit);
         this.propertiesToExclude = checkNotNull(propertiesToExclude);
         initUi();
@@ -156,7 +156,7 @@ public class AddPropertyDialogPanel extends JPanel implements VerifiedInputEdito
     }
 
     public static Optional<List<OWLEntity>> showDialog(OWLEditorKit editorKit, List<OWLEntity> propertiesToExlude) {
-        AddPropertyDialogPanel panel = new AddPropertyDialogPanel(editorKit, propertiesToExlude);
+        AddPropertyToExportDialogPanel panel = new AddPropertyToExportDialogPanel(editorKit, propertiesToExlude);
         int response = JOptionPaneEx.showValidatingConfirmDialog(
                 editorKit.getOWLWorkspace(), "Choose properties to export", panel, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION, null);
         if (response == JOptionPane.OK_OPTION) {

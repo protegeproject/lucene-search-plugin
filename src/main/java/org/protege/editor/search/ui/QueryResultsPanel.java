@@ -422,7 +422,7 @@ public class QueryResultsPanel extends JPanel implements Disposable {
         List<OWLEntity> results = getResults();
         if (!results.isEmpty()) {
             try {
-                success = ExportDialogPanel.showDialog(editorKit, answeredQuery.getAlgebraString(), results);
+                success = ExportDialogPanel.showDialog(editorKit, answeredQuery.getAlgebraString(), results, false);
             } catch (IOException e) {
                 ErrorLogPanel.showErrorDialog(e);
             }

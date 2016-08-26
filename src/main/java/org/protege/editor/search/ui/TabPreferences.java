@@ -33,8 +33,7 @@ public class TabPreferences {
 
     public static QueryType getDefaultQueryType() {
         String type = getPreferences().getString(QUERY_TYPE, defaultQueryType.getName());
-        QueryType qt = QueryType.valueOf(type);
-        return qt;
+        return QueryType.valueOf(type);
     }
 
     public static int getMaximumResultsPerPage() {

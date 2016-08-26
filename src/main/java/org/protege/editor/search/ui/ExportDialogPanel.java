@@ -18,8 +18,10 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -29,62 +31,48 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Stanford University
  */
 public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
-    private static final long serialVersionUID = 2895257460444140568L;
+    private static final long serialVersionUID = 7807859483477962217L;
     private OWLEditorKit editorKit;
-    private final List<OWLEntity> results;
-    private JLabel fileLocationLbl, propertiesLbl, fileDelimLbl, propertyValuesDelimLbl;
+    private final List<OWLEntity> output;
+    private JLabel fileLocationLbl, outputLbl, propertiesLbl, fileDelimLbl, propertyValuesDelimLbl;
     private JTextField fileLocationTxtField, fileDelim, propertyValuesDelim;
     private JCheckBox includePropertyNames, includeEntityTypes, useCurrentRendering, includeSuperclasses, includeCustomText;
     private JButton browseBtn, editCustomTextBtn;
-    private MList propertiesList;
+    private MList propertiesList, outputEntitiesList;
     private List<InputVerificationStatusChangedListener> listeners = new ArrayList<>();
-    private boolean currentlyValid = false;
+    private boolean currentlyValid = false, allowOutputModifications = false;
+    private OwlEntityListItem selectedPropertyListItem, selectedOutputListItem;
     private File selectedFile;
-    private PropertyListItem selectedListItem;
     private String customText;
 
     /**
      * Constructor
      *
      * @param editorKit OWL Editor Kit
-     * @param results  List of OWL entities in the query results
+     * @param customText    Custom text to appear at the end of the CSV file
+     * @param output  List of OWL entities that will be exported
+     * @param allowOutputModifications  true if modifications to the given list of output entities are allowed, false otherwise
      */
-    public ExportDialogPanel(OWLEditorKit editorKit, String queryAlgebra, List<OWLEntity> results) {
+    public ExportDialogPanel(OWLEditorKit editorKit, String customText, List<OWLEntity> output, boolean allowOutputModifications) {
         this.editorKit = checkNotNull(editorKit);
-        this.results = checkNotNull(results);
-        this.customText = checkNotNull(queryAlgebra);
+        this.customText = checkNotNull(customText);
+        this.output = checkNotNull(output);
+        this.allowOutputModifications = checkNotNull(allowOutputModifications);
         initUi();
     }
 
     private void initUi() {
+        initUiComponents();
         setLayout(new GridBagLayout());
-        setupList();
 
-        fileLocationLbl = new JLabel("Export to file:");
-        propertiesLbl = new JLabel("Properties to export:");
-        fileDelimLbl = new JLabel("File delimiter:");
-        propertyValuesDelimLbl = new JLabel("Property values delimiter:");
-
-        fileLocationTxtField = new JTextField();
-        fileDelim = new JTextField(",");
-        propertyValuesDelim = new JTextField("\t");
-
-        fileDelim.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, Collections.EMPTY_SET);
-        fileDelim.addKeyListener(keyListener);
-        propertyValuesDelim.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, Collections.EMPTY_SET);
-        propertyValuesDelim.addKeyListener(keyListener);
-
-        browseBtn = new JButton("Browse");
-        browseBtn.addActionListener(browseBtnListener);
-        editCustomTextBtn = new JButton("Edit text");
-        editCustomTextBtn.addActionListener(editCustomTextBtnListener);
-
-        includePropertyNames = new JCheckBox("Include headers in first line");
-        includeEntityTypes = new JCheckBox("Include entity types");
-        useCurrentRendering = new JCheckBox("Use current rendering instead of IRIs");
-        includeSuperclasses = new JCheckBox("Include superclasses");
-        includeCustomText = new JCheckBox("Include custom text in last line");
-
+        JScrollPane outputScrollpane = null;
+        if(allowOutputModifications) {
+            setPreferredSize(new Dimension(500, 650));
+            outputScrollpane = new JScrollPane(outputEntitiesList);
+            outputScrollpane.setBorder(LuceneUiUtils.MATTE_BORDER);
+        } else {
+            setPreferredSize(new Dimension(400, 500));
+        }
         JScrollPane propertiesScrollpane = new JScrollPane(propertiesList);
         propertiesScrollpane.setBorder(LuceneUiUtils.MATTE_BORDER);
 
@@ -95,9 +83,15 @@ public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
         add(fileLocationTxtField, new GridBagConstraints(0, rowIndex, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.HORIZONTAL, insets, 0, 0));
         add(browseBtn, new GridBagConstraints(1, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, insets, 0, 0));
         rowIndex += 2;
+        if(allowOutputModifications && outputScrollpane != null) {
+            add(outputLbl, new GridBagConstraints(0, rowIndex, 2, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, new Insets(15, 2, 2, 2), 0, 0));
+            rowIndex++;
+            add(outputScrollpane, new GridBagConstraints(0, rowIndex, 2, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.BOTH, insets, 0, 0));
+            rowIndex++;
+        }
         add(propertiesLbl, new GridBagConstraints(0, rowIndex, 2, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, new Insets(15, 2, 2, 2), 0, 0));
         rowIndex++;
-        add(propertiesScrollpane, new GridBagConstraints(0, rowIndex, 2, 1, 1.0, 1.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.BOTH, insets, 0, 0));
+        add(propertiesScrollpane, new GridBagConstraints(0, rowIndex, 2, 1, 1.0, 0.5, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.BOTH, insets, 0, 0));
         rowIndex += 2;
         add(fileDelimLbl, new GridBagConstraints(0, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.NONE, new Insets(15, 2, 2, 0), 0, 0));
         add(fileDelim, new GridBagConstraints(1, rowIndex, 1, 1, 1.0, 0.0, GridBagConstraints.BASELINE_LEADING, GridBagConstraints.HORIZONTAL, new Insets(15, 0, 2, 2), 0, 0));
@@ -117,7 +111,63 @@ public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
         add(editCustomTextBtn, new GridBagConstraints(1, rowIndex, 1, 1, 0.0, 0.0, GridBagConstraints.BASELINE_TRAILING, GridBagConstraints.NONE, new Insets(2, 0, 2, 2), 0, 0));
     }
 
-    private void setupList() {
+    private void initUiComponents() {
+        setupPropertyList();
+        if(allowOutputModifications) {
+            setupClassList();
+        }
+        fileLocationLbl = new JLabel("Export to file:");
+        outputLbl = new JLabel("Entities to export:");
+        propertiesLbl = new JLabel("Export values of properties:");
+        fileDelimLbl = new JLabel("File delimiter:");
+        propertyValuesDelimLbl = new JLabel("Property values delimiter:");
+
+        fileLocationTxtField = new JTextField();
+        fileDelim = new JTextField(CsvExporterBuilder.FILE_DELIMITER);
+        propertyValuesDelim = new JTextField(CsvExporterBuilder.PROPERTY_VALUES_DELIMITER);
+
+        fileDelim.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, Collections.EMPTY_SET);
+        fileDelim.addKeyListener(keyListener);
+        propertyValuesDelim.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, Collections.EMPTY_SET);
+        propertyValuesDelim.addKeyListener(keyListener);
+
+        browseBtn = new JButton("Browse");
+        browseBtn.addActionListener(browseBtnListener);
+        editCustomTextBtn = new JButton("Edit text");
+        editCustomTextBtn.addActionListener(editCustomTextBtnListener);
+
+        includePropertyNames = new JCheckBox("Include headers in first line");
+        includeEntityTypes = new JCheckBox("Include entity types");
+        useCurrentRendering = new JCheckBox("Use current rendering instead of IRIs");
+        includeSuperclasses = new JCheckBox("Include superclasses");
+        includeCustomText = new JCheckBox("Include custom text in last line");
+    }
+
+    private void setupClassList() {
+        outputEntitiesList = new MList() {
+            protected void handleAdd() {
+                addOutputEntity();
+            }
+
+            protected void handleDelete() {
+                deleteOutputEntity();
+            }
+        };
+        outputEntitiesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        outputEntitiesList.addListSelectionListener(outputListSelectionListener);
+        outputEntitiesList.setCellRenderer(new OwlEntityListCellRenderer(editorKit));
+        outputEntitiesList.addKeyListener(keyAdapter);
+        outputEntitiesList.addMouseListener(mouseAdapter);
+        outputEntitiesList.setVisibleRowCount(10);
+        outputEntitiesList.setBorder(new EmptyBorder(2, 2, 0, 2));
+
+        List<Object> data = new ArrayList<>();
+        data.add(new OwlEntityListHeaderItem());
+        data.addAll(output.stream().map(OwlEntityListItem::new).collect(Collectors.toList()));
+        outputEntitiesList.setListData(data.toArray());
+    }
+
+    private void setupPropertyList() {
         propertiesList = new MList() {
             protected void handleAdd() {
                 addProperty();
@@ -128,15 +178,15 @@ public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
             }
         };
         propertiesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        propertiesList.addListSelectionListener(listSelectionListener);
-        propertiesList.setCellRenderer(new OwlPropertyListCellRenderer(editorKit));
+        propertiesList.addListSelectionListener(propertyListSelectionListener);
+        propertiesList.setCellRenderer(new OwlEntityListCellRenderer(editorKit));
         propertiesList.addKeyListener(keyAdapter);
         propertiesList.addMouseListener(mouseAdapter);
-        propertiesList.setVisibleRowCount(10);
+        propertiesList.setVisibleRowCount(5);
         propertiesList.setBorder(new EmptyBorder(2, 2, 0, 2));
 
         List<Object> data = new ArrayList<>();
-        data.add(new PropertyListHeaderItem());
+        data.add(new OwlPropertyListHeaderItem());
         propertiesList.setListData(data.toArray());
     }
 
@@ -155,10 +205,18 @@ public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
         }
     };
 
-    private ListSelectionListener listSelectionListener = e -> {
+    private ListSelectionListener propertyListSelectionListener = e -> {
         if(propertiesList.getSelectedValue() != null && !e.getValueIsAdjusting()) {
-            if(propertiesList.getSelectedValue() instanceof PropertyListItem) {
-                selectedListItem = (PropertyListItem) propertiesList.getSelectedValue();
+            if(propertiesList.getSelectedValue() instanceof OwlEntityListItem) {
+                selectedPropertyListItem = (OwlEntityListItem) propertiesList.getSelectedValue();
+            }
+        }
+    };
+
+    private ListSelectionListener outputListSelectionListener = e -> {
+        if(outputEntitiesList.getSelectedValue() != null && !e.getValueIsAdjusting()) {
+            if(outputEntitiesList.getSelectedValue() instanceof OwlEntityListItem) {
+                selectedOutputListItem = (OwlEntityListItem) outputEntitiesList.getSelectedValue();
             }
         }
     };
@@ -167,8 +225,16 @@ public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
         @Override
         public void keyReleased(KeyEvent e) {
             if(e.getKeyCode() == KeyEvent.VK_ENTER) {
-                if(propertiesList.getSelectedValue() instanceof PropertyListHeaderItem) {
+                if(e.getSource().equals(propertiesList) && propertiesList.getSelectedValue() instanceof OwlPropertyListHeaderItem) {
                     addProperty();
+                } else if(e.getSource().equals(outputEntitiesList) && outputEntitiesList.getSelectedValue() instanceof OwlEntityListHeaderItem) {
+                    addOutputEntity();
+                }
+            } else if(e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+                if(e.getSource().equals(propertiesList) && propertiesList.getSelectedValue() instanceof OwlEntityListItem) {
+                    deleteProperty();
+                } else if(e.getSource().equals(outputEntitiesList) && outputEntitiesList.getSelectedValue() instanceof OwlEntityListItem) {
+                    deleteOutputEntity();
                 }
             }
         }
@@ -178,8 +244,10 @@ public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
         @Override
         public void mouseClicked(MouseEvent e) {
             if(e.getClickCount() == 2) {
-                if(propertiesList.getSelectedValue() instanceof PropertyListHeaderItem) {
+                if(e.getSource().equals(propertiesList) && propertiesList.getSelectedValue() instanceof OwlPropertyListHeaderItem) {
                     addProperty();
+                } else if(e.getSource().equals(outputEntitiesList) && outputEntitiesList.getSelectedValue() instanceof OwlEntityListHeaderItem) {
+                    addOutputEntity();
                 }
             }
         }
@@ -215,30 +283,37 @@ public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
         }
     }
 
+    private void addOutputEntity() {
+        AddEntityToExportDialogPanel.showDialog(editorKit, getEntities(outputEntitiesList)).ifPresent(owlEntities -> addEntitiesToList(owlEntities, outputEntitiesList));
+    }
+
     private void addProperty() {
-        Optional<List<OWLEntity>> entitiesOpt = AddPropertyDialogPanel.showDialog(editorKit, getProperties());
-        if(entitiesOpt.isPresent()) {
-            List<OWLEntity> entities = entitiesOpt.get();
-            List items = getPropertyListItems();
-            for (OWLEntity e : entities) {
-                items.add(new PropertyListItem(e));
-            }
-            propertiesList.setListData(items.toArray());
-        }
+        AddPropertyToExportDialogPanel.showDialog(editorKit, getEntities(propertiesList)).ifPresent(owlEntities -> addEntitiesToList(owlEntities, propertiesList));
+    }
+
+    private void addEntitiesToList(List<OWLEntity> entities, JList list) {
+        List items = getListItems(list);
+        items.addAll(entities.stream().map(OwlEntityListItem::new).collect(Collectors.toList()));
+        list.setListData(items.toArray());
+
+    }
+
+    private void deleteOutputEntity() {
+        List items = getListItems(outputEntitiesList);
+        items.remove(selectedOutputListItem);
+        outputEntitiesList.setListData(items.toArray());
     }
 
     private void deleteProperty() {
-        List items = getPropertyListItems();
-        items.remove(selectedListItem);
+        List items = getListItems(propertiesList);
+        items.remove(selectedPropertyListItem);
         propertiesList.setListData(items.toArray());
     }
 
     private void exportToCsv() throws IOException {
-        CsvExporter csvExporter = new CsvExporterBuilder()
-                .setEditorKit(editorKit)
-                .setOutputFile(selectedFile)
-                .setResults(results)
-                .setProperties(getProperties())
+        CsvExporter csvExporter = new CsvExporterBuilder(editorKit, selectedFile)
+                .setOutputProperties((allowOutputModifications ? getEntities(outputEntitiesList) : output))
+                .setProperties(getEntities(propertiesList))
                 .setFileDelimiter(fileDelim.getText())
                 .setPropertyValuesDelimiter(propertyValuesDelim.getText())
                 .setIncludeEntityTypes(includeEntityTypes.isSelected())
@@ -247,33 +322,33 @@ public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
                 .setIncludeSuperclasses(includeSuperclasses.isSelected())
                 .setUseCurrentRendering(useCurrentRendering.isSelected())
                 .setCustomText(customText)
-                .createCsvExporter();
+                .build();
         csvExporter.export();
     }
 
-    private List<OWLEntity> getProperties() {
+    private List<OWLEntity> getEntities(JList list) {
         List<OWLEntity> entities = new ArrayList<>();
-        for(Object obj : getPropertyListItems()) {
-            if(obj instanceof PropertyListItem) {
-                entities.add(((PropertyListItem)obj).getProperty());
+        for(Object obj : getListItems(list)) {
+            if(obj instanceof OwlEntityListItem) {
+                entities.add(((OwlEntityListItem)obj).getEntity());
             }
         }
         return entities;
     }
 
-    private List<?> getPropertyListItems() {
+    private List<?> getListItems(JList list) {
         List<Object> properties = new ArrayList<>();
-        ListModel model = propertiesList.getModel();
+        ListModel model = list.getModel();
         for(int i = 0; i < model.getSize(); i++) {
             properties.add(model.getElementAt(i));
         }
         return properties;
     }
 
-    public static boolean showDialog(OWLEditorKit editorKit, String queryAlgebra, List<OWLEntity> results) throws IOException {
-        ExportDialogPanel panel = new ExportDialogPanel(editorKit, queryAlgebra, results);
+    public static boolean showDialog(OWLEditorKit editorKit, String queryAlgebra, List<OWLEntity> results, boolean allowOutputAlterations) throws IOException {
+        ExportDialogPanel panel = new ExportDialogPanel(editorKit, queryAlgebra, results, allowOutputAlterations);
         int response = JOptionPaneEx.showValidatingConfirmDialog(
-                editorKit.getOWLWorkspace(), "Export results to CSV file", panel, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION, null);
+                editorKit.getOWLWorkspace(), "Export to CSV file", panel, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION, null);
         if (response == JOptionPane.OK_OPTION) {
             panel.exportToCsv();
             return true;
@@ -296,7 +371,7 @@ public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
     /**
      * Property list header item
      */
-    public class PropertyListHeaderItem implements MListSectionHeader {
+    public class OwlPropertyListHeaderItem implements MListSectionHeader {
 
         @Override
         public String getName() {
@@ -310,22 +385,38 @@ public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
     }
 
     /**
-     * Property list item
+     * Entity list header item
      */
-    public class PropertyListItem implements MListItem {
-        private OWLEntity property;
+    public class OwlEntityListHeaderItem implements MListSectionHeader {
+
+        @Override
+        public String getName() {
+            return "Entities";
+        }
+
+        @Override
+        public boolean canAdd() {
+            return true;
+        }
+    }
+
+    /**
+     * OWLEntity list item
+     */
+    public class OwlEntityListItem implements MListItem {
+        private OWLEntity entity;
 
         /**
          * Constructor
          *
-         * @param property OWL property
+         * @param entity OWL entity
          */
-        public PropertyListItem(OWLEntity property) {
-            this.property = checkNotNull(property);
+        public OwlEntityListItem(OWLEntity entity) {
+            this.entity = checkNotNull(entity);
         }
 
-        public OWLEntity getProperty() {
-            return property;
+        public OWLEntity getEntity() {
+            return entity;
         }
 
         @Override
@@ -350,7 +441,7 @@ public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
 
         @Override
         public String getTooltip() {
-            return property.getIRI().toQuotedString();
+            return entity.getIRI().toQuotedString();
         }
 
         @Override
@@ -358,16 +449,16 @@ public class ExportDialogPanel extends JPanel implements VerifiedInputEditor {
             if (this == o) {
                 return true;
             }
-            if (!(o instanceof PropertyListItem)) {
+            if (!(o instanceof OwlEntityListItem)) {
                 return false;
             }
-            PropertyListItem that = (PropertyListItem) o;
-            return Objects.equal(property, that.property);
+            OwlEntityListItem that = (OwlEntityListItem) o;
+            return Objects.equal(entity, that.entity);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(property);
+            return Objects.hashCode(entity);
         }
     }
 }
