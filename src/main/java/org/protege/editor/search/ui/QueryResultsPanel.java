@@ -1,6 +1,7 @@
 package org.protege.editor.search.ui;
 
 import com.google.common.collect.ImmutableList;
+import edu.stanford.protege.csv.export.ui.ExportDialogPanel;
 import org.protege.editor.core.Disposable;
 import org.protege.editor.core.ui.error.ErrorLogPanel;
 import org.protege.editor.core.ui.util.AugmentedJTextField;

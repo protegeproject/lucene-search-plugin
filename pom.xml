@@ -148,6 +148,12 @@
         </dependency>
 
         <dependency>
+            <groupId>edu.stanford.protege</groupId>
+            <artifactId>csv-export-plugin</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.imgscalr</groupId>
             <artifactId>imgscalr-lib</artifactId>
             <version>4.2</version>
