@@ -1,65 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <plugin>
-    <extension id="SearchTabManager" point="org.protege.editor.owl.searchmanager">
-        <name value="Lucene search" />
-        <class value="org.protege.editor.search.nci.SearchTabManager" />
-    </extension>
 
     <!-- Preferences -->
-
     <extension id="ui.preferences.update"
                point="org.protege.editor.core.application.preferencespanel">
         <label value="Lucene Search"/>
         <class value="org.protege.editor.search.lucene.SearchPreferencesPanel"/>
     </extension>
 
-    <!-- Tabs -->
-
-    <extension id="LuceneQueryTab"
-               point="org.protege.editor.core.application.WorkspaceTab">
-        <label value="Lucene Query"/>
-        <class value="org.protege.editor.owl.ui.OWLWorkspaceViewsTab"/>
-        <index value="X"/>
-        <editorKitId value="OWLEditorKit"/>
-        <defaultViewConfigFileName value="viewconfig.xml"/>
-    </extension>
-
-    <!-- Views -->
-
-    <extension id="LuceneQueryView"
-               point="org.protege.editor.core.application.ViewComponent">
-        <label value="Lucene Query"/>
-        <class value="org.protege.editor.search.ui.LuceneQueryView"/>
-        <headerColor value="@org.protege.ontologycolor"/>
-        <category value="Query"/>
-    </extension>
-
-    <!-- Menus -->
-
-    <extension id="Lucene"
-               name="Top Level Lucene Menu"
-               point="org.protege.editor.core.application.EditorKitMenuAction">
-        <name value="Lucene"/>
-        <path value="/SlotG"/>
-        <editorKitId value="OWLEditorKit"/>
-    </extension>
-
-    <extension id="BuildIndex"
-               name="Build Index Menu"
-               point="org.protege.editor.core.application.EditorKitMenuAction">
-        <name value="Build index"/>
-        <path value="org.protege.editor.search.Lucene/SlotA-G"/>
-        <editorKitId value="OWLEditorKit"/>
-        <class value="org.protege.editor.search.ui.IndexAction"/>
-    </extension>
-
-    <extension id="OpenSettings"
-               name="Open Settings Menu"
-               point="org.protege.editor.core.application.EditorKitMenuAction">
-        <name value="Settings"/>
-        <path value="org.protege.editor.search.Lucene/SlotB-G"/>
-        <editorKitId value="OWLEditorKit"/>
-        <class value="org.protege.editor.search.ui.OpenSettingsAction"/>
-    </extension>
 </plugin>
