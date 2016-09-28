@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
  * Bio-Medical Informatics Research Group<br>
  * Date: 30/06/2016
  */
+@Deprecated
 public class IndexInfoTable extends JTable {
 
     private static final long serialVersionUID = 8148865819337287518L;

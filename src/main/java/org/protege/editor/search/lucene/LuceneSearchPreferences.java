@@ -24,6 +24,7 @@ import java.util.Optional;
  * Bio-Medical Informatics Research Group<br>
  * Date: 15/05/2016
  */
+@Deprecated
 public class LuceneSearchPreferences {
 
     private static final Logger logger = LoggerFactory.getLogger(LuceneSearchPreferences.class);
