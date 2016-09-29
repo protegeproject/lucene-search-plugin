@@ -408,7 +408,9 @@ public class LuceneIndexPreferences {
         List<String> indexRecordKeys = getPreferences().getStringList(
                 INDEX_RECORD_KEYS,
                 new ArrayList<>());
-        indexRecordKeys.add(indexMapKey);
+        if (!indexRecordKeys.contains(indexMapKey)) { // to prevent duplication in the list
+            indexRecordKeys.add(indexMapKey);
+        }
         getPreferences().putStringList(INDEX_RECORD_KEYS, indexRecordKeys);
     }
 
