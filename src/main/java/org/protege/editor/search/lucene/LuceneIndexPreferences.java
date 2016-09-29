@@ -5,7 +5,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -363,7 +362,7 @@ public class LuceneIndexPreferences {
 
     private static List<String> getCheckedIndexRecord(String indexRecordKey) {
         Optional<List<String>> uncheckedIndexRecord = getIndexRecord(indexRecordKey);
-        List<String> indexRecord = Collections.emptyList();
+        List<String> indexRecord = new ArrayList<>();
         if (!uncheckedIndexRecord.isPresent()) {
             indexRecord.add(ONTOLOGY_IRI_ATTRIBUTE, "");
             indexRecord.add(INDEX_DIRECTORY_ATTRIBUTE, "");
@@ -408,7 +407,7 @@ public class LuceneIndexPreferences {
     private static void collectIndexRecordKey(String indexMapKey) {
         List<String> indexRecordKeys = getPreferences().getStringList(
                 INDEX_RECORD_KEYS,
-                Collections.emptyList());
+                new ArrayList<>());
         indexRecordKeys.add(indexMapKey);
         getPreferences().putStringList(INDEX_RECORD_KEYS, indexRecordKeys);
     }
@@ -416,7 +415,7 @@ public class LuceneIndexPreferences {
     private static void discardIndexRecordKey(String indexMapKey) {
         List<String> indexMapKeys = getPreferences().getStringList(
                 INDEX_RECORD_KEYS,
-                Collections.emptyList());
+                new ArrayList<>());
         indexMapKeys.remove(indexMapKey);
         getPreferences().putStringList(INDEX_RECORD_KEYS, indexMapKeys);
     }
