@@ -5,11 +5,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 import javax.annotation.Nonnull;
 
@@ -398,8 +397,8 @@ public class LuceneIndexPreferences {
     }
 
     private static String createIndexChecksum(OWLOntology ontology) {
-        SortedSet<OWLAxiom> sortedAxioms = new TreeSet<>();
-        sortedAxioms.addAll(ontology.getAxioms());
+        List<OWLAxiom> sortedAxioms = new ArrayList<>(ontology.getAxioms());
+        Collections.sort(sortedAxioms);
         KbDigest digest = KbDigest.getDigest(sortedAxioms);
         return Hex.encodeHexString(digest.toByteArray());
     }
