@@ -37,20 +37,20 @@ public class SearchPreferencesPanel extends OWLPreferencesPanel {
 
         panel.addGroup("Index location");
         panel.addGroupComponent(txtIndexLocation);
-        txtIndexLocation.setText(LuceneSearchPreferences.getBaseDirectory());
+        txtIndexLocation.setText(LuceneIndexPreferences.getBaseDirectory());
         txtIndexLocation.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
                 if (!rbCustomLocation.isSelected()) {
                     rbCustomLocation.setSelected(true);
-                    LuceneSearchPreferences.setCustomDirectoryAsBaseDirectory();
+                    LuceneIndexPreferences.setCustomDirectoryAsBaseDirectory();
                 }
             }
         });
 
-        rbUserHomeDir.setSelected(LuceneSearchPreferences.useUserHomeDirectoryAsBaseDirectory());
-        rbTempDir.setSelected(LuceneSearchPreferences.useTempDirectoryAsBaseDirectory());
-        rbCustomLocation.setSelected(LuceneSearchPreferences.useCustomDirectoryAsBaseDirectory());
+        rbUserHomeDir.setSelected(LuceneIndexPreferences.useUserHomeDirectoryAsBaseDirectory());
+        rbTempDir.setSelected(LuceneIndexPreferences.useTempDirectoryAsBaseDirectory());
+        rbCustomLocation.setSelected(LuceneIndexPreferences.useCustomDirectoryAsBaseDirectory());
 
         panel.addGroupComponent(rbUserHomeDir);
         panel.addGroupComponent(rbTempDir);
@@ -63,40 +63,40 @@ public class SearchPreferencesPanel extends OWLPreferencesPanel {
         panel.addVerticalPadding();
 
         rbUserHomeDir.addActionListener(e -> {
-            LuceneSearchPreferences.setUserHomeDirectoryAsBaseDirectory();
-            txtIndexLocation.setText(LuceneSearchPreferences.getUserHomeDirectory());
+            LuceneIndexPreferences.setUserHomeDirectoryAsBaseDirectory();
+            txtIndexLocation.setText(LuceneIndexPreferences.getUserHomeDirectory());
         });
         rbTempDir.addActionListener(e -> {
-            LuceneSearchPreferences.setTempDirectoryAsBaseDirectory();
-            txtIndexLocation.setText(LuceneSearchPreferences.getTempDirectory());
+            LuceneIndexPreferences.setTempDirectoryAsBaseDirectory();
+            txtIndexLocation.setText(LuceneIndexPreferences.getTempDirectory());
         });
         rbCustomLocation.addActionListener(e -> {
-            LuceneSearchPreferences.setCustomDirectoryAsBaseDirectory();
+            LuceneIndexPreferences.setCustomDirectoryAsBaseDirectory();
             txtIndexLocation.requestFocus();
             txtIndexLocation.selectAll();
         });
         
         panel.addGroup("Stored indexes");
-        IndexInfoTable tblIndexLocation = new IndexInfoTable();
-        JScrollPane scpIndexLocation = new JScrollPane(tblIndexLocation);
+        IndexRecordTable tblIndexRecord = new IndexRecordTable();
+        JScrollPane scpIndexLocation = new JScrollPane(tblIndexRecord);
         scpIndexLocation.setPreferredSize(new Dimension(600, 250));
         panel.addGroupComponent(scpIndexLocation);
         
         JButton btnRemoveSelected = new JButton("Remove selected index");
         btnRemoveSelected.addActionListener(l -> {
-            int selectedRow = tblIndexLocation.getSelectedRow();
+            int selectedRow = tblIndexRecord.getSelectedRow();
             if (selectedRow != -1) {
-                String locationKey = (String) tblIndexLocation.getValueAt(selectedRow, 0); // 0 = first column
-                String msg = String.format("<html>Are you sure want to remove index for ontology '%s'?<br/>"
+                String directoryLocation = (String) tblIndexRecord.getValueAt(selectedRow, IndexRecordTable.INDEX_DIRECTORY_LOCATION_COLUMN);
+                String msg = String.format("<html>Are you sure want to remove the selected index?<br/>"
                         + "<br/>"
                         + "This action will remove the index directory on the disk.<br/>"
                         + "<br/>"
                         + "Index directory location:<br/>"
-                        + "%s</html>", locationKey, (String) tblIndexLocation.getValueAt(selectedRow, 1));
+                        + "%s</html>", directoryLocation);
                 int answer = JOptionPaneEx.showConfirmDialog(this, "Remove selected index", new JLabel(msg),
                         JOptionPane.QUESTION_MESSAGE, JOptionPane.OK_CANCEL_OPTION, null);
                 if (answer == JOptionPane.OK_OPTION) {
-                    tblIndexLocation.removeIndex(selectedRow);
+                    tblIndexRecord.removeIndex(selectedRow);
                 }
             }
         });
@@ -105,20 +105,20 @@ public class SearchPreferencesPanel extends OWLPreferencesPanel {
 
         JPanel pnlAdvancedOption = new JPanel();
         JCheckBox useCustomInDiskIndexing = new JCheckBox("Set Lucene to store the index in memory when the ontology file size is less than");
-        useCustomInDiskIndexing.setSelected(LuceneSearchPreferences.useInMemoryIndexStoring());
+        useCustomInDiskIndexing.setSelected(LuceneIndexPreferences.useInMemoryIndexStoring());
         useCustomInDiskIndexing.addActionListener(evt -> {
-            LuceneSearchPreferences.setInMemoryIndexStoring(useCustomInDiskIndexing.isSelected());
+            LuceneIndexPreferences.setInMemoryIndexStoring(useCustomInDiskIndexing.isSelected());
             spnOntologySize.setEnabled(useCustomInDiskIndexing.isSelected());
         });
         pnlAdvancedOption.add(useCustomInDiskIndexing);
         spnOntologySize.setEnabled(useCustomInDiskIndexing.isSelected());
         JFormattedTextField txtOntologySize = ((JSpinner.NumberEditor) spnOntologySize.getEditor()).getTextField();
-        txtOntologySize.setText(LuceneSearchPreferences.getMaxSizeForInMemoryIndexStoring()+"");
+        txtOntologySize.setText(LuceneIndexPreferences.getMaxSizeForInMemoryIndexStoring()+"");
         ((NumberFormatter) txtOntologySize.getFormatter()).setAllowsInvalid(false);
         spnOntologySize.addChangeListener(e -> {
             SpinnerNumberModel model = (SpinnerNumberModel) spnOntologySize.getModel();
             int value = model.getNumber().intValue();
-            LuceneSearchPreferences.setMaxSizeForInMemoryIndexStoring(value);
+            LuceneIndexPreferences.setMaxSizeForInMemoryIndexStoring(value);
         });
         pnlAdvancedOption.add(spnOntologySize);
         pnlAdvancedOption.add(new JLabel(" MB"));
@@ -132,6 +132,6 @@ public class SearchPreferencesPanel extends OWLPreferencesPanel {
 
     @Override
     public void applyChanges() {
-        LuceneSearchPreferences.setBaseDirectory(txtIndexLocation.getText());
+        LuceneIndexPreferences.setBaseDirectory(txtIndexLocation.getText());
     }
 }
