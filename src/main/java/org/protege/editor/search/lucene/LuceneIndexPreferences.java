@@ -283,7 +283,7 @@ public class LuceneIndexPreferences {
     @Nonnull
     public static List<List<String>> getIndexRecordTable() {
         List<List<String>> indexRecordTable = new ArrayList<>();
-        List<String> indexMapKeys = getCheckedIndexRecord(INDEX_RECORD_KEYS);
+        List<String> indexMapKeys = getPreferences().getStringList(INDEX_RECORD_KEYS, new ArrayList<>());
         for (String indexMapKey : indexMapKeys) {
             List<String> indexRecord = new ArrayList<>();
             indexRecord.add(indexMapKey);
