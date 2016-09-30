@@ -31,4 +31,8 @@ public class SearchContext {
     public Set<OWLOntology> getOntologies() {
         return editorKit.getOWLModelManager().getActiveOntologies();
     }
+
+    public boolean isIndexable() {
+        return !getActiveOntology().isEmpty() && !getActiveOntology().isAnonymous();
+    }
 }
