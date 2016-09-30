@@ -73,6 +73,14 @@ public class IndexDelegator implements Disposable {
         return indexSearcher;
     }
 
+    public boolean indexExists() {
+        try {
+            return DirectoryReader.indexExists(directory);
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to read index directory", e);
+        }
+    }
+
     public void buildIndex(Set<Document> documents, IndexProgressListener listener) throws IOException {
         Stopwatch stopwatch = Stopwatch.createStarted();
         logger.info("... start writing index");
